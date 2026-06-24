@@ -1,9 +1,14 @@
 "use client"
 
 import { ChevronRight, Mail, Plus, type LucideIcon } from "lucide-react"
-import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useEffect, useState } from "react"
+
 import { Button } from "@/components/ui/button"
+import {
+  SidebarNavLink,
+  NavPendingIndicator,
+} from "@/components/sidebar-nav-pending"
 import {
   Collapsible,
   CollapsibleContent,
@@ -18,69 +23,166 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  useSidebar,
 } from "@/components/ui/sidebar"
-import { useEffect, useState } from "react"
 
-// Function to get theme-based icon color class
 function getThemeIconColor(): string {
-  if (typeof document === 'undefined') return ''
-  
-  const theme = document.documentElement.getAttribute('data-theme') || 'default'
-  
+  if (typeof document === "undefined") return ""
+
+  const theme = document.documentElement.getAttribute("data-theme") || "default"
+
   const themeColorMap: Record<string, string> = {
-    'default': '',
-    'red': 'text-red-100',
-    'rose': 'text-rose-100',
-    'orange': 'text-orange-500',
-    'yellow': 'text-yellow-500',
-    'green': 'text-green-500',
-    'blue': 'text-blue-500',
-    'violet': 'text-violet-500',
-    'purple': 'text-purple-500',
-    'pink': 'text-pink-500',
-    'cyan': 'text-cyan-500',
-    'teal': 'text-teal-500',
-    'indigo': 'text-indigo-500',
-    'emerald': 'text-emerald-500',
-    'amber': 'text-amber-500',
-    'lime': 'text-lime-500',
-    'sky': 'text-sky-500',
-    'fuchsia': 'text-fuchsia-500',
+    default: "",
+    red: "text-red-100",
+    rose: "text-rose-100",
+    orange: "text-orange-500",
+    yellow: "text-yellow-500",
+    green: "text-green-500",
+    blue: "text-blue-500",
+    violet: "text-violet-500",
+    purple: "text-purple-500",
+    pink: "text-pink-500",
+    cyan: "text-cyan-500",
+    teal: "text-teal-500",
+    indigo: "text-indigo-500",
+    emerald: "text-emerald-500",
+    amber: "text-amber-500",
+    lime: "text-lime-500",
+    sky: "text-sky-500",
+    fuchsia: "text-fuchsia-500",
   }
-  
-  return themeColorMap[theme] || ''
+
+  return themeColorMap[theme] || ""
 }
 
-export function NavMain({
-  items,
-}: {
-  items: {
+type NavItem = {
+  title: string
+  url: string
+  icon?: LucideIcon
+  items?: {
     title: string
     url: string
-    icon?: LucideIcon
-    items?: {
-      title: string
-      url: string
-    }[]
   }[]
+}
+
+function NavSubLinkItem({
+  subItem,
+  pathname,
+}: {
+  subItem: { title: string; url: string }
+  pathname: string | null
 }) {
+  const isSubActive =
+    pathname === subItem.url ||
+    (subItem.url !== "/home" &&
+      subItem.url !== "#" &&
+      pathname?.startsWith(subItem.url))
+  return (
+    <SidebarMenuSubItem>
+      <SidebarMenuSubButton asChild isActive={isSubActive}>
+        <SidebarNavLink href={subItem.url}>
+          <span className="min-w-0 truncate">{subItem.title}</span>
+          <NavPendingIndicator href={subItem.url} />
+        </SidebarNavLink>
+      </SidebarMenuSubButton>
+    </SidebarMenuSubItem>
+  )
+}
+
+function NavMainLinkItem({
+  item,
+  isActive,
+}: {
+  item: NavItem
+  isActive: boolean
+}) {
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton asChild tooltip={item.title} isActive={isActive}>
+        <SidebarNavLink href={item.url}>
+          {item.icon && <item.icon className="size-[1.125rem] shrink-0" strokeWidth={2} data-theme-icon />}
+          <span className="min-w-0 truncate">{item.title}</span>
+          <NavPendingIndicator href={item.url} />
+        </SidebarNavLink>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  )
+}
+
+function NavCollapsibleItem({
+  item,
+  pathname,
+}: {
+  item: NavItem
+  pathname: string | null
+}) {
+  const { state, isMobile, toggleSidebar } = useSidebar()
+  const isActive =
+    pathname === item.url ||
+    (item.url !== "/home" && item.url !== "#" && pathname?.startsWith(item.url))
+  const [open, setOpen] = useState(isActive)
+
+  useEffect(() => {
+    if (isActive) setOpen(true)
+  }, [isActive])
+
+  const handleOpenChange = (next: boolean) => {
+    if (state === "collapsed" && !isMobile) {
+      toggleSidebar()
+      setOpen(true)
+      return
+    }
+    setOpen(next)
+  }
+
+  return (
+    <SidebarMenuItem>
+      <Collapsible open={open} onOpenChange={handleOpenChange} className="group/collapsible w-full">
+        <CollapsibleTrigger asChild>
+          <SidebarMenuButton isActive={isActive} title={item.title} type="button">
+            {item.icon && <item.icon data-theme-icon />}
+            <span>{item.title}</span>
+            <ChevronRight
+              className="ml-auto size-[1.125rem] transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90"
+              strokeWidth={2}
+              data-theme-icon
+              aria-hidden
+            />
+          </SidebarMenuButton>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <SidebarMenuSub>
+            {item.items?.map((subItem) => (
+              <NavSubLinkItem
+                key={subItem.title}
+                subItem={subItem}
+                pathname={pathname}
+              />
+            ))}
+          </SidebarMenuSub>
+        </CollapsibleContent>
+      </Collapsible>
+    </SidebarMenuItem>
+  )
+}
+
+export function NavMain({ items }: { items: NavItem[] }) {
   const pathname = usePathname()
-  const [iconColorClass, setIconColorClass] = useState('')
+  const [, setIconColorClass] = useState("")
 
   useEffect(() => {
     const updateIconColor = () => {
       setIconColorClass(getThemeIconColor())
     }
-    
+
     updateIconColor()
-    
-    // Watch for theme changes
+
     const observer = new MutationObserver(updateIconColor)
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['data-theme']
+      attributeFilter: ["data-theme"],
     })
-    
+
     return () => observer.disconnect()
   }, [])
 
@@ -108,65 +210,20 @@ export function NavMain({
         </SidebarMenu>
         <SidebarMenu>
           {items.map((item) => {
-            const isActive = pathname === item.url || (item.url !== "/dashboard" && pathname?.startsWith(item.url))
-            
-            // If item has nested items, make it collapsible
+            const isActive =
+              pathname === item.url ||
+              (item.url !== "/home" &&
+                item.url !== "#" &&
+                pathname?.startsWith(item.url))
+
             if (item.items && item.items.length > 0) {
               return (
-                <Collapsible
-                  key={item.title}
-                  asChild
-                  defaultOpen={isActive}
-                  className="group/collapsible"
-                >
-                  <SidebarMenuItem>
-                    <CollapsibleTrigger asChild>
-                      {/* No tooltip here: Tooltip wraps the button and breaks CollapsibleTrigger asChild composition */}
-                      <SidebarMenuButton
-                        isActive={isActive}
-                        title={item.title}
-                      >
-                        {item.icon && <item.icon data-theme-icon />}
-                        <span>{item.title}</span>
-                        <ChevronRight
-                          className="ml-auto size-[1.125rem] transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90"
-                          strokeWidth={2}
-                          data-theme-icon
-                          aria-hidden
-                        />
-                      </SidebarMenuButton>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <SidebarMenuSub>
-                        {item.items.map((subItem) => {
-                          const isSubActive = pathname === subItem.url || (subItem.url !== "/dashboard" && pathname?.startsWith(subItem.url))
-                          return (
-                            <SidebarMenuSubItem key={subItem.title}>
-                              <SidebarMenuSubButton asChild isActive={isSubActive}>
-                                <Link href={subItem.url}>
-                                  <span>{subItem.title}</span>
-                                </Link>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                          )
-                        })}
-                      </SidebarMenuSub>
-                    </CollapsibleContent>
-                  </SidebarMenuItem>
-                </Collapsible>
+                <NavCollapsibleItem key={item.title} item={item} pathname={pathname} />
               )
             }
-            
-            // Regular item without nested items
+
             return (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild tooltip={item.title} isActive={isActive}>
-                  <Link href={item.url}>
-                    {item.icon && <item.icon data-theme-icon />}
-                    <span>{item.title}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              <NavMainLinkItem key={item.title} item={item} isActive={isActive} />
             )
           })}
         </SidebarMenu>

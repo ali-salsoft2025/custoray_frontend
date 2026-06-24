@@ -48,6 +48,9 @@ import { DataTableExportDialog } from "@/components/data-table-export-dialog"
 import { DataTableImportDialog } from "@/components/data-table-import-dialog"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { buildSampleCsv } from "@/lib/csv"
+import {
+  confirmDuplicateAction,
+} from "@/lib/confirm-action"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -304,7 +307,7 @@ export const defaultColumns: ColumnDef<z.infer<typeof schema>>[] = [
   {
     id: "actions",
     enableSorting: false,
-    cell: () => (
+    cell: ({ row }) => (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
@@ -325,7 +328,21 @@ export const defaultColumns: ColumnDef<z.infer<typeof schema>>[] = [
             <IconPencil />
             Edit
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() =>
+              void (async () => {
+                if (
+                  !(await confirmDuplicateAction({
+                    itemName: row.original.header,
+                    entityLabel: "section",
+                  }))
+                ) {
+                  return
+                }
+                toast.message(`Duplicated ${row.original.header} (demo).`)
+              })()
+            }
+          >
             <IconCopy />
             Duplicate
           </DropdownMenuItem>
@@ -468,11 +485,13 @@ function DataTableFiltersPopover<TData>({
   enableLayoutToggle,
   layoutView,
   onLayoutViewChange,
+  tableOptionsExtra,
 }: {
   table: TanStackTable<TData>
   enableLayoutToggle?: boolean
   layoutView?: "list" | "grid"
   onLayoutViewChange?: (view: "list" | "grid") => void
+  tableOptionsExtra?: React.ReactNode
 }) {
   const columns = filterableLeafColumns(table)
   const hideableColumns = hideableLeafColumns(table)
@@ -563,6 +582,9 @@ function DataTableFiltersPopover<TData>({
           </div>
         </div>
         <div className="max-h-[min(70vh,28rem)] overflow-y-auto px-4">
+          {tableOptionsExtra ? (
+            <div className="border-border/80 border-b py-3">{tableOptionsExtra}</div>
+          ) : null}
           {showColumns ? (
             <div className="border-border/80 space-y-2 border-b py-3">
               <div className="flex items-center justify-between gap-2">
@@ -876,6 +898,12 @@ export function DataTable<TData>({
   enableLayoutToggle = true,
   defaultColumnVisibility,
   onAddClick,
+  onDataChange,
+  showAddButton = true,
+  showImportButton = true,
+  tableOptionsExtra,
+  onImportRows,
+  importSampleCsvContent,
 }: {
   data: TData[]
   columns: ColumnDef<TData>[]
@@ -896,8 +924,33 @@ export function DataTable<TData>({
   defaultColumnVisibility?: VisibilityState
   /** Primary add button (e.g. open create sheet). */
   onAddClick?: () => void
+  /** Notified when table data changes (e.g. CSV import). */
+  onDataChange?: (data: TData[]) => void
+  showAddButton?: boolean
+  showImportButton?: boolean
+  /** Custom controls rendered at the top of the table options popover. */
+  tableOptionsExtra?: React.ReactNode
+  /** Custom CSV import handler; return number of rows added. */
+  onImportRows?: (rows: Record<string, string>[]) => number
+  /** Override import sample CSV content (e.g. when table rows differ from import shape). */
+  importSampleCsvContent?: string
 }) {
   const [data, setData] = React.useState(() => initialData)
+
+  React.useEffect(() => {
+    setData(initialData)
+  }, [initialData])
+
+  const updateData = React.useCallback(
+    (updater: React.SetStateAction<TData[]>) => {
+      setData((prev) => {
+        const next = typeof updater === "function" ? updater(prev) : updater
+        onDataChange?.(next)
+        return next
+      })
+    },
+    [onDataChange]
+  )
 
   const [uncontrolledTab, setUncontrolledTab] = React.useState(
     () => defaultTab ?? tabs?.[0]?.value ?? "all"
@@ -983,9 +1036,10 @@ export function DataTable<TData>({
   }, [data])
 
   const sampleCsvContent = React.useMemo(() => {
+    if (importSampleCsvContent) return importSampleCsvContent
     const example = data[0] as Record<string, unknown> | undefined
     return buildSampleCsv(csvKeys, example)
-  }, [csvKeys, data])
+  }, [csvKeys, data, importSampleCsvContent])
 
   const handleImportComplete = React.useCallback(
     (rows: Record<string, string>[]) => {
@@ -993,7 +1047,20 @@ export function DataTable<TData>({
         toast.error("No rows to import.")
         return
       }
-      setData((prev) => {
+      if (onImportRows) {
+        const added = onImportRows(rows)
+        queueMicrotask(() => {
+          if (added > 0) {
+            toast.success(`Imported ${added} row(s).`)
+          } else {
+            toast.message(
+              "No rows were added. Check that CSV headers match the sample file."
+            )
+          }
+        })
+        return
+      }
+      updateData((prev) => {
         let acc = [...prev]
         for (const r of rows) {
           const mapped = importRowMapper
@@ -1014,7 +1081,7 @@ export function DataTable<TData>({
         return acc
       })
     },
-    [importRowMapper]
+    [importRowMapper, onImportRows, updateData]
   )
 
   const selectedRowCount = table.getFilteredSelectedRowModel().rows.length
@@ -1207,20 +1274,23 @@ export function DataTable<TData>({
               enableLayoutToggle={enableLayoutToggle}
               layoutView={layoutView}
               onLayoutViewChange={setLayoutView}
+              tableOptionsExtra={tableOptionsExtra}
             />
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2 lg:shrink-0">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="rounded-full px-5 shadow-sm"
-            onClick={() => setImportOpen(true)}
-          >
-            <IconCloudUpload />
-            <span className="hidden sm:inline">Import</span>
-          </Button>
+          {showImportButton ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="rounded-full px-5 shadow-sm"
+              onClick={() => setImportOpen(true)}
+            >
+              <IconCloudUpload />
+              <span className="hidden sm:inline">Import</span>
+            </Button>
+          ) : null}
           <Button
             type="button"
             variant="outline"
@@ -1231,16 +1301,17 @@ export function DataTable<TData>({
             <IconCloudDownload />
             <span className="hidden sm:inline">Export</span>
           </Button>
-          <Button
-            variant="default"
-            
-            type="button"
-            className="rounded-full px-4 md:py-4 shadow-sm"
-            onClick={() => onAddClick?.()}
-          >
-            <IconPlus />
-            <span className="hidden lg:inline">{addButtonLabel}</span>
-          </Button>
+          {showAddButton ? (
+            <Button
+              variant="default"
+              type="button"
+              className="rounded-full px-4 md:py-4 shadow-sm"
+              onClick={() => onAddClick?.()}
+            >
+              <IconPlus />
+              <span className="hidden lg:inline">{addButtonLabel}</span>
+            </Button>
+          ) : null}
         </div>
       </div>
       {(tabs && tabs.length > 0) || selectedRowCount > 0 ? (

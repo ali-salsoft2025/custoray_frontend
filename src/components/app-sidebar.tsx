@@ -1,7 +1,6 @@
 "use client";
 import * as React from "react"
 import Image from "next/image"
-import Link from "next/link"
 import {
   AlertCircle,
   Banknote,
@@ -38,7 +37,6 @@ import {
   Monitor,
   NotebookPen,
   Package,
-  PackagePlus,
   Percent,
   PieChart,
   Receipt,
@@ -61,7 +59,13 @@ import {
 } from "lucide-react"
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from "@/components/ui/sidebar";
+import {
+  SidebarNavLink,
+  SidebarNavPendingProvider,
+} from "@/components/sidebar-nav-pending"
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, useSidebar } from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils"
+import { useTheme } from "next-themes"
 
 const data = {
   user: {
@@ -72,67 +76,73 @@ const data = {
   navMain: [
     {
       title: "Dashboard",
-      url: "/dashboard",
+      url: "/home",
       icon: LayoutDashboard,
     },
     {
       title: "Inventory",
-      url: "/dashboard/inventory",
+      url: "/inventory",
       icon: Package,
       items: [
-        { title: "Products", url: "/dashboard/inventory/products", icon: Package },
-        { title: "Brands", url: "/dashboard/inventory/brands", icon: Tag },
-        { title: "Variants", url: "/dashboard/inventory/variants", icon: Box },
-        { title: "Categories", url: "/dashboard/inventory/categories", icon: Folders },
+        { title: "Products", url: "/inventory/products", icon: Package },
+        { title: "Brands", url: "/inventory/brands", icon: Tag },
+        { title: "Variants", url: "/inventory/variants", icon: Box },
+        { title: "Categories", url: "/inventory/categories", icon: Folders },
       ],
     },
     {
       title: "Customers",
-      url: "/dashboard/customers",
+      url: "/customers",
       icon: Users,
     },
     {
-      title: "Vedors",
-      url: "#",
+      title: "Vendors",
+      url: "/vendors",
       icon: Store,
     },
     {
       title: "Sales",
-      url: "#",
+      url: "/sales",
       icon: BarChart3,
     },
     {
       title: "Purchase",
-      url: "#",
+      url: "/purchases",
       icon: Wallet,
     },
     {
       title: "Returns",
-      url: "#",
+      url: "/returns",
       icon: RotateCcw,
     },
     {
       title: "Payments",
-      url: "#",
-      icon: CircleArrowUp,
+      url: "/payments/customer",
+      icon: Banknote,
       items: [
-        { title: "Customer Payments", url: "#", icon: CircleArrowUp },
-        { title: "Receive Payment", url: "#", icon: Banknote },
-        { title: "Payment History", url: "#", icon: History },
-        { title: "Outstanding", url: "#", icon: AlertCircle },
-        { title: "Vendor Payments", url: "#", icon: CircleArrowDown },
-        { title: "Make Payment", url: "#", icon: Wallet },
-        { title: "Pending Payments", url: "#", icon: Clock },
+        { title: "Customer Payments", url: "/payments/customer", icon: CircleArrowUp },
+        { title: "Vendor Payments", url: "/payments/vendor", icon: CircleArrowDown },
       ],
     },
     {
       title: "Documents",
-      url: "#",
+      url: "/documents/sales-invoice",
       icon: FileText,
       items: [
-        { title: "Sales Invoice", url: "#", icon: Receipt },
-        { title: "Purchase Invoice", url: "#", icon: FileCheck },
-        { title: "Invoice Templates", url: "#", icon: LayoutTemplate },
+        { title: "Sales Invoice", url: "/documents/sales-invoice", icon: Receipt },
+        { title: "Purchase Invoice", url: "/documents/purchase-invoice", icon: FileCheck },
+        { title: "Invoice Templates", url: "/documents/invoice-templates", icon: LayoutTemplate },
+      ],
+    },
+    {
+      title: "POS",
+      url: "/pos",
+      icon: ShoppingCart,
+      items: [
+        { title: "Register", url: "/pos", icon: ShoppingCart },
+        { title: "Sales History", url: "/pos/sales", icon: History },
+        { title: "Reports", url: "/pos/reports", icon: FileBarChart },
+        { title: "Settings", url: "/pos/settings", icon: Settings },
       ],
     },
     {
@@ -200,25 +210,6 @@ const data = {
       ],
     },
     {
-      title: "POS",
-      url: "#",
-      icon: ShoppingCart,
-      items: [
-        { title: "POS Sales", url: "#", icon: ShoppingCart },
-        { title: "New Sale", url: "#", icon: PackagePlus },
-        { title: "Sales History", url: "#", icon: History },
-        { title: "Daily Sales", url: "#", icon: BarChart3 },
-        { title: "POS Settings", url: "#", icon: Settings },
-        { title: "POS Configuration", url: "#", icon: Monitor },
-        { title: "Receipt Settings", url: "#", icon: Receipt },
-        { title: "Payment Methods", url: "#", icon: Banknote },
-        { title: "POS Reports", url: "#", icon: FileBarChart },
-        { title: "Sales Report", url: "#", icon: LineChart },
-        { title: "Product Report", url: "#", icon: FileChartColumn },
-        { title: "Cashier Report", url: "#", icon: User },
-      ],
-    },
-    {
       title: "Ledger",
       url: "#",
       icon: BookOpen,
@@ -241,10 +232,59 @@ const data = {
   navSecondary: [
     {
       title: "Settings",
-      url: "/dashboard/settings",
+      url: "/settings",
       icon: Settings,
     },
   ],
+}
+
+function SidebarBrand() {
+  const { state } = useSidebar()
+  const collapsed = state === "collapsed"
+
+  return (
+    <SidebarHeader className={cn(collapsed && "items-center")}>
+      <SidebarNavLink
+        href="/home"
+        aria-label="Custoray home"
+        className={cn(
+          "hover:bg-sidebar-accent/60 flex items-center rounded-lg px-2 py-1.5 transition-colors",
+          collapsed && "mx-auto size-8 justify-center p-0"
+        )}
+      >
+        <SidebarLogo collapsed={collapsed} />
+      </SidebarNavLink>
+    </SidebarHeader>
+  )
+}
+
+function SidebarLogo({ collapsed }: { collapsed: boolean }) {
+  const { resolvedTheme } = useTheme()
+  const [mounted, setMounted] = React.useState(false)
+
+  React.useEffect(() => setMounted(true), [])
+
+  const isDark = mounted && resolvedTheme === "dark"
+  const logoSrc = collapsed
+    ? "/assets/logo-6.png"
+    : isDark
+      ? "/assets/logo-3.png"
+      : "/assets/logo-2.png"
+
+  return (
+    <Image
+      src={logoSrc}
+      alt="Custoray"
+      width={320}
+      height={96}
+      className={cn(
+        "object-contain",
+        collapsed ? "size-8" : "h-10 w-auto max-w-full"
+      )}
+      sizes={collapsed ? "32px" : "(max-width: 768px) 100vw, 280px"}
+      priority
+    />
+  )
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -268,32 +308,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   }, [])
   
   return (
-    <Sidebar collapsible="icon" side={isRtl ? "right" : "left"} {...props}>
-      <SidebarHeader>
-        <Link
-          href="/dashboard"
-          aria-label="Custoray home"
-          className="hover:bg-sidebar-accent/60 -mx-0.5 flex items-center rounded-lg px-2 py-1.5 transition-colors group-data-[collapsible=icon]:justify-center"
-        >
-          <div className="flex h-10 w-full min-w-0 items-center justify-start group-data-[collapsible=icon]:h-9 group-data-[collapsible=icon]:w-9 group-data-[collapsible=icon]:justify-center">
-            <Image
-              src="/assets/logo-2.png"
-              alt="Custoray"
-              width={320}
-              height={96}
-              className="h-10 w-auto max-w-full object-contain group-data-[collapsible=icon]:h-auto group-data-[collapsible=icon]:max-h-8 group-data-[collapsible=icon]:w-auto group-data-[collapsible=icon]:max-w-8"
-              sizes="(max-width: 768px) 100vw, 280px"
-              priority
-            />
-          </div>
-        </Link>
-      </SidebarHeader>
-      <SidebarContent className="hide-scrollbar overflow-y-auto h-full">
-        <NavMain items={data.navMain} />
-      </SidebarContent>
-      <SidebarFooter>
-        <NavUser user={data.user} />
-      </SidebarFooter>
-    </Sidebar>
+    <SidebarNavPendingProvider>
+      <Sidebar collapsible="icon" side={isRtl ? "right" : "left"} {...props}>
+        <SidebarBrand />
+        <SidebarContent className="hide-scrollbar overflow-y-auto h-full">
+          <NavMain items={data.navMain} />
+        </SidebarContent>
+        <SidebarFooter>
+          <NavUser user={data.user} />
+        </SidebarFooter>
+      </Sidebar>
+    </SidebarNavPendingProvider>
   )
 }

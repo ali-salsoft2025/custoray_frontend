@@ -99,7 +99,7 @@ export function NavUser({
                 Notifications
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/dashboard/settings">
+                <Link href="/settings">
                   <Settings className="size-4" strokeWidth={2} aria-hidden />
                   Settings
                 </Link>

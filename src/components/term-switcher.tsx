@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Calendar, Check, ChevronRight, ChevronsUpDown, Plus } from "lucide-react"
+import { Calendar, Check, ChevronRight, Plus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -45,14 +45,11 @@ export function TermSwitcher() {
         <Button
           type="button"
           variant="outline"
-          className="border-input bg-background text-foreground hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 w-auto min-w-0 max-w-[14rem] shrink-0 gap-2 px-3 shadow-xs sm:max-w-[18rem]"
+          size="icon"
+          className="border-input bg-background text-foreground hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 relative shrink-0 shadow-xs"
           aria-label={viewing ? `Select fiscal term, ${triggerLabel}` : "Select fiscal term"}
         >
-          <Calendar className="size-4 shrink-0 opacity-80" strokeWidth={2} aria-hidden />
-          <span className="min-w-0 flex-1 truncate text-left text-sm font-medium">
-            {triggerLabel}
-          </span>
-          <ChevronsUpDown className="text-muted-foreground size-4 shrink-0 opacity-70" />
+          <Calendar className="size-4" strokeWidth={2} aria-hidden />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
@@ -99,7 +96,7 @@ export function TermSwitcher() {
                 asChild
               >
                 <Link
-                  href={`/dashboard/inventory/terms/${encodeURIComponent(t.id)}`}
+                  href={`/inventory/terms/${encodeURIComponent(t.id)}`}
                   aria-label={`Open term ${t.sequence} details`}
                   className="flex size-full items-center justify-center"
                 >
@@ -111,7 +108,7 @@ export function TermSwitcher() {
         })}
         <DropdownMenuSeparator />
         <DropdownMenuItem className="gap-2 p-2" asChild>
-          <Link href="/dashboard/inventory/year-closing">
+          <Link href="/inventory/year-closing">
             <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
               <Plus className="size-[1.125rem]" />
             </div>

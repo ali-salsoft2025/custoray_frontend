@@ -1,0 +1,164 @@
+import {
+  computeLineTotal,
+  computeOrderTotal,
+  type OrderLineRow,
+  type OrderRow,
+} from "@/lib/orders"
+
+import type { ProductRow } from "@/lib/products"
+
+export const POS_ORDER_DESCRIPTION = "POS sale"
+export const POS_DISCOUNT_LINE_NAME = "Discount"
+
+export type PosCartLine = {
+  productId: number
+  productName: string
+  sku: string
+  quantity: number
+  unitPrice: string
+  maxStock: number
+  /** When set, overrides quantity × unit price for this line. */
+  finalLineTotal?: string
+}
+
+export function cartLineBaseTotal(line: PosCartLine): string {
+  return computeLineTotal(line.quantity, line.unitPrice)
+}
+
+export function cartLineTotal(line: PosCartLine): string {
+  if (line.finalLineTotal !== undefined && line.finalLineTotal !== "") {
+    const parsed = Number(line.finalLineTotal)
+    if (Number.isFinite(parsed) && parsed >= 0) {
+      return parsed.toFixed(2)
+    }
+  }
+  return cartLineBaseTotal(line)
+}
+
+export function cartLineAdjustment(line: PosCartLine): string {
+  const base = Number(cartLineBaseTotal(line))
+  const finalTotal = Number(cartLineTotal(line))
+  if (!Number.isFinite(base) || !Number.isFinite(finalTotal)) return "0.00"
+  return (finalTotal - base).toFixed(2)
+}
+
+export function cartLineHasAdjustment(line: PosCartLine): boolean {
+  return Math.abs(Number(cartLineAdjustment(line))) >= 0.005
+}
+
+export function isPosOrder(
+  order: Pick<OrderRow, "invoiceNumber" | "description">
+): boolean {
+  return (
+    order.description === POS_ORDER_DESCRIPTION ||
+    order.invoiceNumber.startsWith("POS-")
+  )
+}
+
+export function nextPosInvoiceNumber(existing: OrderRow[]): string {
+  const nums = existing
+    .filter(isPosOrder)
+    .map((order) => {
+      const match = order.invoiceNumber.match(/^POS-(\d+)$/)
+      return match ? Number(match[1]) : 0
+    })
+  const next = (nums.length ? Math.max(...nums) : 1000) + 1
+  return `POS-${next}`
+}
+
+export function cartSubtotal(cart: PosCartLine[]): string {
+  const lines = cart.map((line) => ({ lineTotal: cartLineTotal(line) }))
+  return computeOrderTotal(lines)
+}
+
+export function normalizeDiscountAmount(
+  subtotal: string,
+  discountAmount: string
+): string {
+  const sub = Number(subtotal)
+  const safeSub = Number.isFinite(sub) ? sub : 0
+  const disc = Number(discountAmount)
+  const safeDisc = Number.isFinite(disc) ? disc : 0
+  return Math.min(Math.max(0, safeDisc), safeSub).toFixed(2)
+}
+
+export function computePosTotals(subtotal: string, discountAmount: string) {
+  const normalizedSubtotal = Number(subtotal)
+  const safeSubtotal = Number.isFinite(normalizedSubtotal) ? normalizedSubtotal : 0
+  const discount = normalizeDiscountAmount(subtotal, discountAmount)
+  const total = Math.max(0, safeSubtotal - Number(discount)).toFixed(2)
+  return {
+    subtotal: safeSubtotal.toFixed(2),
+    discount,
+    total,
+  }
+}
+
+export function buildPosOrderFromCart(
+  cart: PosCartLine[],
+  options: {
+    customerName: string
+    paymentMethod: OrderRow["paymentMethod"]
+    invoiceNumber: string
+    orderDate?: string
+    discountAmount?: string
+  }
+): Omit<OrderRow, "id"> {
+  const productLines: OrderLineRow[] = cart.map((line, index) => {
+    const lineTotal = cartLineTotal(line)
+    const effectiveUnitPrice =
+      line.quantity > 0
+        ? (Number(lineTotal) / line.quantity).toFixed(2)
+        : line.unitPrice
+
+    return {
+      id: index + 1,
+      productName: line.productName,
+      quantity: line.quantity,
+      unitPrice: effectiveUnitPrice,
+      lineTotal,
+    }
+  })
+
+  const subtotal = computeOrderTotal(productLines)
+  const discount = normalizeDiscountAmount(subtotal, options.discountAmount ?? "0")
+  const { total } = computePosTotals(subtotal, discount)
+
+  const lines =
+    Number(discount) > 0
+      ? [
+          ...productLines,
+          {
+            id: productLines.length + 1,
+            productName: POS_DISCOUNT_LINE_NAME,
+            quantity: 1,
+            unitPrice: `-${discount}`,
+            lineTotal: `-${discount}`,
+          },
+        ]
+      : productLines
+
+  const description =
+    Number(discount) > 0
+      ? `${POS_ORDER_DESCRIPTION} · Discount ${discount}`
+      : POS_ORDER_DESCRIPTION
+
+  return {
+    invoiceNumber: options.invoiceNumber,
+    customerName: options.customerName.trim() || "Walk-in",
+    description,
+    orderDate: options.orderDate ?? new Date().toISOString().slice(0, 10),
+    totalAmount: total,
+    paidAmount: total,
+    paymentMethod: options.paymentMethod,
+    status: "completed",
+    lines,
+  }
+}
+
+/** Active in-stock inventory rows available on the POS register. */
+export function posCatalogProducts(products: ProductRow[]): ProductRow[] {
+  return products
+    .filter((product) => product.lifecycle === "active" && product.stock > 0)
+    .sort((a, b) => a.name.localeCompare(b.name))
+}

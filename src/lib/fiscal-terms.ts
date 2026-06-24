@@ -73,10 +73,11 @@ export function addMonthsIso(isoStart: string, months: number): string {
 
 export function formatShortDate(iso: string): string {
   try {
-    return new Intl.DateTimeFormat(undefined, {
+    return new Intl.DateTimeFormat("en-GB", {
       year: "numeric",
       month: "short",
       day: "numeric",
+      timeZone: "UTC",
     }).format(new Date(iso))
   } catch {
     return iso

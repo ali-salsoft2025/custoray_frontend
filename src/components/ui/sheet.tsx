@@ -6,6 +6,14 @@ import { XIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
+function isNestedPopoverTarget(target: EventTarget | null) {
+  if (!(target instanceof Element)) return false
+  return Boolean(
+    target.closest('[data-slot="popover-content"]') ||
+      target.closest("[data-radix-popper-content-wrapper]")
+  )
+}
+
 function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />
 }
@@ -48,6 +56,9 @@ function SheetContent({
   className,
   children,
   side = "right",
+  onPointerDownOutside,
+  onInteractOutside,
+  onFocusOutside,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
   side?: "top" | "right" | "bottom" | "left"
@@ -57,6 +68,24 @@ function SheetContent({
       <SheetOverlay />
       <SheetPrimitive.Content
         data-slot="sheet-content"
+        onPointerDownOutside={(event) => {
+          if (isNestedPopoverTarget(event.target)) {
+            event.preventDefault()
+          }
+          onPointerDownOutside?.(event)
+        }}
+        onInteractOutside={(event) => {
+          if (isNestedPopoverTarget(event.target)) {
+            event.preventDefault()
+          }
+          onInteractOutside?.(event)
+        }}
+        onFocusOutside={(event) => {
+          if (isNestedPopoverTarget(event.target)) {
+            event.preventDefault()
+          }
+          onFocusOutside?.(event)
+        }}
         className={cn(
           "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out fixed z-50 flex flex-col gap-4 shadow-lg transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500",
           side === "right" &&

@@ -1,13 +1,18 @@
-"use client";
-import { type Icon, IconChevronRight } from "@tabler/icons-react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+"use client"
 
+import { type Icon, IconChevronRight } from "@tabler/icons-react"
+import { usePathname } from "next/navigation"
+import { useEffect, useState } from "react"
+
+import {
+  NavPendingIndicator,
+  SidebarNavLink,
+} from "@/components/sidebar-nav-pending"
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+} from "@/components/ui/collapsible"
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -18,24 +23,125 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   useSidebar,
-} from "@/components/ui/sidebar";
+} from "@/components/ui/sidebar"
+
+type NavGeneralItem = {
+  name: string
+  url: string
+  icon: Icon
+  items?: {
+    title: string
+    url: string
+  }[]
+}
+
+function NavGeneralSubLinkItem({
+  subItem,
+  pathname,
+}: {
+  subItem: { title: string; url: string }
+  pathname: string | null
+}) {
+  const isSubActive =
+    pathname === subItem.url ||
+    (subItem.url !== "/home" &&
+      subItem.url !== "#" &&
+      pathname?.startsWith(subItem.url))
+  return (
+    <SidebarMenuSubItem>
+      <SidebarMenuSubButton asChild isActive={isSubActive}>
+        <SidebarNavLink href={subItem.url}>
+          <span className="min-w-0 truncate">{subItem.title}</span>
+          <NavPendingIndicator href={subItem.url} />
+        </SidebarNavLink>
+      </SidebarMenuSubButton>
+    </SidebarMenuSubItem>
+  )
+}
+
+function NavGeneralLinkItem({
+  item,
+  isActive,
+}: {
+  item: NavGeneralItem
+  isActive: boolean
+}) {
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton asChild isActive={isActive}>
+        <SidebarNavLink href={item.url}>
+          <item.icon className="size-[1.125rem] shrink-0" />
+          <span className="min-w-0 truncate">{item.name}</span>
+          <NavPendingIndicator href={item.url} />
+        </SidebarNavLink>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  )
+}
+
+function NavGeneralCollapsibleItem({
+  item,
+  pathname,
+}: {
+  item: NavGeneralItem
+  pathname: string | null
+}) {
+  const { state, isMobile, toggleSidebar } = useSidebar()
+  const isActive =
+    pathname === item.url ||
+    (item.url !== "/home" && item.url !== "#" && pathname?.startsWith(item.url))
+  const [open, setOpen] = useState(isActive)
+
+  useEffect(() => {
+    if (isActive) setOpen(true)
+  }, [isActive])
+
+  const handleOpenChange = (next: boolean) => {
+    if (state === "collapsed" && !isMobile) {
+      toggleSidebar()
+      setOpen(true)
+      return
+    }
+    setOpen(next)
+  }
+
+  return (
+    <SidebarMenuItem>
+      <Collapsible
+        open={open}
+        onOpenChange={handleOpenChange}
+        className="group/collapsible-item w-full"
+      >
+        <CollapsibleTrigger asChild>
+          <SidebarMenuButton isActive={isActive} type="button">
+            <item.icon />
+            <span>{item.name}</span>
+            <IconChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible-item:rotate-90" />
+          </SidebarMenuButton>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <SidebarMenuSub>
+            {item.items?.map((subItem) => (
+              <NavGeneralSubLinkItem
+                key={subItem.title}
+                subItem={subItem}
+                pathname={pathname}
+              />
+            ))}
+          </SidebarMenuSub>
+        </CollapsibleContent>
+      </Collapsible>
+    </SidebarMenuItem>
+  )
+}
 
 export function NavGeneral({
   items,
   title,
 }: {
-  items: {
-    name: string
-    url: string
-    icon: Icon
-    items?: {
-      title: string
-      url: string
-    }[]
-  }[]
+  items: NavGeneralItem[]
   title: string
 }) {
-  const { isMobile } = useSidebar()
   const pathname = usePathname()
 
   return (
@@ -43,56 +149,20 @@ export function NavGeneral({
       <SidebarGroupLabel>{title}</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => {
-          // If item has nested items, make it collapsible
+          const isActive =
+            pathname === item.url ||
+            (item.url !== "/home" &&
+              item.url !== "#" &&
+              pathname?.startsWith(item.url))
+
           if (item.items && item.items.length > 0) {
-            const isActive = pathname === item.url || (item.url !== "/dashboard" && pathname?.startsWith(item.url))
             return (
-              <Collapsible
-                key={item.name}
-                asChild
-                defaultOpen={isActive}
-                className="group/collapsible-item"
-              >
-                <SidebarMenuItem>
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton isActive={isActive}>
-                      <item.icon />
-                      <span>{item.name}</span>
-                      <IconChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible-item:rotate-90" />
-                    </SidebarMenuButton>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <SidebarMenuSub>
-                      {item.items.map((subItem) => {
-                        const isSubActive = pathname === subItem.url || (subItem.url !== "/dashboard" && pathname?.startsWith(subItem.url))
-                        return (
-                          <SidebarMenuSubItem key={subItem.title}>
-                            <SidebarMenuSubButton asChild isActive={isSubActive}>
-                              <Link href={subItem.url}>
-                                <span>{subItem.title}</span>
-                              </Link>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        )
-                      })}
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
-                </SidebarMenuItem>
-              </Collapsible>
+              <NavGeneralCollapsibleItem key={item.name} item={item} pathname={pathname} />
             )
           }
-          
-          // Regular item without nested items
-          const isActive = pathname === item.url || (item.url !== "/dashboard" && pathname?.startsWith(item.url))
+
           return (
-            <SidebarMenuItem key={item.name}>
-              <SidebarMenuButton asChild isActive={isActive}>
-                <Link href={item.url}>
-                  <item.icon />
-                  <span>{item.name}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+            <NavGeneralLinkItem key={item.name} item={item} isActive={isActive} />
           )
         })}
       </SidebarMenu>
