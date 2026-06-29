@@ -21,6 +21,7 @@ import { SaleLineDetail } from "@/components/sales/sale-line-detail"
 import { SalesViewTableOption } from "@/components/sales/sales-view-toggle"
 import { DataTableColumnHeader } from "@/components/data-table-column-header"
 import { DataTable, type DataTableTab } from "@/components/data-table"
+import { StatCard, StatCardsGrid, sumNumericField } from "@/components/stat-card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -542,6 +543,20 @@ export default function SalesReportPage() {
   }, [])
 
   const saleLines = useMemo(() => flattenOrdersToSaleLines(orders), [orders])
+
+  const salesStats = useMemo(() => {
+    const completed = orders.filter((order) => order.status === "completed")
+    const pending = orders.filter((order) => order.status === "pending")
+    const total = sumNumericField(orders, (order) => order.totalAmount)
+    const completedTotal = sumNumericField(completed, (order) => order.totalAmount)
+    return {
+      count: orders.length,
+      total,
+      completedCount: completed.length,
+      completedTotal,
+      pendingCount: pending.length,
+    }
+  }, [orders])
 
   const handleViewModeChange = useCallback((mode: BillItemViewMode) => {
     setViewMode(mode)
@@ -1199,6 +1214,25 @@ export default function SalesReportPage() {
           ) : null}
         </SheetContent>
       </Sheet>
+
+      <StatCardsGrid className="mb-5">
+        <StatCard label="Invoices" value={String(salesStats.count)} hint="All sales records" />
+        <StatCard
+          label="Total sales"
+          value={formatMoney(salesStats.total.toFixed(2))}
+          hint="All statuses"
+        />
+        <StatCard
+          label="Completed"
+          value={String(salesStats.completedCount)}
+          hint={formatMoney(salesStats.completedTotal.toFixed(2))}
+        />
+        <StatCard
+          label="Pending"
+          value={String(salesStats.pendingCount)}
+          hint="Awaiting payment"
+        />
+      </StatCardsGrid>
 
       {viewMode === "bill" ? (
         <DataTable

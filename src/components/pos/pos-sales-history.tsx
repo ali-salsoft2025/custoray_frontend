@@ -1,20 +1,54 @@
 "use client"
 
 import * as React from "react"
-import { IconSearch } from "@tabler/icons-react"
+import Link from "next/link"
+import {
+  IconChevronDown,
+  IconDownload,
+  IconLayoutGrid,
+  IconLayoutList,
+  IconReceipt,
+  IconRotateClockwise,
+  IconSearch,
+  IconShoppingCart,
+} from "@tabler/icons-react"
 import { toast } from "sonner"
 
 import { InvoicePdfButton } from "@/components/invoices/invoice-pdf-button"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { SearchInput } from "@/components/ui/search-input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import { useOrders } from "@/context/orders-context"
 import { useProducts } from "@/context/products-context"
 import { useReturns } from "@/context/returns-context"
 import { confirmReturnAction } from "@/lib/confirm-action"
 import { formatMoney } from "@/lib/customers"
+import { downloadRowsAsXls } from "@/lib/excel-export"
 import { buildReturnFromOrder } from "@/lib/returns"
-import type { OrderRow } from "@/lib/orders"
-import { isPosOrder } from "@/lib/pos"
+import {
+  formatDate,
+  ORDER_STATUSES,
+  PAYMENT_METHODS,
+  statusBadgeClass,
+  statusLabel,
+  type OrderRow,
+} from "@/lib/orders"
+import { isPosOrder, POS_DISCOUNT_LINE_NAME } from "@/lib/pos"
 import { canReturnDocument } from "@/lib/return-eligibility"
 import { cn } from "@/lib/utils"
 
@@ -23,34 +57,431 @@ function formatPosMoney(value: string) {
 }
 
 const panelClass =
-  "rounded-2xl bg-card shadow-sm shadow-black/[0.04] ring-1 ring-border/40"
+  "rounded-xl bg-card shadow-sm shadow-black/[0.04] ring-1 ring-border/40"
 
-const searchInputClass =
-  "rounded-full shadow-sm focus-visible:ring-0 focus-visible:ring-offset-0 hover:ring-0 focus:ring-0 focus:outline-none min-w-0 flex-1"
+const POS_SALES_VIEW_KEY = "custoray-pos-sales-view-mode"
+
+type StatusFilter = "all" | OrderRow["status"]
+type PaymentFilter = "all" | OrderRow["paymentMethod"]
+type ViewLayout = "list" | "grid"
+
+function loadViewLayout(): ViewLayout {
+  if (typeof window === "undefined") return "grid"
+  const stored = window.localStorage.getItem(POS_SALES_VIEW_KEY)
+  return stored === "list" || stored === "grid" ? stored : "grid"
+}
+
+function saveViewLayout(layout: ViewLayout) {
+  if (typeof window === "undefined") return
+  window.localStorage.setItem(POS_SALES_VIEW_KEY, layout)
+}
+
+function orderItemCount(order: OrderRow): number {
+  return order.lines
+    .filter((line) => line.productName !== POS_DISCOUNT_LINE_NAME)
+    .reduce((sum, line) => sum + line.quantity, 0)
+}
+
+function sumOrderTotals(orders: OrderRow[]): number {
+  return orders.reduce((acc, order) => {
+    const value = Number(order.totalAmount)
+    return acc + (Number.isFinite(value) ? value : 0)
+  }, 0)
+}
+
+function productLinesForOrder(order: OrderRow) {
+  return order.lines.filter((line) => line.productName !== POS_DISCOUNT_LINE_NAME)
+}
+
+function ViewLayoutToggle({
+  value,
+  onChange,
+}: {
+  value: ViewLayout
+  onChange: (value: ViewLayout) => void
+}) {
+  return (
+    <div
+      className="border-border/70 bg-background inline-flex h-9 shrink-0 items-center overflow-hidden rounded-full border shadow-sm"
+      role="group"
+      aria-label="View layout"
+    >
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className={cn(
+          "size-9 rounded-none border-0 shadow-none",
+          value === "list"
+            ? "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
+            : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+        )}
+        aria-label="Table view"
+        aria-pressed={value === "list"}
+        onClick={() => onChange("list")}
+      >
+        <IconLayoutList className="size-4 opacity-90" />
+      </Button>
+      <div className="bg-border/70 h-5 w-px" aria-hidden />
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className={cn(
+          "size-9 rounded-none border-0 shadow-none",
+          value === "grid"
+            ? "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
+            : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+        )}
+        aria-label="Grid view"
+        aria-pressed={value === "grid"}
+        onClick={() => onChange("grid")}
+      >
+        <IconLayoutGrid className="size-4 opacity-90" />
+      </Button>
+    </div>
+  )
+}
+
+function StatCard({
+  label,
+  value,
+  hint,
+}: {
+  label: string
+  value: string
+  hint?: string
+}) {
+  return (
+    <div className={cn(panelClass, "p-4")}>
+      <p className="text-muted-foreground text-xs font-medium">{label}</p>
+      <p className="mt-1 text-lg font-semibold tabular-nums tracking-tight">{value}</p>
+      {hint ? <p className="text-muted-foreground mt-0.5 text-[11px]">{hint}</p> : null}
+    </div>
+  )
+}
+
+type SaleOrderActionsProps = {
+  order: OrderRow
+  onReturn: () => void
+  returning: boolean
+  compact?: boolean
+}
+
+function SaleOrderActions({ order, onReturn, returning, compact }: SaleOrderActionsProps) {
+  const returnable = canReturnDocument(order)
+
+  return (
+    <div className={cn("flex flex-wrap gap-2", compact && "justify-end")}>
+      <InvoicePdfButton
+        order={order}
+        size="sm"
+        variant="outline"
+        label={compact ? "PDF" : "Download PDF"}
+      />
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        disabled={!returnable || returning}
+        onClick={(event) => {
+          event.stopPropagation()
+          onReturn()
+        }}
+      >
+        <IconRotateClockwise className="size-3.5" />
+        Return
+      </Button>
+    </div>
+  )
+}
+
+function SaleOrderLines({ order }: { order: OrderRow }) {
+  const productLines = productLinesForOrder(order)
+  const returnable = canReturnDocument(order)
+
+  return (
+    <>
+      <div className="space-y-1.5">
+        {productLines.map((line) => (
+          <div
+            key={line.id}
+            className="bg-muted/25 flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm"
+          >
+            <div className="min-w-0">
+              <p className="truncate font-medium">{line.productName}</p>
+              <p className="text-muted-foreground text-xs tabular-nums">
+                {line.quantity} × {formatPosMoney(line.unitPrice)}
+              </p>
+            </div>
+            <p className="shrink-0 font-medium tabular-nums">
+              {formatPosMoney(line.lineTotal)}
+            </p>
+          </div>
+        ))}
+      </div>
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+        <p className="text-muted-foreground text-xs tabular-nums">
+          Paid {formatPosMoney(order.paidAmount)} of {formatPosMoney(order.totalAmount)}
+        </p>
+      </div>
+    </>
+  )
+}
+
+type SaleCardProps = {
+  order: OrderRow
+  expanded: boolean
+  onToggle: () => void
+  onReturn: () => void
+  returning: boolean
+}
+
+function SaleCard({ order, expanded, onToggle, onReturn, returning }: SaleCardProps) {
+  const items = orderItemCount(order)
+  const returnable = canReturnDocument(order)
+
+  return (
+    <article
+      className={cn(
+        panelClass,
+        "overflow-hidden transition-colors",
+        expanded && "ring-primary/25"
+      )}
+    >
+      <button
+        type="button"
+        onClick={onToggle}
+        className="hover:bg-muted/20 flex w-full items-start gap-3 px-4 py-3.5 text-left transition-colors"
+      >
+        <div className="bg-primary/10 text-primary mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg">
+          <IconReceipt className="size-4" stroke={1.75} />
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <p className="text-sm font-semibold tabular-nums tracking-tight">
+              {order.invoiceNumber}
+            </p>
+            <Badge
+              variant="outline"
+              className={cn("h-5 px-1.5 text-[10px] font-normal", statusBadgeClass(order.status))}
+            >
+              {statusLabel(order.status)}
+            </Badge>
+            <Badge
+              variant="outline"
+              className="h-5 border-border/50 px-1.5 text-[10px] font-normal"
+            >
+              {order.paymentMethod}
+            </Badge>
+          </div>
+          <p className="text-muted-foreground mt-0.5 truncate text-xs">{order.customerName}</p>
+          <p className="text-muted-foreground mt-1 text-[11px]">
+            {formatDate(order.orderDate)} · {items} item{items === 1 ? "" : "s"}
+          </p>
+        </div>
+
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          <p className="text-sm font-semibold tabular-nums">{formatPosMoney(order.totalAmount)}</p>
+          <IconChevronDown
+            className={cn(
+              "text-muted-foreground size-4 transition-transform",
+              expanded && "rotate-180"
+            )}
+            stroke={1.75}
+          />
+        </div>
+      </button>
+
+      {expanded ? (
+        <div className="border-border/40 border-t px-4 pb-4">
+          <div className="mt-3">
+            <SaleOrderLines order={order} />
+          </div>
+          <div className="mt-3">
+            <SaleOrderActions order={order} onReturn={onReturn} returning={returning} />
+          </div>
+          {!returnable ? (
+            <p className="text-muted-foreground mt-2 text-[11px]">
+              Returns available for completed, fully paid receipts only.
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+    </article>
+  )
+}
+
+type SalesHistoryTableProps = {
+  orders: OrderRow[]
+  expandedId: number | null
+  onToggle: (orderId: number) => void
+  onReturn: (order: OrderRow) => void
+  returningId: number | null
+}
+
+function SalesHistoryTable({
+  orders,
+  expandedId,
+  onToggle,
+  onReturn,
+  returningId,
+}: SalesHistoryTableProps) {
+  return (
+    <div className="overflow-hidden rounded-lg border">
+      <Table>
+        <TableHeader className="bg-muted sticky top-0 z-10">
+          <TableRow>
+            <TableHead className="w-8" />
+            <TableHead>Receipt</TableHead>
+            <TableHead>Customer</TableHead>
+            <TableHead>Date</TableHead>
+            <TableHead>Payment</TableHead>
+            <TableHead className="text-center">Items</TableHead>
+            <TableHead className="text-right">Total</TableHead>
+            <TableHead className="text-right">Paid</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {orders.map((order) => {
+            const expanded = expandedId === order.id
+            const items = orderItemCount(order)
+
+            return (
+              <React.Fragment key={order.id}>
+                <TableRow
+                  className={cn("cursor-pointer", expanded && "bg-muted/30")}
+                  onClick={() => onToggle(order.id)}
+                >
+                  <TableCell>
+                    <IconChevronDown
+                      className={cn(
+                        "text-muted-foreground size-4 transition-transform",
+                        expanded && "rotate-180"
+                      )}
+                      stroke={1.75}
+                    />
+                  </TableCell>
+                  <TableCell className="font-medium tabular-nums">
+                    {order.invoiceNumber}
+                  </TableCell>
+                  <TableCell className="max-w-[10rem] truncate">
+                    {order.customerName}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-xs tabular-nums">
+                    {formatDate(order.orderDate)}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-xs">
+                    {order.paymentMethod}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-center tabular-nums">
+                    {items}
+                  </TableCell>
+                  <TableCell className="text-right font-medium tabular-nums">
+                    {formatPosMoney(order.totalAmount)}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-right tabular-nums">
+                    {formatPosMoney(order.paidAmount)}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "h-5 px-1.5 text-[10px] font-normal",
+                        statusBadgeClass(order.status)
+                      )}
+                    >
+                      {statusLabel(order.status)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right" onClick={(event) => event.stopPropagation()}>
+                    <SaleOrderActions
+                      order={order}
+                      onReturn={() => onReturn(order)}
+                      returning={returningId === order.id}
+                      compact
+                    />
+                  </TableCell>
+                </TableRow>
+                {expanded ? (
+                  <TableRow className="bg-muted/15 hover:bg-muted/15">
+                    <TableCell colSpan={10} className="p-0">
+                      <div className="border-border/40 border-t px-4 py-4">
+                        <SaleOrderLines order={order} />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : null}
+              </React.Fragment>
+            )
+          })}
+        </TableBody>
+      </Table>
+    </div>
+  )
+}
 
 export function PosSalesHistory() {
   const { orders, getOrder, updateOrder } = useOrders()
   const { products, updateProduct } = useProducts()
   const { addReturn } = useReturns()
+
   const [search, setSearch] = React.useState("")
+  const [statusFilter, setStatusFilter] = React.useState<StatusFilter>("all")
+  const [paymentFilter, setPaymentFilter] = React.useState<PaymentFilter>("all")
+  const [expandedId, setExpandedId] = React.useState<number | null>(null)
+  const [returningId, setReturningId] = React.useState<number | null>(null)
+  const [viewLayout, setViewLayout] = React.useState<ViewLayout>("grid")
+
+  React.useEffect(() => {
+    setViewLayout(loadViewLayout())
+  }, [])
+
+  const handleViewLayoutChange = React.useCallback((layout: ViewLayout) => {
+    setViewLayout(layout)
+    saveViewLayout(layout)
+  }, [])
+
+  const allPosOrders = React.useMemo(
+    () =>
+      orders
+        .filter(isPosOrder)
+        .sort((a, b) => {
+          const dateCompare = b.orderDate.localeCompare(a.orderDate)
+          if (dateCompare !== 0) return dateCompare
+          return b.id - a.id
+        }),
+    [orders]
+  )
 
   const posOrders = React.useMemo(() => {
     const query = search.trim().toLowerCase()
-    return orders
-      .filter(isPosOrder)
-      .filter((order) => {
-        if (!query) return true
-        return (
-          order.invoiceNumber.toLowerCase().includes(query) ||
-          order.customerName.toLowerCase().includes(query)
-        )
-      })
-      .sort((a, b) => {
-        const dateCompare = b.orderDate.localeCompare(a.orderDate)
-        if (dateCompare !== 0) return dateCompare
-        return b.id - a.id
-      })
-  }, [orders, search])
+    return allPosOrders.filter((order) => {
+      if (statusFilter !== "all" && order.status !== statusFilter) return false
+      if (paymentFilter !== "all" && order.paymentMethod !== paymentFilter) return false
+      if (!query) return true
+      return (
+        order.invoiceNumber.toLowerCase().includes(query) ||
+        order.customerName.toLowerCase().includes(query) ||
+        order.paymentMethod.toLowerCase().includes(query)
+      )
+    })
+  }, [allPosOrders, paymentFilter, search, statusFilter])
+
+  const summary = React.useMemo(() => {
+    const completed = posOrders.filter((order) => order.status === "completed")
+    const pending = posOrders.filter((order) => order.status === "pending")
+    return {
+      count: posOrders.length,
+      total: sumOrderTotals(posOrders),
+      completedCount: completed.length,
+      completedTotal: sumOrderTotals(completed),
+      pendingCount: pending.length,
+    }
+  }, [posOrders])
 
   const restoreStockForReturn = React.useCallback(
     (order: OrderRow, lineIds?: number[]) => {
@@ -80,21 +511,17 @@ export function PosSalesHistory() {
   )
 
   const handleReturnOrder = React.useCallback(
-    async (order: OrderRow, lineIds?: number[]) => {
+    async (order: OrderRow) => {
       if (!canReturnDocument(order)) {
         toast.error("This sale cannot be returned.")
         return
       }
 
-      const draft = buildReturnFromOrder(order, { lineIds })
-      const scope = lineIds?.length === 1 ? "item" : "invoice"
-      const itemName =
-        scope === "item" ? draft.lines[0]?.productName : order.invoiceNumber
-
+      const draft = buildReturnFromOrder(order)
       if (
         !(await confirmReturnAction({
-          scope,
-          itemName,
+          scope: "invoice",
+          itemName: order.invoiceNumber,
           referenceNumber: order.invoiceNumber,
           totalAmount: draft.totalAmount,
           refundDue: draft.refundDue,
@@ -103,96 +530,191 @@ export function PosSalesHistory() {
         return
       }
 
-      const created = addReturn({ ...draft, status: "completed" }, {
-        getOrder,
-        onApplySales: updateOrder,
-      })
+      setReturningId(order.id)
+      try {
+        const created = addReturn({ ...draft, status: "completed" }, {
+          getOrder,
+          onApplySales: updateOrder,
+        })
 
-      restoreStockForReturn(order, lineIds)
-      toast.success(`Return ${created.returnNumber} recorded.`)
+        restoreStockForReturn(order)
+        toast.success(`Return ${created.returnNumber} recorded.`)
+      } finally {
+        setReturningId(null)
+      }
     },
     [addReturn, getOrder, restoreStockForReturn, updateOrder]
   )
 
+  const handleExport = () => {
+    if (posOrders.length === 0) {
+      toast.error("No sales to export.")
+      return
+    }
+
+    downloadRowsAsXls(
+      posOrders.map((order) => ({
+        Receipt: order.invoiceNumber,
+        Date: formatDate(order.orderDate),
+        Customer: order.customerName,
+        Payment: order.paymentMethod,
+        Status: statusLabel(order.status),
+        Total: order.totalAmount,
+        Paid: order.paidAmount,
+        Items: orderItemCount(order),
+      })),
+      "pos-sales-history.xls"
+    )
+    toast.success("Sales history exported.")
+  }
+
   return (
     <div className="flex flex-col gap-5">
-      <div>
-        <h2 className="text-xl font-semibold tracking-tight">Sales history</h2>
-        <p className="text-muted-foreground mt-1 text-sm">
-          Past register receipts. Download invoices or process returns.
-        </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight">Sales history</h2>
+          <p className="text-muted-foreground mt-1 text-sm">
+            Register receipts with line details, PDF downloads, and returns.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" variant="outline" size="sm" onClick={handleExport}>
+            <IconDownload className="size-4" />
+            Export
+          </Button>
+          <Button type="button" size="sm" asChild>
+            <Link href="/pos">
+              <IconShoppingCart className="size-4" />
+              Open register
+            </Link>
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          label="Receipts"
+          value={String(summary.count)}
+          hint={`${allPosOrders.length} total in register`}
+        />
+        <StatCard
+          label="Filtered total"
+          value={formatPosMoney(summary.total.toFixed(2))}
+          hint="All statuses in view"
+        />
+        <StatCard
+          label="Completed"
+          value={String(summary.completedCount)}
+          hint={formatPosMoney(summary.completedTotal.toFixed(2))}
+        />
+        <StatCard
+          label="Pending"
+          value={String(summary.pendingCount)}
+          hint="Awaiting payment"
+        />
       </div>
 
       <div className={cn(panelClass, "overflow-hidden")}>
         <div className="border-border/40 border-b px-4 py-4">
-          <p className="text-muted-foreground text-sm">
-            {posOrders.length} receipt{posOrders.length === 1 ? "" : "s"}
-          </p>
-          <div className="mt-3 sm:max-w-md">
+          <div className="flex items-center gap-2 overflow-x-auto">
             <SearchInput
-              placeholder="Search by receipt or customer…"
+              placeholder="Search receipt, customer, or payment…"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              icon={<IconSearch className="size-4" />}
-              className={searchInputClass}
+              icon={<IconSearch className="size-5" />}
+              className="h-11 min-w-[14rem] flex-1 rounded-full text-base shadow-sm focus-visible:ring-0 focus-visible:ring-offset-0 hover:ring-0 focus:ring-0 focus:outline-none sm:max-w-md"
             />
+            <Select
+              value={paymentFilter}
+              onValueChange={(value) => setPaymentFilter(value as PaymentFilter)}
+            >
+              <SelectTrigger className="h-11 w-[150px] shrink-0">
+                <SelectValue placeholder="Payment method" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All payments</SelectItem>
+                {PAYMENT_METHODS.map((method) => (
+                  <SelectItem key={method} value={method}>
+                    {method}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="border-border/40 flex shrink-0 items-center gap-1.5 border-l pl-2">
+              <button
+                type="button"
+                onClick={() => setStatusFilter("all")}
+                className={cn(
+                  "rounded-full px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors ring-1",
+                  statusFilter === "all"
+                    ? "bg-primary text-primary-foreground ring-primary"
+                    : "bg-muted/30 text-muted-foreground ring-border/40 hover:text-foreground"
+                )}
+              >
+                All
+              </button>
+              {ORDER_STATUSES.map((status) => (
+                <button
+                  key={status}
+                  type="button"
+                  onClick={() => setStatusFilter(status)}
+                  className={cn(
+                    "rounded-full px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors ring-1",
+                    statusFilter === status
+                      ? "bg-primary text-primary-foreground ring-primary"
+                      : "bg-muted/30 text-muted-foreground ring-border/40 hover:text-foreground"
+                  )}
+                >
+                  {statusLabel(status)}
+                </button>
+              ))}
+            </div>
+            <ViewLayoutToggle value={viewLayout} onChange={handleViewLayoutChange} />
           </div>
         </div>
 
         <div className="p-4">
           {posOrders.length === 0 ? (
-            <p className="text-muted-foreground py-12 text-center text-sm">
-              No POS sales yet. Complete a sale from the register.
-            </p>
+            <div className="flex flex-col items-center justify-center gap-2 py-14 text-center">
+              <div className="bg-muted/60 text-muted-foreground flex size-12 items-center justify-center rounded-2xl">
+                <IconReceipt className="size-5" stroke={1.5} />
+              </div>
+              <p className="text-sm font-medium">No sales match</p>
+              <p className="text-muted-foreground max-w-sm text-xs">
+                {allPosOrders.length === 0
+                  ? "Complete a sale from the register to see receipts here."
+                  : "Try a different search or filter."}
+              </p>
+              {allPosOrders.length === 0 ? (
+                <Button type="button" size="sm" className="mt-2" asChild>
+                  <Link href="/pos">Go to register</Link>
+                </Button>
+              ) : null}
+            </div>
+          ) : viewLayout === "list" ? (
+            <SalesHistoryTable
+              orders={posOrders}
+              expandedId={expandedId}
+              onToggle={(orderId) =>
+                setExpandedId((current) => (current === orderId ? null : orderId))
+              }
+              onReturn={handleReturnOrder}
+              returningId={returningId}
+            />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[640px] text-sm">
-                <thead>
-                  <tr className="text-muted-foreground border-border/40 border-b text-left text-xs tracking-wide uppercase">
-                    <th className="pb-3 pr-4 font-medium">Receipt</th>
-                    <th className="pb-3 pr-4 font-medium">Date</th>
-                    <th className="pb-3 pr-4 font-medium">Customer</th>
-                    <th className="pb-3 pr-4 font-medium">Payment</th>
-                    <th className="pb-3 pr-4 text-right font-medium">Total</th>
-                    <th className="pb-3 text-right font-medium">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {posOrders.map((order) => (
-                    <tr
-                      key={order.id}
-                      className="border-border/30 border-b last:border-0 hover:bg-muted/20"
-                    >
-                      <td className="py-3.5 pr-4 font-medium">{order.invoiceNumber}</td>
-                      <td className="text-muted-foreground py-3.5 pr-4">{order.orderDate}</td>
-                      <td className="py-3.5 pr-4">{order.customerName}</td>
-                      <td className="py-3.5 pr-4">{order.paymentMethod}</td>
-                      <td className="py-3.5 pr-4 text-right font-medium tabular-nums">
-                        {formatPosMoney(order.totalAmount)}
-                      </td>
-                      <td className="py-3.5 text-right">
-                        <div className="flex justify-end gap-2">
-                          <InvoicePdfButton
-                            order={order}
-                            size="sm"
-                            variant="outline"
-                            label="PDF"
-                          />
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            disabled={!canReturnDocument(order)}
-                            onClick={() => handleReturnOrder(order)}
-                          >
-                            Return
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="grid gap-2 lg:grid-cols-2">
+              {posOrders.map((order) => (
+                <SaleCard
+                  key={order.id}
+                  order={order}
+                  expanded={expandedId === order.id}
+                  onToggle={() =>
+                    setExpandedId((current) => (current === order.id ? null : order.id))
+                  }
+                  onReturn={() => handleReturnOrder(order)}
+                  returning={returningId === order.id}
+                />
+              ))}
             </div>
           )}
         </div>

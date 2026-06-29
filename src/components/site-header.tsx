@@ -45,6 +45,12 @@ function titleForPath(pathname: string | null): string {
     return "Inventory"
   }
   if (pathname === "/settings") return "Settings"
+  if (pathname === "/tax") return "Tax Helper"
+  if (pathname === "/tax/profit-loss") return "Profit & loss"
+  if (pathname === "/tax/balance-sheet") return "Balance sheet"
+  if (pathname === "/tax/year-summary") return "Year summary"
+  if (pathname === "/tax/settings") return "Tax settings"
+  if (pathname.startsWith("/tax")) return "Tax Helper"
   return "Documents"
 }
 

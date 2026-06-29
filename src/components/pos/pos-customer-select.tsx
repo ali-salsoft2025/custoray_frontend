@@ -46,8 +46,8 @@ export function PosCustomerSelect({
         pageSize={10}
         onAddNew={onAddCustomer}
         addNewLabel="Add customer"
-        leadingIcon={<IconUser className="size-3.5" stroke={1.75} />}
-        className="h-9 min-w-0 flex-1 rounded-full text-xs shadow-sm"
+        leadingIcon={<IconUser className="size-4" stroke={1.75} />}
+        className="h-10 min-w-0 flex-1 rounded-full text-sm shadow-sm"
       />
 
       {hasSelectedCustomer ? (
@@ -55,22 +55,22 @@ export function PosCustomerSelect({
           type="button"
           variant="outline"
           size="icon"
-          className="size-9 shrink-0 rounded-full"
+          className="size-10 shrink-0 rounded-full"
           onClick={onClearCustomer}
           aria-label={`Clear ${customerName}`}
         >
-          <IconX className="size-3.5" />
+          <IconX className="size-4" />
         </Button>
       ) : (
         <Button
           type="button"
           variant="outline"
           size="icon"
-          className="size-9 shrink-0 rounded-full"
+          className="size-10 shrink-0 rounded-full"
           onClick={onAddCustomer}
           aria-label="Add customer"
         >
-          <IconPlus className="size-3.5" />
+          <IconPlus className="size-4" />
         </Button>
       )}
     </div>

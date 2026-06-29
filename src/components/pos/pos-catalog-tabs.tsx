@@ -13,7 +13,7 @@ type PosCatalogTabsProps = {
 }
 
 const tabTriggerClass =
-  "text-muted-foreground hover:text-foreground data-[state=active]:text-primary relative mx-1 h-auto shrink-0 flex-none rounded-none border-0 border-b-2 border-transparent bg-transparent px-3 py-2 text-xs font-medium whitespace-nowrap shadow-none transition-colors first:ml-0 last:mr-0 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:font-semibold data-[state=active]:shadow-none"
+  "text-muted-foreground hover:text-foreground data-[state=active]:text-primary relative mx-1 h-auto shrink-0 flex-none rounded-none border-0 border-b-2 border-transparent bg-transparent px-4 py-2.5 text-sm font-medium whitespace-nowrap shadow-none transition-colors first:ml-0 last:mr-0 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:font-semibold data-[state=active]:shadow-none"
 
 const tabListClass =
   "bg-transparent text-muted-foreground -mb-px inline-flex h-auto w-max min-w-full flex-nowrap items-center justify-start gap-x-1 rounded-none border-0 px-1 py-0 shadow-none"

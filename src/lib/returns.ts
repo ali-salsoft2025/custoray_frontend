@@ -3,6 +3,25 @@ import { z } from "zod"
 import { formatMoney, parseMoney } from "@/lib/customers"
 import { computeLineTotal, computeOrderTotal, type OrderRow } from "@/lib/orders"
 import { computePurchaseTotal, type PurchaseRow } from "@/lib/purchases"
+import {
+  cartLineTotal,
+  normalizeDiscountAmount,
+  POS_DISCOUNT_LINE_NAME,
+  type PosCartLine,
+} from "@/lib/pos"
+
+export const POS_RETURN_DESCRIPTION = "POS return"
+
+export function isPosReturn(
+  returnDoc: Pick<ReturnRow, "type" | "sourceId" | "description">
+): boolean {
+  return (
+    returnDoc.type === "sales" &&
+    returnDoc.sourceId === 0 &&
+    (returnDoc.description === POS_RETURN_DESCRIPTION ||
+      returnDoc.description.startsWith(`${POS_RETURN_DESCRIPTION} ·`))
+  )
+}
 
 export { formatMoney }
 
@@ -166,6 +185,82 @@ export function buildReturnFromOrder(
     refundDue: impact.refundDue,
     balanceDue: impact.balanceDue,
     status: "pending",
+    lines: lines.length > 0 ? lines : [{ ...EMPTY_RETURN_LINE }],
+  }
+}
+
+export function buildPosReturnFromCart(
+  cart: PosCartLine[],
+  options: {
+    customerName: string
+    returnNumber: string
+    returnDate?: string
+    discountAmount?: string
+    status?: ReturnRow["status"]
+  }
+): Omit<ReturnRow, "id"> {
+  const productLines: ReturnLineRow[] = cart.map((line, index) => {
+    const lineTotal = cartLineTotal(line)
+    const effectiveUnitPrice =
+      line.quantity > 0
+        ? (Number(lineTotal) / line.quantity).toFixed(2)
+        : line.unitPrice
+
+    return {
+      id: index + 1,
+      sourceLineId: index + 1,
+      productName: line.productName,
+      quantity: line.quantity,
+      maxQuantity: line.quantity,
+      unitPrice: effectiveUnitPrice,
+      lineTotal,
+    }
+  })
+
+  const subtotal = computeReturnTotal(productLines)
+  const discount = normalizeDiscountAmount(subtotal, options.discountAmount ?? "0")
+
+  const lines =
+    Number(discount) > 0
+      ? [
+          ...productLines,
+          {
+            id: productLines.length + 1,
+            sourceLineId: productLines.length + 1,
+            productName: POS_DISCOUNT_LINE_NAME,
+            quantity: 1,
+            maxQuantity: 1,
+            unitPrice: `-${discount}`,
+            lineTotal: `-${discount}`,
+          },
+        ]
+      : productLines
+
+  const totalAmount = computeReturnTotal(lines)
+
+  const description =
+    Number(discount) > 0
+      ? `${POS_RETURN_DESCRIPTION} · Discount ${discount}`
+      : POS_RETURN_DESCRIPTION
+
+  const status = options.status ?? "completed"
+
+  return {
+    returnNumber: options.returnNumber,
+    type: "sales",
+    sourceId: 0,
+    referenceNumber: options.returnNumber,
+    partyName: options.customerName.trim() || "Walk-in",
+    returnDate: options.returnDate ?? new Date().toISOString().slice(0, 10),
+    description,
+    totalAmount,
+    refundedAmount: status === "completed" ? totalAmount : "0.00",
+    sourcePaidAmount: "0.00",
+    sourceTotalBefore: "0.00",
+    sourceTotalAfter: "0.00",
+    refundDue: totalAmount,
+    balanceDue: "0.00",
+    status,
     lines: lines.length > 0 ? lines : [{ ...EMPTY_RETURN_LINE }],
   }
 }

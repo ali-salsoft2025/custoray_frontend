@@ -9,6 +9,7 @@ import {
   cartLineAdjustment,
   cartLineBaseTotal,
   cartLineHasAdjustment,
+  cartLineTotal,
   type PosCartLine,
 } from "@/lib/pos"
 import { cn } from "@/lib/utils"
@@ -19,6 +20,7 @@ type PosCartLineControlsProps = {
   onQuantityChange: (productId: number, quantity: number) => void
   onFinalPriceChange: (productId: number, finalLineTotal: string | undefined) => void
   onRemove: (productId: number) => void
+  allowLinePriceEdit?: boolean
 }
 
 export function PosCartLineControls({
@@ -27,6 +29,7 @@ export function PosCartLineControls({
   onQuantityChange,
   onFinalPriceChange,
   onRemove,
+  allowLinePriceEdit = true,
 }: PosCartLineControlsProps) {
   const [qtyDraft, setQtyDraft] = React.useState(String(line.quantity))
   const [priceDraft, setPriceDraft] = React.useState("")
@@ -69,21 +72,19 @@ export function PosCartLineControls({
   }
 
   return (
-    <div className="space-y-2 border-t border-border/30 pt-2">
-      <div className="grid grid-cols-[1fr_1fr_auto] items-end gap-2">
+    <div className="space-y-3 border-t border-border/30 pt-3">
+      <div className={cn("grid items-end gap-3", allowLinePriceEdit ? "grid-cols-[1fr_1fr_auto]" : "grid-cols-[1fr_auto]")}>
         <div>
-          <p className="text-muted-foreground mb-1 text-[10px] font-medium uppercase tracking-wide">
-            Qty
-          </p>
-          <div className="flex items-center gap-0.5">
+          <p className="text-muted-foreground mb-1.5 text-xs font-medium">Quantity</p>
+          <div className="flex items-center gap-1">
             <Button
               type="button"
               variant="outline"
               size="icon"
-              className="size-7 shrink-0 rounded-md"
+              className="size-9 shrink-0 rounded-lg"
               onClick={() => applyQuantity(String(Math.max(1, line.quantity - 1)))}
             >
-              <IconMinus className="size-3" />
+              <IconMinus className="size-3.5" />
             </Button>
             <Input
               inputMode="numeric"
@@ -93,52 +94,57 @@ export function PosCartLineControls({
                 if (qtyDraft.trim()) applyQuantity(qtyDraft)
                 else setQtyDraft(String(line.quantity))
               }}
-              className="h-7 px-1 text-center text-xs font-semibold tabular-nums"
+              className="h-9 px-1 text-center text-sm font-semibold tabular-nums"
             />
             <Button
               type="button"
               variant="outline"
               size="icon"
-              className="size-7 shrink-0 rounded-md"
+              className="size-9 shrink-0 rounded-lg"
               onClick={() =>
                 applyQuantity(String(Math.min(line.maxStock, line.quantity + 1)))
               }
             >
-              <IconPlus className="size-3" />
+              <IconPlus className="size-3.5" />
             </Button>
           </div>
         </div>
 
-        <div>
-          <p className="text-muted-foreground mb-1 text-[10px] font-medium uppercase tracking-wide">
-            Total
-          </p>
-          <Input
-            inputMode="decimal"
-            value={priceDraft}
-            onChange={(event) =>
-              setPriceDraft(event.target.value.replace(/[^\d.]/g, ""))
-            }
-            onBlur={() => {
-              if (priceDraft.trim()) applyPrice(priceDraft)
-            }}
-            className="h-7 text-xs font-semibold tabular-nums"
-          />
-        </div>
+        {allowLinePriceEdit ? (
+          <div>
+            <p className="text-muted-foreground mb-1.5 text-xs font-medium">Line total</p>
+            <Input
+              inputMode="decimal"
+              value={priceDraft}
+              onChange={(event) =>
+                setPriceDraft(event.target.value.replace(/[^\d.]/g, ""))
+              }
+              onBlur={() => {
+                if (priceDraft.trim()) applyPrice(priceDraft)
+              }}
+              className="h-9 text-sm font-semibold tabular-nums"
+            />
+          </div>
+        ) : (
+          <div className="flex flex-col justify-end pb-1">
+            <p className="text-muted-foreground text-xs font-medium">Line total</p>
+            <p className="text-sm font-semibold tabular-nums">{formatMoney(cartLineTotal(line))}</p>
+          </div>
+        )}
 
         <Button
           type="button"
           variant="ghost"
           size="icon"
-          className="text-muted-foreground hover:text-destructive size-7 shrink-0"
+          className="text-muted-foreground hover:text-destructive size-9 shrink-0"
           onClick={() => onRemove(line.productId)}
           aria-label="Remove"
         >
-          <IconTrash className="size-3.5" />
+          <IconTrash className="size-4" />
         </Button>
       </div>
 
-      <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px]">
+      <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
         <span>List {formatMoney(baseTotal)}</span>
         {hasAdjustment ? (
           <>

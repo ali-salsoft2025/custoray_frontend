@@ -125,6 +125,33 @@ export async function confirmReturnAction({
   return result.isConfirmed
 }
 
+type ConfirmPosSaleOptions = {
+  invoiceNumber: string
+  totalAmount: string
+  customerName: string
+  status: string
+}
+
+export async function confirmPosSaleAction({
+  invoiceNumber,
+  totalAmount,
+  customerName,
+  status,
+}: ConfirmPosSaleOptions): Promise<boolean> {
+  const result = await Swal.fire({
+    title: `Complete ${invoiceNumber}?`,
+    text: `${customerName} · ${totalAmount} · ${status.charAt(0).toUpperCase()}${status.slice(1)}`,
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonText: "Yes, complete",
+    cancelButtonText: "Cancel",
+    reverseButtons: true,
+    focusCancel: true,
+  })
+
+  return result.isConfirmed
+}
+
 export async function confirmDuplicateAction({
   itemName,
   entityLabel = "item",

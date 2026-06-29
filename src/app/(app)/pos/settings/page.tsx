@@ -1,10 +1,5 @@
-import { PosPlaceholderPage } from "@/components/pos/pos-placeholder-page"
+import { PosSettingsPanel } from "@/components/pos/pos-settings-panel"
 
 export default function PosSettingsPage() {
-  return (
-    <PosPlaceholderPage
-      title="POS settings"
-      description="Configure receipt layout, payment methods, and register defaults."
-    />
-  )
+  return <PosSettingsPanel />
 }

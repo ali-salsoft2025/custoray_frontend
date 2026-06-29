@@ -141,27 +141,9 @@ const data = {
       items: [
         { title: "Register", url: "/pos", icon: ShoppingCart },
         { title: "Sales History", url: "/pos/sales", icon: History },
+        { title: "Returns History", url: "/pos/returns", icon: RotateCcw },
         { title: "Reports", url: "/pos/reports", icon: FileBarChart },
         { title: "Settings", url: "/pos/settings", icon: Settings },
-      ],
-    },
-    {
-      title: "Tax",
-      url: "#",
-      icon: ReceiptText,
-      items: [
-        { title: "Tax Reports", url: "#", icon: FileBarChart },
-        { title: "Tax Summary", url: "#", icon: FileText },
-        { title: "Tax by Period", url: "#", icon: Calendar },
-        { title: "Tax Compliance", url: "#", icon: ShieldCheck },
-        { title: "Tax Settings", url: "#", icon: Settings },
-        { title: "Tax Rates", url: "#", icon: Percent },
-        { title: "Tax Groups", url: "#", icon: UsersRound },
-        { title: "Tax Configuration", url: "#", icon: SlidersHorizontal },
-        { title: "Tax Returns", url: "#", icon: FileUp },
-        { title: "File Return", url: "#", icon: Files },
-        { title: "Return History", url: "#", icon: History },
-        { title: "Forms", url: "#", icon: FileText },
       ],
     },
     {

@@ -1,0 +1,61 @@
+"use client"
+
+import { formatDate, type ReturnRow } from "@/lib/returns"
+import { cn } from "@/lib/utils"
+
+type PosReturnPanelProps = {
+  nextReturnNumber: string
+  lastCreated: ReturnRow | null
+  justCreated: ReturnRow | null
+  formatMoney: (value: string) => string
+  onDismissJustCreated?: () => void
+  className?: string
+}
+
+export function PosReturnPanel({
+  nextReturnNumber,
+  lastCreated,
+  justCreated,
+  formatMoney,
+  onDismissJustCreated,
+  className,
+}: PosReturnPanelProps) {
+  return (
+    <div
+      className={cn(
+        "rounded-xl bg-card px-3 py-2 text-xs shadow-sm shadow-black/[0.04] ring-1 ring-border/40",
+        className
+      )}
+    >
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="text-muted-foreground">Next return</span>
+        <span className="font-semibold tabular-nums">{nextReturnNumber}</span>
+      </div>
+
+      {justCreated ? (
+        <div className="bg-muted/40 mt-2 flex items-start justify-between gap-2 rounded-md px-2 py-1.5">
+          <div className="min-w-0">
+            <p className="font-medium tabular-nums">{justCreated.returnNumber}</p>
+            <p className="text-muted-foreground truncate text-[10px]">
+              {justCreated.partyName} · {formatMoney(justCreated.totalAmount)}
+            </p>
+          </div>
+          {onDismissJustCreated ? (
+            <button
+              type="button"
+              onClick={onDismissJustCreated}
+              className="text-muted-foreground hover:text-foreground shrink-0 text-[10px]"
+            >
+              ×
+            </button>
+          ) : null}
+        </div>
+      ) : lastCreated ? (
+        <p className="text-muted-foreground mt-1 truncate text-[10px]">
+          Last {lastCreated.returnNumber} · {formatDate(lastCreated.returnDate)} ·{" "}
+          {formatMoney(lastCreated.totalAmount)}
+        </p>
+      ) : null}
+    </div>
+  )
+}

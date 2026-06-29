@@ -15,6 +15,7 @@ import { CustomerDetail } from "@/components/customers/customer-detail"
 import { CustomerForm } from "@/components/customers/customer-form"
 import { DataTableColumnHeader } from "@/components/data-table-column-header"
 import { DataTable, type DataTableTab } from "@/components/data-table"
+import { StatCard, StatCardsGrid, sumNumericField } from "@/components/stat-card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -275,6 +276,21 @@ export default function CustomersPage() {
   } = useCustomers()
   const [sidebar, setSidebar] = useState<CustomerSidebarState>(null)
 
+  const customerStats = useMemo(() => {
+    const active = customers.filter((customer) => customer.status === "active")
+    const outstanding = customers.reduce((acc, customer) => {
+      const balance = Number(computeBalance(customer))
+      return acc + (Number.isFinite(balance) && balance > 0 ? balance : 0)
+    }, 0)
+    const totalSales = sumNumericField(customers, (customer) => customer.totalSales)
+    return {
+      count: customers.length,
+      activeCount: active.length,
+      outstanding,
+      totalSales,
+    }
+  }, [customers])
+
   const closeSidebar = () => setSidebar(null)
 
   const handleDelete = useCallback(
@@ -454,6 +470,29 @@ export default function CustomersPage() {
           ) : null}
         </SheetContent>
       </Sheet>
+
+      <StatCardsGrid className="mb-5">
+        <StatCard
+          label="Customers"
+          value={String(customerStats.count)}
+          hint={`${customerStats.activeCount} active`}
+        />
+        <StatCard
+          label="Active"
+          value={String(customerStats.activeCount)}
+          hint={`${customerStats.count - customerStats.activeCount} inactive`}
+        />
+        <StatCard
+          label="Outstanding"
+          value={formatMoney(customerStats.outstanding.toFixed(2))}
+          hint="Receivable balance"
+        />
+        <StatCard
+          label="Total sales"
+          value={formatMoney(customerStats.totalSales.toFixed(2))}
+          hint="Lifetime volume"
+        />
+      </StatCardsGrid>
 
       <DataTable
         data={customers}

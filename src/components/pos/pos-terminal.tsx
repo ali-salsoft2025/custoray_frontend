@@ -9,24 +9,31 @@ import {
 import { toast } from "sonner"
 
 import { CustomerQuickAddSheet } from "@/components/customers/customer-quick-add-sheet"
-import { InvoicePdfButton } from "@/components/invoices/invoice-pdf-button"
+import { downloadInvoicePdf } from "@/components/invoices/invoice-pdf-button"
 import { PosCartPanel } from "@/components/pos/pos-cart-panel"
 import { applyPosDiscount } from "@/components/pos/pos-cart-checkout"
 import { PosCatalogTabs } from "@/components/pos/pos-catalog-tabs"
 import { PosCustomerSelect } from "@/components/pos/pos-customer-select"
 import { PosInvoicePanel } from "@/components/pos/pos-invoice-panel"
+import { PosReturnPanel } from "@/components/pos/pos-return-panel"
 import { PosRecentSales } from "@/components/pos/pos-recent-sales"
 import { PosProductCard } from "@/components/pos/pos-product-card"
-import { Button } from "@/components/ui/button"
 import { SearchInput } from "@/components/ui/search-input"
 import { useCustomers } from "@/context/customers-context"
 import { useOrders } from "@/context/orders-context"
+import { usePosSettings } from "@/context/pos-settings-context"
+import { catalogGridClass } from "@/lib/pos-settings"
 import { useProducts } from "@/context/products-context"
 import { useReturns } from "@/context/returns-context"
-import { confirmReturnAction } from "@/lib/confirm-action"
+import { confirmPosSaleAction, confirmReturnAction } from "@/lib/confirm-action"
 import { formatMoney } from "@/lib/customers"
-import { buildReturnFromOrder } from "@/lib/returns"
 import { type OrderRow } from "@/lib/orders"
+import {
+  buildPosReturnFromCart,
+  isPosReturn,
+  nextReturnNumber,
+  type ReturnRow,
+} from "@/lib/returns"
 import {
   buildPosOrderFromCart,
   cartSubtotal,
@@ -34,9 +41,9 @@ import {
   isPosOrder,
   nextPosInvoiceNumber,
   posCatalogProducts,
+  posReturnCatalogProducts,
   type PosCartLine,
 } from "@/lib/pos"
-import { canReturnDocument } from "@/lib/return-eligibility"
 import type { CustomerRow } from "@/lib/customers"
 import type { ProductRow } from "@/lib/products"
 import { cn } from "@/lib/utils"
@@ -45,19 +52,30 @@ function formatPosMoney(value: string) {
   return formatMoney(value).replace(/^\$/, "Rs ")
 }
 
+function formatPosReturnMoney(value: string) {
+  const amount = Number(value)
+  if (!Number.isFinite(amount) || Math.abs(amount) < 0.005) {
+    return formatPosMoney("0.00")
+  }
+  return `−${formatPosMoney(Math.abs(amount).toFixed(2))}`
+}
+
 const WALK_IN_CUSTOMER_ID = "walk-in"
+const RETURN_MAX_QTY = 9999
 
 const panelClass =
   "rounded-2xl bg-card shadow-sm shadow-black/[0.04] ring-1 ring-border/40"
 
 const searchInputClass =
-  "h-9 rounded-full text-sm shadow-sm focus-visible:ring-0 focus-visible:ring-offset-0 hover:ring-0 focus:ring-0 focus:outline-none min-w-0 flex-1"
+  "h-10 rounded-full text-sm shadow-sm focus-visible:ring-0 focus-visible:ring-offset-0 hover:ring-0 focus:ring-0 focus:outline-none min-w-0 flex-1"
 
 export function PosTerminal() {
   const { products, getProduct, updateProduct } = useProducts()
   const { customers } = useCustomers()
-  const { orders, addOrder, getOrder, updateOrder } = useOrders()
-  const { addReturn } = useReturns()
+  const { orders, addOrder } = useOrders()
+  const { returns, addReturn } = useReturns()
+  const { settings, hydrated } = usePosSettings()
+  const searchInputRef = React.useRef<HTMLInputElement>(null)
 
   const [mode, setMode] = React.useState<"sale" | "return">("sale")
   const [search, setSearch] = React.useState("")
@@ -70,11 +88,35 @@ export function PosTerminal() {
   const [customerQuickAddOpen, setCustomerQuickAddOpen] = React.useState(false)
   const [paymentMethod, setPaymentMethod] =
     React.useState<OrderRow["paymentMethod"]>("Cash")
+  const [documentStatus, setDocumentStatus] =
+    React.useState<OrderRow["status"]>("completed")
   const [lastSale, setLastSale] = React.useState<OrderRow | null>(null)
-  const [returnSearch, setReturnSearch] = React.useState("")
+  const [lastReturn, setLastReturn] = React.useState<ReturnRow | null>(null)
   const [processing, setProcessing] = React.useState(false)
+  const [paidAmountDraft, setPaidAmountDraft] = React.useState("")
 
-  const catalog = React.useMemo(() => posCatalogProducts(products), [products])
+  const isSale = mode === "sale"
+
+  React.useEffect(() => {
+    if (!hydrated) return
+    setMode(settings.defaultRegisterMode)
+    setPaymentMethod(settings.defaultPaymentMethod)
+    setDocumentStatus(
+      settings.defaultRegisterMode === "sale"
+        ? settings.defaultSaleStatus
+        : settings.defaultReturnStatus
+    )
+  }, [hydrated, settings.defaultPaymentMethod, settings.defaultRegisterMode, settings.defaultReturnStatus, settings.defaultSaleStatus])
+
+  const catalog = React.useMemo(
+    () =>
+      isSale
+        ? posCatalogProducts(products, {
+            hideOutOfStock: settings.hideOutOfStockOnSale,
+          })
+        : posReturnCatalogProducts(products),
+    [isSale, products, settings.hideOutOfStockOnSale]
+  )
 
   const customerName = React.useMemo(() => {
     if (customerId === WALK_IN_CUSTOMER_ID) return "Walk-in"
@@ -131,6 +173,12 @@ export function PosTerminal() {
     [discountAmount, subtotal]
   )
 
+  React.useEffect(() => {
+    if (settings.allowPartialPayment && isSale) {
+      setPaidAmountDraft(checkoutTotals.total)
+    }
+  }, [checkoutTotals.total, isSale, settings.allowPartialPayment])
+
   const posOrders = React.useMemo(() => {
     return orders
       .filter(isPosOrder)
@@ -142,85 +190,137 @@ export function PosTerminal() {
   }, [orders])
 
   const nextInvoice = React.useMemo(
-    () => nextPosInvoiceNumber(orders),
-    [orders]
+    () => nextPosInvoiceNumber(orders, settings.receiptPrefix),
+    [orders, settings.receiptPrefix]
   )
 
-  const recentSales = React.useMemo(() => posOrders.slice(0, 6), [posOrders])
+  const recentSales = React.useMemo(
+    () => posOrders.slice(0, settings.recentSalesLimit),
+    [posOrders, settings.recentSalesLimit]
+  )
 
   const lastCreatedInvoice = posOrders[0] ?? null
 
-  const filteredReturnOrders = React.useMemo(() => {
-    const query = returnSearch.trim().toLowerCase()
-    if (!query) return posOrders.slice(0, 30)
-    return posOrders
-      .filter(
-        (order) =>
-          order.invoiceNumber.toLowerCase().includes(query) ||
-          order.customerName.toLowerCase().includes(query)
-      )
-      .slice(0, 30)
-  }, [posOrders, returnSearch])
+  const nextReturn = React.useMemo(
+    () => nextReturnNumber(returns, "sales"),
+    [returns]
+  )
 
-  const addToCart = React.useCallback((product: ProductRow) => {
-    if (product.stock <= 0) {
-      toast.error(`${product.name} is out of stock.`)
-      return
-    }
+  const posReturns = React.useMemo(() => {
+    return returns
+      .filter(isPosReturn)
+      .sort((a, b) => {
+        const dateCompare = b.returnDate.localeCompare(a.returnDate)
+        if (dateCompare !== 0) return dateCompare
+        return b.id - a.id
+      })
+  }, [returns])
 
-    setCart((prev) => {
-      const existing = prev.find((line) => line.productId === product.id)
-      if (existing) {
-        if (existing.quantity >= product.stock) {
-          toast.error(`Only ${product.stock} in stock for ${product.name}.`)
-          return prev
+  const lastCreatedReturn = posReturns[0] ?? null
+
+  const formatRegisterMoney = isSale ? formatPosMoney : formatPosReturnMoney
+
+  const addToCart = React.useCallback(
+    (product: ProductRow) => {
+      if (isSale) {
+        const canOversell = settings.allowOverselling
+        if (!canOversell && product.stock <= 0) {
+          toast.error(`${product.name} is out of stock.`)
+          return
         }
-        return prev.map((line) =>
-          line.productId === product.id
-            ? { ...line, quantity: line.quantity + 1, maxStock: product.stock }
-            : line
-        )
-      }
-      return [
-        ...prev,
-        {
-          productId: product.id,
-          productName: product.name,
-          sku: product.sku,
-          quantity: 1,
-          unitPrice: product.salePrice,
-          maxStock: product.stock,
-        },
-      ]
-    })
-    setSelectedProductId(product.id)
-  }, [])
 
-  const setLineQuantity = React.useCallback((productId: number, quantity: number) => {
-    setCart((prev) =>
-      prev
-        .map((line) => {
-          if (line.productId !== productId) return line
-          if (quantity <= 0) return null
-          if (quantity > line.maxStock) {
-            toast.error(`Only ${line.maxStock} in stock.`)
-            return line
+        const maxStock = canOversell ? RETURN_MAX_QTY : product.stock
+
+        setCart((prev) => {
+          const existing = prev.find((line) => line.productId === product.id)
+          if (existing) {
+            if (!canOversell && existing.quantity >= product.stock) {
+              toast.error(`Only ${product.stock} in stock for ${product.name}.`)
+              return prev
+            }
+            return prev.map((line) =>
+              line.productId === product.id
+                ? { ...line, quantity: line.quantity + 1, maxStock }
+                : line
+            )
           }
-          return { ...line, quantity }
+          return [
+            ...prev,
+            {
+              productId: product.id,
+              productName: product.name,
+              sku: product.sku,
+              quantity: 1,
+              unitPrice: product.salePrice,
+              maxStock,
+            },
+          ]
         })
-        .filter((line): line is PosCartLine => line !== null)
-    )
-  }, [])
+      } else {
+        setCart((prev) => {
+          const existing = prev.find((line) => line.productId === product.id)
+          if (existing) {
+            return prev.map((line) =>
+              line.productId === product.id
+                ? {
+                    ...line,
+                    quantity: line.quantity + 1,
+                    maxStock: RETURN_MAX_QTY,
+                  }
+                : line
+            )
+          }
+          return [
+            ...prev,
+            {
+              productId: product.id,
+              productName: product.name,
+              sku: product.sku,
+              quantity: 1,
+              unitPrice: product.salePrice,
+              maxStock: RETURN_MAX_QTY,
+            },
+          ]
+        })
+      }
+      setSelectedProductId(product.id)
+    },
+    [isSale, settings.allowOverselling]
+  )
+
+  const setLineQuantity = React.useCallback(
+    (productId: number, quantity: number) => {
+      setCart((prev) =>
+        prev
+          .map((line) => {
+            if (line.productId !== productId) return line
+            if (quantity <= 0) return null
+            if (
+              isSale &&
+              !settings.allowOverselling &&
+              quantity > line.maxStock
+            ) {
+              toast.error(`Only ${line.maxStock} in stock.`)
+              return line
+            }
+            return { ...line, quantity }
+          })
+          .filter((line): line is PosCartLine => line !== null)
+      )
+    },
+    [isSale, settings.allowOverselling]
+  )
 
   const setLineFinalPrice = React.useCallback(
     (productId: number, finalLineTotal: string | undefined) => {
+      if (!settings.allowLinePriceEdit) return
       setCart((prev) =>
         prev.map((line) =>
           line.productId === productId ? { ...line, finalLineTotal } : line
         )
       )
     },
-    []
+    [settings.allowLinePriceEdit]
   )
 
   const removeFromCart = React.useCallback((productId: number) => {
@@ -245,20 +345,55 @@ export function PosTerminal() {
     setCustomerId(WALK_IN_CUSTOMER_ID)
   }, [])
 
-  const resetAfterSale = React.useCallback(() => {
+  const resetRegister = React.useCallback(() => {
     setCart([])
     setSelectedProductId(null)
     setDiscountAmount("0.00")
     setDiscountDraft("")
     setCustomerId(WALK_IN_CUSTOMER_ID)
-    setPaymentMethod("Cash")
-  }, [])
+    setPaymentMethod(settings.defaultPaymentMethod)
+    setDocumentStatus(
+      isSale ? settings.defaultSaleStatus : settings.defaultReturnStatus
+    )
+    setPaidAmountDraft("")
+  }, [
+    isSale,
+    settings.defaultPaymentMethod,
+    settings.defaultReturnStatus,
+    settings.defaultSaleStatus,
+  ])
+
+  const switchMode = React.useCallback(
+    (nextMode: "sale" | "return") => {
+      if (nextMode === mode) return
+      clearCart()
+      setSearch("")
+      setBrand("all")
+      setDocumentStatus(
+        nextMode === "sale"
+          ? settings.defaultSaleStatus
+          : settings.defaultReturnStatus
+      )
+      setMode(nextMode)
+    },
+    [
+      clearCart,
+      mode,
+      settings.defaultReturnStatus,
+      settings.defaultSaleStatus,
+    ]
+  )
 
   const applyDiscount = React.useCallback(() => {
-    const applied = applyPosDiscount(subtotal, discountDraft)
+    let applied = applyPosDiscount(subtotal, discountDraft)
+    if (settings.maxDiscountPercent > 0) {
+      const cap =
+        Number(subtotal) * (settings.maxDiscountPercent / 100)
+      applied = Math.min(Number(applied), cap).toFixed(2)
+    }
     setDiscountAmount(applied)
     setDiscountDraft(applied === "0.00" ? "" : applied)
-  }, [discountDraft, subtotal])
+  }, [discountDraft, settings.maxDiscountPercent, subtotal])
 
   const clearDiscount = React.useCallback(() => {
     setDiscountAmount("0.00")
@@ -269,31 +404,18 @@ export function PosTerminal() {
     setCustomerId(String(customer.id))
   }, [])
 
-  const restoreStockForReturn = React.useCallback(
-    (order: OrderRow, lineIds?: number[]) => {
-      const lineFilter = lineIds?.length
-        ? (line: OrderRow["lines"][number]) => lineIds.includes(line.id)
-        : () => true
-
-      const qtyByProductId = new Map<number, number>()
-      for (const line of order.lines.filter(lineFilter)) {
-        const product = products.find((item) => item.name === line.productName)
+  const restoreStockFromCart = React.useCallback(
+    (lines: PosCartLine[]) => {
+      for (const line of lines) {
+        const product = getProduct(line.productId)
         if (product) {
-          qtyByProductId.set(
-            product.id,
-            (qtyByProductId.get(product.id) ?? 0) + line.quantity
-          )
-        }
-      }
-
-      for (const [productId, quantity] of qtyByProductId) {
-        const product = products.find((item) => item.id === productId)
-        if (product) {
-          updateProduct(productId, { stock: product.stock + quantity })
+          updateProduct(line.productId, {
+            stock: product.stock + line.quantity,
+          })
         }
       }
     },
-    [products, updateProduct]
+    [getProduct, updateProduct]
   )
 
   const completeSale = React.useCallback(async () => {
@@ -302,37 +424,90 @@ export function PosTerminal() {
       return
     }
 
-    for (const line of cart) {
-      const product = getProduct(line.productId)
-      if (!product || product.stock < line.quantity) {
-        toast.error(`${line.productName} no longer has enough stock.`)
-        return
+    if (settings.requireCustomer && customerId === WALK_IN_CUSTOMER_ID) {
+      toast.error("Select a customer before completing this sale.")
+      return
+    }
+
+    const shouldDeductStock =
+      documentStatus === "completed" ||
+      (documentStatus === "pending" && settings.deductStockOnPending)
+    const adjustStock = documentStatus !== "cancelled" && shouldDeductStock
+
+    if (adjustStock && !settings.allowOverselling) {
+      for (const line of cart) {
+        const product = getProduct(line.productId)
+        if (!product || product.stock < line.quantity) {
+          toast.error(`${line.productName} no longer has enough stock.`)
+          return
+        }
       }
+    }
+
+    const invoiceNumber = nextPosInvoiceNumber(orders, settings.receiptPrefix)
+
+    if (settings.confirmBeforeComplete) {
+      const confirmed = await confirmPosSaleAction({
+        invoiceNumber,
+        totalAmount: formatPosMoney(checkoutTotals.total),
+        customerName,
+        status: documentStatus,
+      })
+      if (!confirmed) return
     }
 
     setProcessing(true)
     try {
-      const invoiceNumber = nextPosInvoiceNumber(orders)
+      const paidAmount = settings.allowPartialPayment
+        ? Math.min(
+            Number(checkoutTotals.total),
+            Math.max(0, Number(paidAmountDraft) || 0)
+          ).toFixed(2)
+        : documentStatus === "completed"
+          ? checkoutTotals.total
+          : "0.00"
+
       const payload = buildPosOrderFromCart(cart, {
         customerName,
         paymentMethod,
         invoiceNumber,
         discountAmount: checkoutTotals.discount,
+        status: documentStatus,
+        paidAmount,
       })
       const created = addOrder(payload)
 
-      for (const line of cart) {
-        const product = getProduct(line.productId)
-        if (product) {
-          updateProduct(line.productId, {
-            stock: Math.max(0, product.stock - line.quantity),
-          })
+      if (adjustStock) {
+        for (const line of cart) {
+          const product = getProduct(line.productId)
+          if (product) {
+            updateProduct(line.productId, {
+              stock: Math.max(0, product.stock - line.quantity),
+            })
+          }
         }
       }
 
       setLastSale(created)
-      resetAfterSale()
-      toast.success(`Sale ${created.invoiceNumber} completed.`)
+      resetRegister()
+
+      if (settings.autoOpenReceiptPdf && documentStatus === "completed") {
+        try {
+          await downloadInvoicePdf(created)
+        } catch {
+          toast.error("Sale saved but receipt PDF could not be downloaded.")
+        }
+      }
+
+      if (settings.autoFocusSearchAfterSale) {
+        searchInputRef.current?.focus()
+      }
+
+      toast.success(
+        documentStatus === "completed"
+          ? `Sale ${created.invoiceNumber} completed.`
+          : `Sale ${created.invoiceNumber} saved as ${documentStatus}.`
+      )
     } finally {
       setProcessing(false)
     }
@@ -340,53 +515,91 @@ export function PosTerminal() {
     addOrder,
     cart,
     checkoutTotals.discount,
-    resetAfterSale,
+    checkoutTotals.total,
+    customerId,
+    documentStatus,
+    resetRegister,
     customerName,
     getProduct,
     orders,
     paymentMethod,
+    settings.allowOverselling,
+    settings.allowPartialPayment,
+    settings.autoFocusSearchAfterSale,
+    settings.autoOpenReceiptPdf,
+    settings.confirmBeforeComplete,
+    settings.deductStockOnPending,
+    settings.receiptPrefix,
+    settings.requireCustomer,
+    paidAmountDraft,
     updateProduct,
   ])
 
-  const handleReturnOrder = React.useCallback(
-    async (order: OrderRow, lineIds?: number[]) => {
-      if (!canReturnDocument(order)) {
-        toast.error("This sale cannot be returned.")
-        return
-      }
+  const completeReturn = React.useCallback(async () => {
+    if (cart.length === 0) {
+      toast.error("Add at least one product to return.")
+      return
+    }
 
-      const draft = buildReturnFromOrder(order, { lineIds })
-      if (draft.lines.length === 0 || Number(draft.totalAmount) <= 0) {
-        toast.error("Nothing left to return on this invoice.")
-        return
-      }
+    if (settings.requireCustomer && customerId === WALK_IN_CUSTOMER_ID) {
+      toast.error("Select a customer before completing this return.")
+      return
+    }
 
-      const scope = lineIds?.length === 1 ? "item" : "invoice"
-      const itemName =
-        scope === "item" ? draft.lines[0]?.productName : order.invoiceNumber
+    const returnNumber = nextReturnNumber(returns, "sales")
 
+    if (settings.confirmBeforeComplete) {
       if (
         !(await confirmReturnAction({
-          scope,
-          itemName,
-          referenceNumber: order.invoiceNumber,
-          totalAmount: draft.totalAmount,
-          refundDue: draft.refundDue,
+          scope: "invoice",
+          itemName: returnNumber,
+          referenceNumber: returnNumber,
+          totalAmount: checkoutTotals.total,
+          refundDue: checkoutTotals.total,
         }))
       ) {
         return
       }
+    }
 
-      const created = addReturn({ ...draft, status: "completed" }, {
-        getOrder,
-        onApplySales: updateOrder,
+    setProcessing(true)
+    try {
+      const payload = buildPosReturnFromCart(cart, {
+        customerName,
+        returnNumber,
+        discountAmount: checkoutTotals.discount,
+        status: documentStatus,
       })
+      const created = addReturn({ ...payload, status: documentStatus })
 
-      restoreStockForReturn(order, lineIds)
-      toast.success(`Return ${created.returnNumber} recorded.`)
-    },
-    [addReturn, getOrder, restoreStockForReturn, updateOrder]
-  )
+      if (documentStatus === "completed") {
+        restoreStockFromCart(cart)
+      }
+
+      setLastReturn(created)
+      resetRegister()
+      toast.success(
+        documentStatus === "completed"
+          ? `Return ${created.returnNumber} completed.`
+          : `Return ${created.returnNumber} saved as ${documentStatus}.`
+      )
+    } finally {
+      setProcessing(false)
+    }
+  }, [
+    addReturn,
+    cart,
+    checkoutTotals.discount,
+    checkoutTotals.total,
+    customerId,
+    customerName,
+    documentStatus,
+    resetRegister,
+    restoreStockFromCart,
+    returns,
+    settings.confirmBeforeComplete,
+    settings.requireCustomer,
+  ])
 
   return (
     <div className="flex flex-col gap-3">
@@ -398,7 +611,12 @@ export function PosTerminal() {
       />
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-base font-semibold tracking-tight">Register</h2>
+        <div>
+          <h2 className="text-base font-semibold tracking-tight">{settings.registerName}</h2>
+          <p className="text-muted-foreground text-xs">
+            {isSale ? "New sale" : "Returns"} · {settings.receiptPrefix} receipts
+          </p>
+        </div>
 
         <div className="border-border inline-flex border-b">
           {(
@@ -410,7 +628,7 @@ export function PosTerminal() {
             <button
               key={value}
               type="button"
-              onClick={() => setMode(value)}
+              onClick={() => switchMode(value)}
               className={cn(
                 "relative flex items-center gap-1.5 border-b-2 px-2.5 py-2 text-xs font-medium transition-colors",
                 mode === value
@@ -425,12 +643,11 @@ export function PosTerminal() {
         </div>
       </div>
 
-      {mode === "sale" ? (
-        <div className="flex flex-col gap-3">
-        <div className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_300px]">
-          <div className="flex min-h-[480px] flex-col gap-2.5">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex min-w-0 flex-1 items-center gap-1.5">
+      <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
+          <div className="flex min-h-[560px] flex-col gap-3">
+            <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 flex-1 items-center gap-2">
                 <PosCustomerSelect
                   customerId={customerId}
                   customerName={customerName}
@@ -439,18 +656,20 @@ export function PosTerminal() {
                   onAddCustomer={() => setCustomerQuickAddOpen(true)}
                   customerOptions={customerOptions}
                   walkInCustomerId={WALK_IN_CUSTOMER_ID}
-                  className="w-full shrink-0 sm:w-[200px] lg:w-[220px]"
+                  className="w-full shrink-0 sm:w-[240px] lg:w-[260px]"
                 />
                 <SearchInput
-                  placeholder="Search products…"
+                  ref={searchInputRef}
+                  placeholder="Search by name, SKU, or brand…"
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  icon={<IconSearch className="size-3.5" />}
+                  icon={<IconSearch className="size-4" />}
                   className={cn(searchInputClass, "min-w-0 flex-1")}
                 />
               </div>
-              <p className="text-muted-foreground shrink-0 text-xs tabular-nums">
-                {filteredProducts.length} items
+              <p className="text-muted-foreground shrink-0 text-sm tabular-nums">
+                {filteredProducts.length}{" "}
+                {filteredProducts.length === 1 ? "product" : "products"}
               </p>
             </div>
 
@@ -461,38 +680,67 @@ export function PosTerminal() {
             />
 
             {filteredProducts.length > 0 ? (
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5">
+              <div className={cn("grid auto-rows-fr gap-3", catalogGridClass(settings.catalogColumns))}>
                 {filteredProducts.map((product) => (
                   <PosProductCard
                     key={product.id}
                     product={product}
                     inCartQty={cartQtyByProductId.get(product.id) ?? 0}
-                    formatPrice={formatPosMoney}
+                    formatPrice={formatRegisterMoney}
                     onAdd={addToCart}
+                    disableWhenOutOfStock={
+                      isSale ? !settings.allowOverselling : false
+                    }
+                    showSku={settings.showSkuOnCards}
+                    showStock={settings.showStockOnCards}
+                    lowStockThreshold={settings.lowStockThreshold}
                   />
                 ))}
               </div>
             ) : (
-              <div className={cn(panelClass, "flex flex-col items-center justify-center gap-2 py-16 text-center")}>
+              <div
+                className={cn(
+                  panelClass,
+                  "flex flex-col items-center justify-center gap-2 py-16 text-center"
+                )}
+              >
                 <div className="bg-muted/60 text-muted-foreground flex size-12 items-center justify-center rounded-2xl">
-                  <IconShoppingCart className="size-5" />
+                  {isSale ? (
+                    <IconShoppingCart className="size-5" />
+                  ) : (
+                    <IconRotateClockwise className="size-5" />
+                  )}
                 </div>
                 <p className="text-sm font-medium">No products match</p>
                 <p className="text-muted-foreground max-w-xs text-sm">
-                  Try another search or filter. Only active inventory items appear here.
+                  {isSale
+                    ? settings.hideOutOfStockOnSale
+                      ? "Try another search or filter. Only in-stock active items appear here."
+                      : "Try another search or filter. Out-of-stock items are shown but disabled."
+                    : "Try another search or filter. All active inventory items appear here."}
                 </p>
               </div>
             )}
           </div>
 
-          <div className="flex flex-col gap-2 xl:sticky xl:top-4 xl:self-start">
-            <PosInvoicePanel
-              nextInvoiceNumber={nextInvoice}
-              lastCreated={lastCreatedInvoice}
-              justCreated={lastSale}
-              formatMoney={formatPosMoney}
-              onDismissJustCreated={() => setLastSale(null)}
-            />
+          <div className="flex flex-col gap-3 xl:sticky xl:top-4 xl:self-start">
+            {isSale ? (
+              <PosInvoicePanel
+                nextInvoiceNumber={nextInvoice}
+                lastCreated={lastCreatedInvoice}
+                justCreated={lastSale}
+                formatMoney={formatPosMoney}
+                onDismissJustCreated={() => setLastSale(null)}
+              />
+            ) : (
+              <PosReturnPanel
+                nextReturnNumber={nextReturn}
+                lastCreated={lastCreatedReturn}
+                justCreated={lastReturn}
+                formatMoney={formatPosReturnMoney}
+                onDismissJustCreated={() => setLastReturn(null)}
+              />
+            )}
 
             <PosCartPanel
               cart={cart}
@@ -502,9 +750,11 @@ export function PosTerminal() {
               onFinalPriceChange={setLineFinalPrice}
               onRemoveLine={removeFromCart}
               onClearCart={clearCart}
-              formatMoney={formatPosMoney}
+              formatMoney={formatRegisterMoney}
               paymentMethod={paymentMethod}
               onPaymentMethodChange={setPaymentMethod}
+              status={documentStatus}
+              onStatusChange={setDocumentStatus}
               discountDraft={discountDraft}
               onDiscountDraftChange={setDiscountDraft}
               onApplyDiscount={applyDiscount}
@@ -514,107 +764,22 @@ export function PosTerminal() {
               total={checkoutTotals.total}
               disabled={cart.length === 0}
               processing={processing}
-              onCompleteSale={completeSale}
+              onCompleteSale={isSale ? completeSale : completeReturn}
+              variant={isSale ? "sale" : "return"}
+              enabledPaymentMethods={settings.enabledPaymentMethods}
+              allowDiscounts={settings.allowDiscounts}
+              allowLinePriceEdit={settings.allowLinePriceEdit}
+              allowPartialPayment={settings.allowPartialPayment}
+              paidAmountDraft={paidAmountDraft}
+              onPaidAmountDraftChange={setPaidAmountDraft}
             />
           </div>
         </div>
 
-        <PosRecentSales recentSales={recentSales} formatMoney={formatPosMoney} />
-        </div>
-      ) : (
-        <div className={cn(panelClass, "overflow-hidden")}>
-          <div className="border-border/40 border-b px-4 py-4">
-            <p className="font-medium">Return a sale</p>
-            <p className="text-muted-foreground mt-0.5 text-sm">
-              Find a receipt and return items back to inventory.
-            </p>
-            <div className="mt-3 sm:max-w-lg">
-              <SearchInput
-                placeholder="Search by receipt or customer…"
-                value={returnSearch}
-                onChange={(event) => setReturnSearch(event.target.value)}
-                icon={<IconSearch className="size-4" />}
-                className={searchInputClass}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-3 p-4">
-            {filteredReturnOrders.length === 0 ? (
-              <p className="text-muted-foreground py-12 text-center text-sm">
-                No POS sales found.
-              </p>
-            ) : (
-              filteredReturnOrders.map((order) => {
-                const returnable = canReturnDocument(order)
-                return (
-                  <div
-                    key={order.id}
-                    className="rounded-xl bg-muted/25 p-4 ring-1 ring-border/30"
-                  >
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                      <div>
-                        <p className="font-medium">{order.invoiceNumber}</p>
-                        <p className="text-muted-foreground mt-0.5 text-sm">
-                          {order.customerName} · {order.orderDate}
-                        </p>
-                        <p className="mt-1 text-sm font-semibold tabular-nums">
-                          {formatPosMoney(order.totalAmount)}
-                        </p>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        <InvoicePdfButton order={order} size="sm" variant="outline" />
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          className="rounded-xl"
-                          disabled={!returnable}
-                          onClick={() => handleReturnOrder(order)}
-                        >
-                          Return all
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="mt-3 space-y-1.5">
-                      {(order.lines ?? []).map((line) => (
-                        <div
-                          key={line.id}
-                          className="bg-background/70 flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm"
-                        >
-                          <div className="min-w-0">
-                            <p className="truncate font-medium">{line.productName}</p>
-                            <p className="text-muted-foreground text-xs">
-                              Qty {line.quantity} · {formatPosMoney(line.lineTotal)}
-                            </p>
-                          </div>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="ghost"
-                            className="shrink-0 rounded-lg"
-                            disabled={!returnable || line.quantity <= 0}
-                            onClick={() => handleReturnOrder(order, [line.id])}
-                          >
-                            Return
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-
-                    {!returnable ? (
-                      <p className="text-muted-foreground mt-2 text-xs">
-                        Not eligible — must be completed and paid.
-                      </p>
-                    ) : null}
-                  </div>
-                )
-              })
-            )}
-          </div>
-        </div>
-      )}
+        {isSale ? (
+          <PosRecentSales recentSales={recentSales} formatMoney={formatPosMoney} />
+        ) : null}
+      </div>
     </div>
   )
 }

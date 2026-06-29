@@ -22,6 +22,7 @@ import { PurchaseViewTableOption } from "@/components/purchases/purchase-view-to
 import { ReturnCreateSheet } from "@/components/returns/return-create-sheet"
 import { DataTableColumnHeader } from "@/components/data-table-column-header"
 import { DataTable, type DataTableTab } from "@/components/data-table"
+import { StatCard, StatCardsGrid, sumNumericField } from "@/components/stat-card"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -543,6 +544,20 @@ export default function PurchasesPage() {
     [purchases]
   )
 
+  const purchaseStats = useMemo(() => {
+    const completed = purchases.filter((purchase) => purchase.status === "completed")
+    const pending = purchases.filter((purchase) => purchase.status === "pending")
+    const total = sumNumericField(purchases, (purchase) => purchase.totalAmount)
+    const completedTotal = sumNumericField(completed, (purchase) => purchase.totalAmount)
+    return {
+      count: purchases.length,
+      total,
+      completedCount: completed.length,
+      completedTotal,
+      pendingCount: pending.length,
+    }
+  }, [purchases])
+
   const closeSidebar = () => setSidebar(null)
 
   const handleViewModeChange = useCallback((mode: BillItemViewMode) => {
@@ -993,6 +1008,29 @@ export default function PurchasesPage() {
           ) : null}
         </SheetContent>
       </Sheet>
+
+      <StatCardsGrid className="mb-5">
+        <StatCard
+          label="Purchase orders"
+          value={String(purchaseStats.count)}
+          hint="All PO records"
+        />
+        <StatCard
+          label="Total value"
+          value={formatMoney(purchaseStats.total.toFixed(2))}
+          hint="All statuses"
+        />
+        <StatCard
+          label="Completed"
+          value={String(purchaseStats.completedCount)}
+          hint={formatMoney(purchaseStats.completedTotal.toFixed(2))}
+        />
+        <StatCard
+          label="Pending"
+          value={String(purchaseStats.pendingCount)}
+          hint="Awaiting payment"
+        />
+      </StatCardsGrid>
 
       {viewMode === "bill" ? (
           <DataTable

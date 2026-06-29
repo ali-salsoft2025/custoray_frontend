@@ -10,12 +10,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { PAYMENT_METHODS, type OrderRow } from "@/lib/orders"
+import { ORDER_STATUSES, PAYMENT_METHODS, statusLabel, type OrderRow } from "@/lib/orders"
 import { normalizeDiscountAmount } from "@/lib/pos"
+import { formatMoney as formatCurrency } from "@/lib/customers"
+import { cn } from "@/lib/utils"
+
+function formatPosPositive(value: string) {
+  return formatCurrency(value).replace(/^\$/, "Rs ")
+}
 
 type PosCartCheckoutProps = {
   paymentMethod: OrderRow["paymentMethod"]
   onPaymentMethodChange: (value: OrderRow["paymentMethod"]) => void
+  status: OrderRow["status"]
+  onStatusChange: (value: OrderRow["status"]) => void
   discountDraft: string
   onDiscountDraftChange: (value: string) => void
   onApplyDiscount: () => void
@@ -27,11 +35,19 @@ type PosCartCheckoutProps = {
   disabled?: boolean
   processing?: boolean
   onCompleteSale: () => void
+  variant?: "sale" | "return"
+  enabledPaymentMethods?: OrderRow["paymentMethod"][]
+  allowDiscounts?: boolean
+  allowPartialPayment?: boolean
+  paidAmountDraft?: string
+  onPaidAmountDraftChange?: (value: string) => void
 }
 
 export function PosCartCheckout({
   paymentMethod,
   onPaymentMethodChange,
+  status,
+  onStatusChange,
   discountDraft,
   onDiscountDraftChange,
   onApplyDiscount,
@@ -43,14 +59,40 @@ export function PosCartCheckout({
   disabled,
   processing,
   onCompleteSale,
+  variant = "sale",
+  enabledPaymentMethods = [...PAYMENT_METHODS],
+  allowDiscounts = true,
+  allowPartialPayment = false,
+  paidAmountDraft = "",
+  onPaidAmountDraftChange,
 }: PosCartCheckoutProps) {
+  const isReturn = variant === "return"
   const hasDiscount = Number(appliedDiscount) > 0
+  const showPartialPayment = !isReturn && allowPartialPayment
+  const balanceDue = Math.max(
+    0,
+    Number(total) - (Number(paidAmountDraft) || 0)
+  ).toFixed(2)
+
+  const actionLabel = processing
+    ? "Processing…"
+    : isReturn
+      ? status === "completed"
+        ? "Complete return"
+        : status === "pending"
+          ? "Save pending return"
+          : "Save cancelled return"
+      : status === "completed"
+        ? "Complete sale"
+        : status === "pending"
+          ? "Save pending sale"
+          : "Save cancelled sale"
 
   return (
-    <div className="border-border/40 space-y-2.5 border-t p-2.5">
-      <div className="space-y-1">
-        <Label htmlFor="pos-payment" className="text-[10px] font-medium uppercase tracking-wide">
-          Payment
+    <div className="border-border/40 space-y-3 border-t p-4">
+      <div className="space-y-1.5">
+        <Label htmlFor="pos-payment" className="text-xs">
+          {isReturn ? "Refund method" : "Payment method"}
         </Label>
         <Select
           value={paymentMethod}
@@ -58,11 +100,11 @@ export function PosCartCheckout({
             onPaymentMethodChange(value as OrderRow["paymentMethod"])
           }
         >
-          <SelectTrigger id="pos-payment" className="h-8 w-full text-xs">
-            <SelectValue placeholder="Payment method" />
+          <SelectTrigger id="pos-payment" className="h-10 w-full">
+            <SelectValue placeholder="Select payment method" />
           </SelectTrigger>
           <SelectContent>
-            {PAYMENT_METHODS.map((method) => (
+            {enabledPaymentMethods.map((method) => (
               <SelectItem key={method} value={method}>
                 {method}
               </SelectItem>
@@ -71,69 +113,131 @@ export function PosCartCheckout({
         </Select>
       </div>
 
-      <div className="space-y-1">
-        <Label htmlFor="pos-discount" className="text-[10px] font-medium uppercase tracking-wide">
-          Discount
+      <div className="space-y-1.5">
+        <Label htmlFor="pos-status" className="text-xs">
+          Status
         </Label>
-        <div className="flex gap-1.5">
+        <Select
+          value={status}
+          onValueChange={(value) => onStatusChange(value as OrderRow["status"])}
+        >
+          <SelectTrigger id="pos-status" className="h-10 w-full">
+            <SelectValue placeholder="Select status" />
+          </SelectTrigger>
+          <SelectContent>
+            {ORDER_STATUSES.map((option) => (
+              <SelectItem key={option} value={option}>
+                {statusLabel(option)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {allowDiscounts ? (
+        <div className="space-y-1.5">
+          <Label htmlFor="pos-discount" className="text-xs">
+            Discount
+          </Label>
+          <div className="flex gap-2">
+            <Input
+              id="pos-discount"
+              type="number"
+              min={0}
+              step="0.01"
+              inputMode="decimal"
+              value={discountDraft}
+              onChange={(event) => onDiscountDraftChange(event.target.value)}
+              placeholder="0.00"
+              disabled={disabled}
+              className="h-10"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              className="h-10 shrink-0"
+              disabled={disabled}
+              onClick={onApplyDiscount}
+            >
+              Apply
+            </Button>
+          </div>
+          {hasDiscount ? (
+            <button
+              type="button"
+              onClick={onClearDiscount}
+              className="text-muted-foreground hover:text-foreground text-xs font-medium"
+            >
+              Remove discount
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+
+      {showPartialPayment ? (
+        <div className="space-y-1.5">
+          <Label htmlFor="pos-paid-amount" className="text-xs">
+            Amount paid
+          </Label>
           <Input
-            id="pos-discount"
+            id="pos-paid-amount"
             type="number"
             min={0}
             step="0.01"
             inputMode="decimal"
-            value={discountDraft}
-            onChange={(event) => onDiscountDraftChange(event.target.value)}
-            placeholder="0.00"
+            value={paidAmountDraft}
+            onChange={(event) => onPaidAmountDraftChange?.(event.target.value)}
+            placeholder={total}
             disabled={disabled}
-            className="h-8 text-xs"
+            className="h-10"
           />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-8 shrink-0 px-2.5 text-xs"
-            disabled={disabled}
-            onClick={onApplyDiscount}
-          >
-            Apply
-          </Button>
         </div>
-        {hasDiscount ? (
-          <button
-            type="button"
-            onClick={onClearDiscount}
-            className="text-muted-foreground hover:text-foreground text-[10px] font-medium"
-          >
-            Remove discount
-          </button>
-        ) : null}
-      </div>
+      ) : null}
 
-      <div className="space-y-1 text-xs">
-        <div className="flex items-center justify-between gap-2">
+      <div className="space-y-2 text-sm">
+        <div className="flex items-center justify-between gap-3">
           <span className="text-muted-foreground">Subtotal</span>
           <span className="tabular-nums">{formatMoney(subtotal)}</span>
         </div>
         {hasDiscount ? (
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center justify-between gap-3">
             <span className="text-muted-foreground">Discount</span>
-            <span className="tabular-nums">−{formatMoney(appliedDiscount)}</span>
+            <span className="tabular-nums">
+              −{isReturn ? formatPosPositive(appliedDiscount) : formatMoney(appliedDiscount)}
+            </span>
           </div>
         ) : null}
-        <div className="bg-muted/40 flex items-center justify-between rounded-md px-2.5 py-2">
-          <span className="font-medium">Total</span>
-          <span className="text-base font-semibold tabular-nums">{formatMoney(total)}</span>
+        {showPartialPayment ? (
+          <div className="flex items-center justify-between gap-3 text-xs">
+            <span className="text-muted-foreground">Balance due</span>
+            <span className="font-medium tabular-nums">{formatPosPositive(balanceDue)}</span>
+          </div>
+        ) : null}
+        <div
+          className={cn(
+            "flex items-center justify-between rounded-lg px-3 py-3",
+            isReturn ? "bg-amber-500/10" : "bg-muted/40"
+          )}
+        >
+          <span className="font-medium">{isReturn ? "Refund total" : "Total due"}</span>
+          <span
+            className={cn(
+              "text-lg font-semibold tabular-nums",
+              isReturn && "text-amber-900 dark:text-amber-300"
+            )}
+          >
+            {formatMoney(total)}
+          </span>
         </div>
       </div>
 
       <Button
         type="button"
-        className="h-9 w-full text-sm"
+        className="h-11 w-full"
         disabled={disabled || processing}
         onClick={onCompleteSale}
       >
-        {processing ? "Processing…" : "Complete sale"}
+        {actionLabel}
       </Button>
     </div>
   )

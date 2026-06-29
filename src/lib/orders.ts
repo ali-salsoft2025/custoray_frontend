@@ -6,6 +6,8 @@ export { formatMoney, parseMoney }
 
 export const PAYMENT_METHODS = ["Cash", "Bank transfer", "Card", "Credit"] as const
 
+export const ORDER_STATUSES = ["pending", "completed", "cancelled"] as const
+
 export const orderLineSchema = z.object({
   id: z.number(),
   productName: z.string(),

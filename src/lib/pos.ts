@@ -55,15 +55,21 @@ export function isPosOrder(
   )
 }
 
-export function nextPosInvoiceNumber(existing: OrderRow[]): string {
+export function nextPosInvoiceNumber(
+  existing: OrderRow[],
+  prefix = "POS"
+): string {
+  const safePrefix =
+    prefix.trim().toUpperCase().replace(/[^A-Z0-9-]/g, "") || "POS"
+  const pattern = new RegExp(`^${safePrefix}-(\\d+)$`)
   const nums = existing
     .filter(isPosOrder)
     .map((order) => {
-      const match = order.invoiceNumber.match(/^POS-(\d+)$/)
+      const match = order.invoiceNumber.match(pattern)
       return match ? Number(match[1]) : 0
     })
   const next = (nums.length ? Math.max(...nums) : 1000) + 1
-  return `POS-${next}`
+  return `${safePrefix}-${next}`
 }
 
 export function cartSubtotal(cart: PosCartLine[]): string {
@@ -102,6 +108,8 @@ export function buildPosOrderFromCart(
     invoiceNumber: string
     orderDate?: string
     discountAmount?: string
+    status?: OrderRow["status"]
+    paidAmount?: string
   }
 ): Omit<OrderRow, "id"> {
   const productLines: OrderLineRow[] = cart.map((line, index) => {
@@ -143,22 +151,40 @@ export function buildPosOrderFromCart(
       ? `${POS_ORDER_DESCRIPTION} · Discount ${discount}`
       : POS_ORDER_DESCRIPTION
 
+  const status = options.status ?? "completed"
+
   return {
     invoiceNumber: options.invoiceNumber,
     customerName: options.customerName.trim() || "Walk-in",
     description,
     orderDate: options.orderDate ?? new Date().toISOString().slice(0, 10),
     totalAmount: total,
-    paidAmount: total,
+    paidAmount:
+      options.paidAmount ??
+      (status === "completed" ? total : "0.00"),
     paymentMethod: options.paymentMethod,
-    status: "completed",
+    status,
     lines,
   }
 }
 
-/** Active in-stock inventory rows available on the POS register. */
-export function posCatalogProducts(products: ProductRow[]): ProductRow[] {
+/** Active inventory rows for the POS sale catalog. */
+export function posCatalogProducts(
+  products: ProductRow[],
+  options?: { hideOutOfStock?: boolean }
+): ProductRow[] {
+  const hideOutOfStock = options?.hideOutOfStock ?? true
   return products
-    .filter((product) => product.lifecycle === "active" && product.stock > 0)
+    .filter(
+      (product) =>
+        product.lifecycle === "active" && (hideOutOfStock ? product.stock > 0 : true)
+    )
+    .sort((a, b) => a.name.localeCompare(b.name))
+}
+
+/** Active inventory rows for POS returns (includes out-of-stock items). */
+export function posReturnCatalogProducts(products: ProductRow[]): ProductRow[] {
+  return products
+    .filter((product) => product.lifecycle === "active")
     .sort((a, b) => a.name.localeCompare(b.name))
 }

@@ -24,6 +24,8 @@ type PosCartPanelProps = {
   formatMoney: (value: string) => string
   paymentMethod: Parameters<typeof PosCartCheckout>[0]["paymentMethod"]
   onPaymentMethodChange: Parameters<typeof PosCartCheckout>[0]["onPaymentMethodChange"]
+  status: Parameters<typeof PosCartCheckout>[0]["status"]
+  onStatusChange: Parameters<typeof PosCartCheckout>[0]["onStatusChange"]
   discountDraft: string
   onDiscountDraftChange: (value: string) => void
   onApplyDiscount: () => void
@@ -34,6 +36,13 @@ type PosCartPanelProps = {
   disabled?: boolean
   processing?: boolean
   onCompleteSale: () => void
+  variant?: "sale" | "return"
+  enabledPaymentMethods?: Parameters<typeof PosCartCheckout>[0]["enabledPaymentMethods"]
+  allowDiscounts?: boolean
+  allowLinePriceEdit?: boolean
+  allowPartialPayment?: boolean
+  paidAmountDraft?: string
+  onPaidAmountDraftChange?: (value: string) => void
   className?: string
 }
 
@@ -48,6 +57,8 @@ export function PosCartPanel({
   formatMoney,
   paymentMethod,
   onPaymentMethodChange,
+  status,
+  onStatusChange,
   discountDraft,
   onDiscountDraftChange,
   onApplyDiscount,
@@ -58,8 +69,16 @@ export function PosCartPanel({
   disabled,
   processing,
   onCompleteSale,
+  variant = "sale",
+  enabledPaymentMethods,
+  allowDiscounts,
+  allowLinePriceEdit = true,
+  allowPartialPayment,
+  paidAmountDraft,
+  onPaidAmountDraftChange,
   className,
 }: PosCartPanelProps) {
+  const isReturn = variant === "return"
   const cartItemCount = cart.reduce((sum, line) => sum + line.quantity, 0)
   const selectedLine =
     cart.find((line) => line.productId === selectedProductId) ?? cart[cart.length - 1] ?? null
@@ -67,15 +86,15 @@ export function PosCartPanel({
   return (
     <aside
       className={cn(
-        "flex flex-col overflow-hidden rounded-xl bg-card shadow-sm shadow-black/[0.04] ring-1 ring-border/40 xl:max-h-[calc(100vh-10rem)]",
+        "flex flex-col overflow-hidden rounded-xl bg-card shadow-sm shadow-black/[0.04] ring-1 ring-border/40 xl:max-h-[calc(100vh-8rem)]",
         className
       )}
     >
-      <div className="border-border/40 flex items-center justify-between gap-2 border-b px-3 py-2">
-        <p className="text-xs font-semibold">
-          Cart
-          <span className="text-muted-foreground ml-1.5 font-normal">
-            {cartItemCount === 0 ? "· empty" : `· ${cartItemCount}`}
+      <div className="border-border/40 flex items-center justify-between gap-2 border-b px-4 py-3">
+        <p className="text-sm font-semibold">
+          {isReturn ? "Return" : "Cart"}
+          <span className="text-muted-foreground ml-1.5 font-normal text-xs">
+            {cartItemCount === 0 ? "· empty" : `· ${cartItemCount} items`}
           </span>
         </p>
         {cart.length > 0 ? (
@@ -83,7 +102,7 @@ export function PosCartPanel({
             type="button"
             variant="ghost"
             size="sm"
-            className="text-muted-foreground h-7 px-2 text-xs"
+            className="text-muted-foreground h-8 px-2 text-xs"
             onClick={onClearCart}
           >
             Clear
@@ -91,11 +110,11 @@ export function PosCartPanel({
         ) : null}
       </div>
 
-      <div className="min-h-[100px] flex-1 space-y-1.5 overflow-y-auto p-2">
+      <div className="min-h-[160px] flex-1 space-y-2 overflow-y-auto p-3">
         {cart.length === 0 ? (
-          <div className="text-muted-foreground flex min-h-[80px] flex-col items-center justify-center gap-1.5 text-center text-xs">
-            <IconShoppingCart className="size-5 opacity-30" stroke={1.5} />
-            Tap a product to add
+          <div className="text-muted-foreground flex min-h-[140px] flex-col items-center justify-center gap-2 text-center text-sm">
+            <IconShoppingCart className="size-6 opacity-30" stroke={1.5} />
+            Tap a product to {isReturn ? "return" : "add"}
           </div>
         ) : (
           cart.map((line) => {
@@ -116,21 +135,26 @@ export function PosCartPanel({
                 <button
                   type="button"
                   onClick={() => onSelectLine(line.productId)}
-                  className="w-full px-2.5 py-2 text-left"
+                  className="w-full px-3 py-2.5 text-left"
                 >
                   <div className="flex items-center justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="truncate text-xs font-medium">{line.productName}</p>
-                      <p className="text-muted-foreground text-[10px] tabular-nums">
+                      <p className="truncate text-sm font-medium">{line.productName}</p>
+                      <p className="text-muted-foreground text-xs tabular-nums">
                         {line.quantity} × {formatMoney(line.unitPrice)}
                       </p>
                     </div>
                     <div className="shrink-0 text-right">
-                      <p className="text-xs font-semibold tabular-nums">
+                      <p
+                        className={cn(
+                          "text-sm font-semibold tabular-nums",
+                          isReturn && "text-amber-800 dark:text-amber-400"
+                        )}
+                      >
                         {formatMoney(lineTotal)}
                       </p>
                       {hasAdjustment && !isSelected ? (
-                        <p className="text-muted-foreground text-[9px] line-through tabular-nums">
+                        <p className="text-muted-foreground text-[10px] line-through tabular-nums">
                           {formatMoney(cartLineBaseTotal(line))}
                         </p>
                       ) : null}
@@ -139,13 +163,14 @@ export function PosCartPanel({
                 </button>
 
                 {isSelected ? (
-                  <div className="px-2.5 pb-2">
+                  <div className="px-3 pb-3">
                     <PosCartLineControls
                       line={line}
                       formatMoney={formatMoney}
                       onQuantityChange={onQuantityChange}
                       onFinalPriceChange={onFinalPriceChange}
                       onRemove={onRemoveLine}
+                      allowLinePriceEdit={allowLinePriceEdit}
                     />
                   </div>
                 ) : null}
@@ -158,6 +183,8 @@ export function PosCartPanel({
       <PosCartCheckout
         paymentMethod={paymentMethod}
         onPaymentMethodChange={onPaymentMethodChange}
+        status={status}
+        onStatusChange={onStatusChange}
         discountDraft={discountDraft}
         onDiscountDraftChange={onDiscountDraftChange}
         onApplyDiscount={onApplyDiscount}
@@ -169,6 +196,12 @@ export function PosCartPanel({
         disabled={disabled}
         processing={processing}
         onCompleteSale={onCompleteSale}
+        variant={variant}
+        enabledPaymentMethods={enabledPaymentMethods}
+        allowDiscounts={allowDiscounts}
+        allowPartialPayment={allowPartialPayment}
+        paidAmountDraft={paidAmountDraft}
+        onPaidAmountDraftChange={onPaidAmountDraftChange}
       />
     </aside>
   )
