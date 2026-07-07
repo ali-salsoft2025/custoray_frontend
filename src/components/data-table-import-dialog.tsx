@@ -1,8 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { IconCloudUpload, IconLoader, IconTrash } from "@tabler/icons-react"
+import { IconCloudUpload, IconTrash } from "@tabler/icons-react"
 import { toast } from "sonner"
+
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -296,7 +298,7 @@ export function DataTableImportDialog({
                   aria-label="Reading uploaded file"
                 >
                   <div className="flex items-center gap-2 text-sm font-medium">
-                    <IconLoader className="text-primary size-4 shrink-0 animate-spin" />
+                    <LoadingSpinner size="sm" className="shrink-0" />
                     <span>
                       {readPercent != null
                         ? `Reading file… ${readPercent}%`

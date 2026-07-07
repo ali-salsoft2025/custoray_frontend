@@ -1,0 +1,90 @@
+"use client"
+
+import * as React from "react"
+import {
+  type LeaveRecord,
+  LEAVES_STORAGE_KEY,
+  initialLeaveRecords,
+  parsePersistedLeaves,
+} from "@/lib/employee-leaves"
+
+type LeavesContextValue = {
+  records: LeaveRecord[]
+  setRecords: React.Dispatch<React.SetStateAction<LeaveRecord[]>>
+  addRecord: (row: Omit<LeaveRecord, "id">) => LeaveRecord
+  updateRecord: (id: number, patch: Partial<LeaveRecord>) => void
+  removeRecord: (id: number) => void
+  getRecordsForEmployee: (employeeId: number) => LeaveRecord[]
+}
+
+const LeavesContext = React.createContext<LeavesContextValue | null>(null)
+
+export function LeavesProvider({ children }: { children: React.ReactNode }) {
+  const [records, setRecords] = React.useState<LeaveRecord[]>(() => [
+    ...initialLeaveRecords,
+  ])
+  const [hydrated, setHydrated] = React.useState(false)
+
+  React.useEffect(() => {
+    const saved = parsePersistedLeaves(
+      typeof window !== "undefined"
+        ? window.localStorage.getItem(LEAVES_STORAGE_KEY)
+        : null
+    )
+    if (saved) setRecords(saved)
+    setHydrated(true)
+  }, [])
+
+  React.useEffect(() => {
+    if (!hydrated || typeof window === "undefined") return
+    window.localStorage.setItem(LEAVES_STORAGE_KEY, JSON.stringify(records))
+  }, [records, hydrated])
+
+  const addRecord = React.useCallback((row: Omit<LeaveRecord, "id">) => {
+    let created = { ...row, id: 0 } as LeaveRecord
+    setRecords((prev) => {
+      const maxId = prev.reduce((m, x) => Math.max(m, x.id), 0)
+      created = { ...row, id: maxId + 1 }
+      return [...prev, created]
+    })
+    return created
+  }, [])
+
+  const updateRecord = React.useCallback((id: number, patch: Partial<LeaveRecord>) => {
+    setRecords((prev) =>
+      prev.map((row) => (row.id === id ? { ...row, ...patch, id: row.id } : row))
+    )
+  }, [])
+
+  const removeRecord = React.useCallback((id: number) => {
+    setRecords((prev) => prev.filter((row) => row.id !== id))
+  }, [])
+
+  const getRecordsForEmployee = React.useCallback(
+    (employeeId: number) =>
+      records
+        .filter((row) => row.employeeId === employeeId)
+        .sort((a, b) => b.startDate.localeCompare(a.startDate)),
+    [records]
+  )
+
+  const value = React.useMemo(
+    () => ({
+      records,
+      setRecords,
+      addRecord,
+      updateRecord,
+      removeRecord,
+      getRecordsForEmployee,
+    }),
+    [records, addRecord, updateRecord, removeRecord, getRecordsForEmployee]
+  )
+
+  return <LeavesContext.Provider value={value}>{children}</LeavesContext.Provider>
+}
+
+export function useLeaves() {
+  const ctx = React.useContext(LeavesContext)
+  if (!ctx) throw new Error("useLeaves must be used within LeavesProvider")
+  return ctx
+}

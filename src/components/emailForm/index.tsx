@@ -21,14 +21,14 @@ export function EmailForm({
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card className="overflow-hidden p-0">
-        <CardContent className="grid p-0 md:grid-cols-2">
-          <form className="p-6 md:p-8">
-            <div className="flex flex-col justify-center gap-6 min-h-100">
+      <Card className="overflow-hidden p-0 shadow-lg md:min-h-[32rem]">
+        <CardContent className="grid p-0 md:grid-cols-2 md:min-h-[32rem]">
+          <form className="p-8 md:p-10 lg:p-12">
+            <div className="flex flex-col justify-center gap-7 min-h-[24rem] md:min-h-[28rem]">
                
-              <div className="flex flex-col">
-                <CardTitle className="text-lg">Forgot Password</CardTitle>
-                <CardDescription className="text-xs">
+              <div className="flex flex-col gap-1">
+                <CardTitle className="text-xl md:text-2xl">Forgot Password</CardTitle>
+                <CardDescription className="text-sm md:text-base">
                 Enter your email address to receive a password reset link.
                 </CardDescription>
               </div>
@@ -39,10 +39,11 @@ export function EmailForm({
                   type="email"
                   placeholder="jhon.doe@example.com"
                   required
+                  className="h-11"
                 />
               </div>
              
-              <Button type="submit" className="w-full bg-[#8cc91a] hover:bg-[black] text-white">
+              <Button type="submit" className="h-11 w-full bg-[#8cc91a] text-base hover:bg-[black] text-white">
                 Send Reset Link
               </Button>
 

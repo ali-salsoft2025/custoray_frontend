@@ -11,12 +11,19 @@ import { PaymentsProvider } from "@/context/payments-context"
 import { ProductsProvider } from "@/context/products-context"
 import { FiscalTermProvider } from "@/context/fiscal-term-context"
 import { TaxSettingsProvider } from "@/context/tax-settings-context"
-import { Toaster } from "@/components/ui/sonner"
+import { EmployeesProvider } from "@/context/employees-context"
+import { DepartmentsProvider } from "@/context/employee-departments-context"
+import { PayrollProvider } from "@/context/employee-payroll-context"
+import { LeavesProvider } from "@/context/employee-leaves-context"
 
 export function DashboardProviders({ children }: { children: React.ReactNode }) {
   return (
     <FiscalTermProvider>
       <TaxSettingsProvider>
+      <EmployeesProvider>
+      <DepartmentsProvider>
+      <PayrollProvider>
+      <LeavesProvider>
       <CustomersProvider>
         <VendorsProvider>
           <OrdersProvider>
@@ -26,7 +33,6 @@ export function DashboardProviders({ children }: { children: React.ReactNode }) 
                   <PaymentsProvider>
                     <ProductsProvider>
                       {children}
-                      <Toaster richColors position="top-center" />
                     </ProductsProvider>
                   </PaymentsProvider>
                 </ReturnsProvider>
@@ -35,6 +41,10 @@ export function DashboardProviders({ children }: { children: React.ReactNode }) 
           </OrdersProvider>
         </VendorsProvider>
       </CustomersProvider>
+      </LeavesProvider>
+      </PayrollProvider>
+      </DepartmentsProvider>
+      </EmployeesProvider>
       </TaxSettingsProvider>
     </FiscalTermProvider>
   )

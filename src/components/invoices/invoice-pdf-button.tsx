@@ -1,8 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { IconDownload, IconLoader } from "@tabler/icons-react"
+import { IconDownload } from "@tabler/icons-react"
 import { toast } from "sonner"
+
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 import { Button } from "@/components/ui/button"
 import { loadCompanySettings } from "@/lib/company-settings"
@@ -83,7 +85,7 @@ export function InvoicePdfButton({
       onClick={handleClick}
     >
       {loading ? (
-        <IconLoader className="size-4 animate-spin" />
+        <LoadingSpinner size="sm" />
       ) : showIcon ? (
         <IconDownload className="size-4" />
       ) : null}

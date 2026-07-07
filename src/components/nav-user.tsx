@@ -4,6 +4,7 @@ import Link from "next/link"
 import {
   Bell,
   CreditCard,
+  LogIn,
   LogOut,
   MoreVertical,
   Settings,
@@ -30,17 +31,27 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { useAuth } from "@/context/auth-context"
+import { permissionSummary } from "@/lib/employee-permissions"
 
-export function NavUser({
-  user,
-}: {
-  user: {
-    name: string
-    email: string
-    avatar: string
-  }
-}) {
+function initials(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("")
+}
+
+export function NavUser() {
   const { isMobile } = useSidebar()
+  const { user, logout, isAuthenticated } = useAuth()
+
+  const accessLabel = isAuthenticated
+    ? user.isAdmin
+      ? "Admin"
+      : permissionSummary(user.permissions)
+    : "Demo mode"
 
   return (
     <SidebarMenu>
@@ -51,14 +62,14 @@ export function NavUser({
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <Avatar className="h-8 w-8 rounded-lg grayscale">
+              <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                <AvatarFallback className="rounded-lg">{initials(user.name)}</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{user.name}</span>
                 <span className="text-muted-foreground truncate text-xs">
-                  {user.email}
+                  {accessLabel}
                 </span>
               </div>
               <MoreVertical className="ml-auto size-[1.125rem]" strokeWidth={2} aria-hidden />
@@ -74,7 +85,7 @@ export function NavUser({
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                  <AvatarFallback className="rounded-lg">{initials(user.name)}</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{user.name}</span>
@@ -106,10 +117,19 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <LogOut className="size-4" strokeWidth={2} aria-hidden />
-              Log out
-            </DropdownMenuItem>
+            {isAuthenticated ? (
+              <DropdownMenuItem onClick={logout}>
+                <LogOut className="size-4" strokeWidth={2} aria-hidden />
+                Log out
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem asChild>
+                <Link href="/">
+                  <LogIn className="size-4" strokeWidth={2} aria-hidden />
+                  Sign in
+                </Link>
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

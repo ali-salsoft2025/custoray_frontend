@@ -1,10 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { IconLoader } from "@tabler/icons-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { cn } from "@/lib/utils"
 
 type SidebarNavPendingContextValue = {
@@ -56,12 +56,7 @@ function useSidebarNavPending() {
 }
 
 export function NavLoadingSpinner({ className }: { className?: string }) {
-  return (
-    <IconLoader
-      className={cn("size-3 shrink-0 animate-spin", className)}
-      aria-hidden
-    />
-  )
+  return <LoadingSpinner size="xs" className={className} label="Loading page" />
 }
 
 export function useNavItemPending(href: string) {

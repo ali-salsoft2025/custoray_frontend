@@ -64,15 +64,11 @@ import {
   SidebarNavPendingProvider,
 } from "@/components/sidebar-nav-pending"
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, useSidebar } from "@/components/ui/sidebar";
+import { useAuth } from "@/context/auth-context"
 import { cn } from "@/lib/utils"
 import { useTheme } from "next-themes"
 
 const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
   navMain: [
     {
       title: "Dashboard",
@@ -148,25 +144,15 @@ const data = {
     },
     {
       title: "Employees",
-      url: "#",
+      url: "/employees",
       icon: UserCircle,
       items: [
-        { title: "Employee List", url: "#", icon: Users },
-        { title: "All Employees", url: "#", icon: UsersRound },
-        { title: "Add Employee", url: "#", icon: UserPlus },
-        { title: "Employee Details", url: "#", icon: IdCard },
-        { title: "Payroll", url: "#", icon: Wallet },
-        { title: "Process Payroll", url: "#", icon: Banknote },
-        { title: "Payroll History", url: "#", icon: History },
-        { title: "Salary Slips", url: "#", icon: Receipt },
-        { title: "Attendance", url: "#", icon: CalendarDays },
-        { title: "Mark Attendance", url: "#", icon: ClipboardCheck },
-        { title: "Attendance Report", url: "#", icon: FileBarChart },
-        { title: "Leave Management", url: "#", icon: Calendar },
-        { title: "Employee Management", url: "#", icon: UserCheck },
-        { title: "Departments", url: "#", icon: Building2 },
-        { title: "Designations", url: "#", icon: Briefcase },
-        { title: "Employee Settings", url: "#", icon: Settings },
+        { title: "Team", url: "/employees", icon: Users },
+        { title: "Add employee", url: "/employees/new", icon: UserPlus },
+        { title: "Permissions", url: "/employees/permissions", icon: ShieldCheck },
+        { title: "Payroll", url: "/employees/payroll", icon: Wallet },
+        { title: "Leave", url: "/employees/leaves", icon: CalendarDays },
+        { title: "Departments", url: "/employees/departments", icon: Building2 },
       ],
     },
     {
@@ -270,6 +256,14 @@ function SidebarLogo({ collapsed }: { collapsed: boolean }) {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { canAdmin } = useAuth()
+  const navItems = React.useMemo(
+    () =>
+      data.navMain.filter(
+        (item) => item.title !== "Employees" || canAdmin
+      ),
+    [canAdmin]
+  )
   // Check if RTL is enabled
   const [isRtl, setIsRtl] = React.useState(false)
   
@@ -294,10 +288,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <Sidebar collapsible="icon" side={isRtl ? "right" : "left"} {...props}>
         <SidebarBrand />
         <SidebarContent className="hide-scrollbar overflow-y-auto h-full">
-          <NavMain items={data.navMain} />
+          <NavMain items={navItems} />
         </SidebarContent>
         <SidebarFooter>
-          <NavUser user={data.user} />
+          <NavUser />
         </SidebarFooter>
       </Sidebar>
     </SidebarNavPendingProvider>
