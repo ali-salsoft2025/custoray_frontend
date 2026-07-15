@@ -1,5 +1,5 @@
 import type { EmployeePermissions } from "@/lib/employee-permissions"
-import { FULL_PERMISSIONS } from "@/lib/employee-permissions"
+import { FULL_PERMISSIONS, normalizePermissions } from "@/lib/employee-permissions"
 import {
   EMPLOYEES_STORAGE_KEY,
   findEmployeeByPortalLogin,
@@ -96,7 +96,13 @@ export function authenticateCredentials(
       typeof window !== "undefined"
         ? window.localStorage.getItem(EMPLOYEES_STORAGE_KEY)
         : null
-    ) ?? []
+    ) ??
+    parsePersistedEmployees(
+      typeof window !== "undefined"
+        ? window.localStorage.getItem("custoray-employees-v1")
+        : null
+    ) ??
+    []
 
   const employee = findEmployeeByPortalLogin(employees, normalized, password)
   if (!employee) return null
@@ -105,8 +111,8 @@ export function authenticateCredentials(
     userId: `employee-${employee.id}`,
     name: employee.name,
     email: employee.portalEmail,
-    isAdmin: employee.permissions.admin,
+    isAdmin: normalizePermissions(employee.permissions).admin,
     employeeId: employee.id,
-    permissions: employee.permissions,
+    permissions: normalizePermissions(employee.permissions),
   }
 }

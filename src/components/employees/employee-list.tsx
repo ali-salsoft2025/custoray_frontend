@@ -1,8 +1,7 @@
 "use client"
 
-import { useCallback, useMemo } from "react"
+import { useCallback, useMemo, useRef, useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { ColumnDef } from "@tanstack/react-table"
 import {
   IconDotsVertical,
@@ -12,10 +11,12 @@ import {
 } from "@tabler/icons-react"
 import { toast } from "sonner"
 
+import {
+  EmployeeForm,
+  type EmployeeFormHandle,
+} from "@/components/employees/employee-form"
 import { DataTableColumnHeader } from "@/components/data-table-column-header"
 import { DataTable, type DataTableTab } from "@/components/data-table"
-import { StatCard, StatCardsGrid } from "@/components/stat-card"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -25,15 +26,26 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet"
 import { useAuth } from "@/context/auth-context"
 import { useEmployees } from "@/context/employees-context"
 import { confirmDeleteAction } from "@/lib/confirm-action"
 import { permissionSummary } from "@/lib/employee-permissions"
 import { formatMoney } from "@/lib/employee-payroll"
 import {
+  EMPTY_EMPLOYEE,
+  employeeFromValues,
   mapImportedEmployee,
-  statusBadgeClass,
   statusLabel,
+  type EmployeeFormValues,
   type EmployeeRow,
 } from "@/lib/employees"
 
@@ -44,6 +56,11 @@ const employeeTabs: DataTableTab[] = [
   { value: "portal", label: "Portal access" },
 ]
 
+type EmployeeSidebarState =
+  | { mode: "add" }
+  | { mode: "edit"; employee: EmployeeRow }
+  | null
+
 function employeeTabFilter(row: EmployeeRow, tab: string) {
   if (tab === "all") return true
   if (tab === "portal") return row.portalEnabled
@@ -51,21 +68,23 @@ function employeeTabFilter(row: EmployeeRow, tab: string) {
 }
 
 export function EmployeeList() {
-  const router = useRouter()
   const { canAdmin } = useAuth()
-  const { employees, setEmployees, removeEmployee } = useEmployees()
+  const {
+    employees,
+    setEmployees,
+    addEmployee,
+    updateEmployee,
+    removeEmployee,
+  } = useEmployees()
+  const [sidebar, setSidebar] = useState<EmployeeSidebarState>(null)
+  const [formStep, setFormStep] = useState<1 | 2>(1)
+  const [portalEnabled, setPortalEnabled] = useState(false)
+  const formRef = useRef<EmployeeFormHandle>(null)
 
-  const employeeStats = useMemo(() => {
-    const active = employees.filter((e) => e.status === "active")
-    const portal = employees.filter((e) => e.portalEnabled)
-    const admins = employees.filter((e) => e.permissions.admin)
-    return {
-      count: employees.length,
-      activeCount: active.length,
-      portalCount: portal.length,
-      adminCount: admins.length,
-    }
-  }, [employees])
+  const closeSidebar = () => {
+    setSidebar(null)
+    setFormStep(1)
+  }
 
   const handleDelete = useCallback(
     async (employee: EmployeeRow) => {
@@ -79,9 +98,33 @@ export function EmployeeList() {
         return
       }
       removeEmployee(employee.id)
+      if (sidebar?.mode === "edit" && sidebar.employee.id === employee.id) {
+        closeSidebar()
+      }
       toast.message(`Removed ${employee.name}.`)
     },
-    [canAdmin, removeEmployee]
+    [canAdmin, removeEmployee, sidebar]
+  )
+
+  const handleSubmit = useCallback(
+    (values: EmployeeFormValues) => {
+      if (!canAdmin) return
+      if (sidebar?.mode === "add") {
+        addEmployee(employeeFromValues(values, 0))
+        toast.success("Employee created.")
+        closeSidebar()
+        return
+      }
+      if (sidebar?.mode === "edit") {
+        updateEmployee(
+          sidebar.employee.id,
+          employeeFromValues(values, sidebar.employee.id, sidebar.employee)
+        )
+        toast.success("Employee saved.")
+        closeSidebar()
+      }
+    },
+    [canAdmin, sidebar, addEmployee, updateEmployee]
   )
 
   const columns = useMemo<ColumnDef<EmployeeRow>[]>(
@@ -126,6 +169,7 @@ export function EmployeeList() {
           </Link>
         ),
         enableHiding: false,
+        meta: { dataTableFilter: false },
       },
       {
         accessorKey: "department",
@@ -135,15 +179,19 @@ export function EmployeeList() {
         cell: ({ row }) => (
           <span className="text-muted-foreground">{row.original.department}</span>
         ),
+        meta: { dataTableFilter: false },
       },
       {
         accessorKey: "baseSalary",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Salary" align="center" />
+          <DataTableColumnHeader column={column} title="Salary" />
         ),
         cell: ({ row }) => (
-          <span className="tabular-nums">{formatMoney(row.original.baseSalary)}</span>
+          <span className="text-foreground tabular-nums">
+            {formatMoney(row.original.baseSalary)}
+          </span>
         ),
+        meta: { dataTableFilter: false },
       },
       {
         id: "portal",
@@ -152,12 +200,13 @@ export function EmployeeList() {
         ),
         cell: ({ row }) =>
           row.original.portalEnabled ? (
-            <Badge variant="outline" className="border-emerald-500/30 text-emerald-700 dark:text-emerald-400">
+            <span className="text-emerald-700 text-sm dark:text-emerald-400">
               Active
-            </Badge>
+            </span>
           ) : (
-            <Badge variant="outline">Off</Badge>
+            <span className="text-muted-foreground text-sm">Off</span>
           ),
+        meta: { dataTableFilter: false },
       },
       {
         id: "permissions",
@@ -165,10 +214,11 @@ export function EmployeeList() {
           <DataTableColumnHeader column={column} title="Access" />
         ),
         cell: ({ row }) => (
-          <span className="text-muted-foreground text-xs">
+          <span className="text-muted-foreground text-sm">
             {permissionSummary(row.original.permissions)}
           </span>
         ),
+        meta: { dataTableFilter: false },
       },
       {
         accessorKey: "status",
@@ -176,14 +226,16 @@ export function EmployeeList() {
           <DataTableColumnHeader column={column} title="Status" />
         ),
         cell: ({ row }) => (
-          <Badge variant="outline" className={statusBadgeClass(row.original.status)}>
+          <span className="text-muted-foreground text-sm">
             {statusLabel(row.original.status)}
-          </Badge>
+          </span>
         ),
+        meta: { dataTableFilter: false },
       },
       {
         id: "actions",
         enableSorting: false,
+        enableHiding: false,
         cell: ({ row }) => (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -200,11 +252,13 @@ export function EmployeeList() {
               </DropdownMenuItem>
               {canAdmin ? (
                 <>
-                  <DropdownMenuItem asChild>
-                    <Link href={`/employees/${row.original.id}/edit`}>
-                      <IconPencil />
-                      Edit
-                    </Link>
+                  <DropdownMenuItem
+                    onClick={() =>
+                      setSidebar({ mode: "edit", employee: row.original })
+                    }
+                  >
+                    <IconPencil />
+                    Edit
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
@@ -224,25 +278,120 @@ export function EmployeeList() {
     [canAdmin, handleDelete]
   )
 
+  const sheetEmployee =
+    sidebar?.mode === "edit" ? sidebar.employee : null
+  const formEmployee =
+    sidebar?.mode === "add" ? EMPTY_EMPLOYEE : sheetEmployee ?? EMPTY_EMPLOYEE
+  const formId =
+    sidebar?.mode === "add"
+      ? "employee-add-form"
+      : sheetEmployee
+        ? `employee-edit-${sheetEmployee.id}`
+        : "employee-edit"
+
   return (
     <>
-      <StatCardsGrid className="mb-5">
-        <StatCard label="Employees" value={String(employeeStats.count)} hint={`${employeeStats.activeCount} active`} />
-        <StatCard label="Portal access" value={String(employeeStats.portalCount)} hint="Can sign in" />
-        <StatCard label="Admins" value={String(employeeStats.adminCount)} hint="Full access" />
-        <StatCard label="Inactive" value={String(employeeStats.count - employeeStats.activeCount)} hint="Offboarded" />
-      </StatCardsGrid>
+      <Sheet
+        open={sidebar !== null}
+        onOpenChange={(open) => {
+          if (!open) closeSidebar()
+        }}
+      >
+        <SheetContent
+          side="right"
+          className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-xl"
+        >
+          {sidebar ? (
+            <>
+              <SheetHeader className="border-border/60 space-y-1 border-b px-6 py-5 text-left">
+                <SheetTitle className="text-lg leading-tight">
+                  {sidebar.mode === "add" ? "Add employee" : "Edit employee"}
+                </SheetTitle>
+                <SheetDescription>
+                  {sidebar.mode === "add" ? (
+                    formStep === 1
+                      ? "Step 1 — basic info and portal access."
+                      : "Step 2 — login credentials and module permissions."
+                  ) : sheetEmployee ? (
+                    <>
+                      {sheetEmployee.name}
+                      <span className="text-muted-foreground">
+                        {" "}
+                        · {sheetEmployee.department || "No department"}
+                      </span>
+                    </>
+                  ) : null}
+                </SheetDescription>
+              </SheetHeader>
+              <div
+                key={
+                  sidebar.mode === "add"
+                    ? "add"
+                    : `${sheetEmployee?.id}-edit`
+                }
+                className="min-h-0 flex-1 overflow-y-auto px-6 py-5"
+              >
+                <EmployeeForm
+                  ref={formRef}
+                  formId={formId}
+                  mode={sidebar.mode}
+                  employee={formEmployee}
+                  onSubmit={handleSubmit}
+                  onStepChange={setFormStep}
+                  onPortalEnabledChange={setPortalEnabled}
+                />
+              </div>
+              <SheetFooter className="border-border/60 gap-2 border-t px-6 py-4 sm:flex-row sm:justify-end">
+                {sidebar.mode === "add" && formStep === 2 ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => formRef.current?.goBack()}
+                  >
+                    Back
+                  </Button>
+                ) : (
+                  <SheetClose asChild>
+                    <Button variant="outline" type="button">
+                      Cancel
+                    </Button>
+                  </SheetClose>
+                )}
+                <Button
+                  type="button"
+                  onClick={() => formRef.current?.goNextOrSubmit()}
+                >
+                  {sidebar.mode === "add"
+                    ? formStep === 2
+                      ? "Create employee"
+                      : portalEnabled
+                        ? "Continue"
+                        : "Create employee"
+                    : "Save employee"}
+                </Button>
+              </SheetFooter>
+            </>
+          ) : null}
+        </SheetContent>
+      </Sheet>
 
       <DataTable
         data={employees}
         columns={columns}
-        addButtonLabel="Add employee"
+        addButtonLabel="New Employee"
         searchPlaceholder="Search employees..."
         importRowMapper={mapImportedEmployee}
         importSampleFilename="employees-sample.csv"
         exportFilename="employees-export.csv"
         onDataChange={setEmployees}
-        onAddClick={() => router.push("/employees/new")}
+        onAddClick={() => {
+          if (!canAdmin) {
+            toast.error("Only admins can add employees.")
+            return
+          }
+          setSidebar({ mode: "add" })
+        }}
+        defaultColumnVisibility={{ actions: false }}
         bulkActions={
           canAdmin
             ? [

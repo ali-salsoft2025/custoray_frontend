@@ -15,7 +15,6 @@ import { VendorDetail } from "@/components/vendors/vendor-detail"
 import { VendorForm } from "@/components/vendors/vendor-form"
 import { DataTableColumnHeader } from "@/components/data-table-column-header"
 import { DataTable, type DataTableTab } from "@/components/data-table"
-import { StatCard, StatCardsGrid, sumNumericField } from "@/components/stat-card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -276,21 +275,6 @@ export default function VendorsPage() {
   } = useVendors()
   const [sidebar, setSidebar] = useState<VendorSidebarState>(null)
 
-  const vendorStats = useMemo(() => {
-    const active = vendors.filter((vendor) => vendor.status === "active")
-    const outstanding = vendors.reduce((acc, vendor) => {
-      const balance = Number(computeBalance(vendor))
-      return acc + (Number.isFinite(balance) && balance > 0 ? balance : 0)
-    }, 0)
-    const totalPurchases = sumNumericField(vendors, (vendor) => vendor.totalPurchases)
-    return {
-      count: vendors.length,
-      activeCount: active.length,
-      outstanding,
-      totalPurchases,
-    }
-  }, [vendors])
-
   const closeSidebar = () => setSidebar(null)
 
   const handleDelete = useCallback(
@@ -461,39 +445,17 @@ export default function VendorsPage() {
         </SheetContent>
       </Sheet>
 
-      <StatCardsGrid className="mb-5">
-        <StatCard
-          label="Vendors"
-          value={String(vendorStats.count)}
-          hint={`${vendorStats.activeCount} active`}
-        />
-        <StatCard
-          label="Active"
-          value={String(vendorStats.activeCount)}
-          hint={`${vendorStats.count - vendorStats.activeCount} inactive`}
-        />
-        <StatCard
-          label="Outstanding"
-          value={formatMoney(vendorStats.outstanding.toFixed(2))}
-          hint="Payable balance"
-        />
-        <StatCard
-          label="Total purchases"
-          value={formatMoney(vendorStats.totalPurchases.toFixed(2))}
-          hint="Lifetime volume"
-        />
-      </StatCardsGrid>
-
       <DataTable
         data={vendors}
         columns={columns}
-        addButtonLabel="Add vendor"
+        addButtonLabel="New Vendor"
         searchPlaceholder="Search vendors..."
         importRowMapper={mapImportedVendor}
         importSampleFilename="vendors-sample.csv"
         exportFilename="vendors-export.csv"
         onDataChange={setVendors}
         onAddClick={() => setSidebar({ mode: "add" })}
+        defaultColumnVisibility={{ status: false, actions: false }}
         bulkActions={[
           {
             id: "delete",

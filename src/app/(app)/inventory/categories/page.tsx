@@ -506,7 +506,7 @@ export default function CategoriesPage() {
       <DataTable
         data={rows}
         columns={columns}
-        addButtonLabel="Add category"
+        addButtonLabel="New Category"
         searchPlaceholder="Search categories..."
         importRowMapper={mapImportedCategory}
         importSampleFilename="categories-sample.csv"

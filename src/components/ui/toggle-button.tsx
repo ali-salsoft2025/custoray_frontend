@@ -10,10 +10,12 @@ import { cn } from "@/lib/utils"
 export function ToggleButton({
   className,
   layout = "fixed-corner",
+  variant = "outline",
 }: {
   className?: string
   /** `toolbar`: sits in flex header row. `fixed-corner`: floating on auth pages. */
   layout?: "fixed-corner" | "toolbar"
+  variant?: "outline" | "ghost"
 }) {
   const { setTheme, resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
@@ -30,7 +32,7 @@ export function ToggleButton({
 
   return (
     <Button
-      variant="outline"
+      variant={variant}
       size="icon"
       type="button"
       onClick={toggleTheme}

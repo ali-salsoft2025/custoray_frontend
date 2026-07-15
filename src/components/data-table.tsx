@@ -52,6 +52,16 @@ import {
   confirmDuplicateAction,
 } from "@/lib/confirm-action"
 import { cn } from "@/lib/utils"
+
+type DataTableColumnMeta = {
+  dataTableFilter?: boolean
+  headerClassName?: string
+  cellClassName?: string
+}
+
+function getColumnMeta<TData>(column: Column<TData, unknown>) {
+  return column.columnDef.meta as DataTableColumnMeta | undefined
+}
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -1117,14 +1127,19 @@ export function DataTable<TData>({
   const tableContent = (
     <div className="relative flex flex-col gap-4 overflow-auto">
         {layoutView === "list" || !enableLayoutToggle ? (
-          <div className="overflow-hidden rounded-lg border">
+          <div className="overflow-hidden rounded-md border">
             <Table>
               <TableHeader className="bg-muted sticky top-0 z-10">
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id}>
                     {headerGroup.headers.map((header) => {
+                      const meta = getColumnMeta(header.column)
                       return (
-                        <TableHead key={header.id} colSpan={header.colSpan}>
+                        <TableHead
+                          key={header.id}
+                          colSpan={header.colSpan}
+                          className={cn("px-4", meta?.headerClassName)}
+                        >
                           {header.isPlaceholder
                             ? null
                             : flexRender(
@@ -1144,14 +1159,20 @@ export function DataTable<TData>({
                       key={row.id}
                       data-state={row.getIsSelected() && "selected"}
                     >
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
-                          )}
-                        </TableCell>
-                      ))}
+                      {row.getVisibleCells().map((cell) => {
+                        const meta = getColumnMeta(cell.column)
+                        return (
+                          <TableCell
+                            key={cell.id}
+                            className={cn("px-4 py-3.5", meta?.cellClassName)}
+                          >
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext()
+                            )}
+                          </TableCell>
+                        )
+                      })}
                     </TableRow>
                   ))
                 ) : (
@@ -1283,8 +1304,7 @@ export function DataTable<TData>({
             <Button
               type="button"
               variant="outline"
-              size="sm"
-              className="rounded-full px-5 shadow-sm"
+              className="h-9 rounded-full px-7 shadow-sm"
               onClick={() => setImportOpen(true)}
             >
               <IconCloudUpload />
@@ -1294,8 +1314,7 @@ export function DataTable<TData>({
           <Button
             type="button"
             variant="outline"
-            size="sm"
-            className="rounded-full px-5 shadow-sm"
+            className="h-9 rounded-full px-7 shadow-sm"
             onClick={() => setExportOpen(true)}
           >
             <IconCloudDownload />
@@ -1305,11 +1324,11 @@ export function DataTable<TData>({
             <Button
               variant="default"
               type="button"
-              className="rounded-full px-4 md:py-4 shadow-sm"
+              className="h-9 rounded-full px-5 shadow-sm has-[>svg]:px-5"
               onClick={() => onAddClick?.()}
             >
-              <IconPlus />
-              <span className="hidden lg:inline">{addButtonLabel}</span>
+              <IconPlus className="size-4 shrink-0" />
+              <span className="leading-none">{addButtonLabel}</span>
             </Button>
           ) : null}
         </div>

@@ -456,7 +456,7 @@ export default function PurchaseInvoicePage() {
       <DataTable
         data={purchases}
         columns={columns}
-        addButtonLabel="Create purchase invoice"
+        addButtonLabel="New Purchase Invoice"
         searchPlaceholder="Search purchase invoices..."
         importRowMapper={mapImportedPurchase}
         importSampleFilename="purchase-invoices-sample.csv"

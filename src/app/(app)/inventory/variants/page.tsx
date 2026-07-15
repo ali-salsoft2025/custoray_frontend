@@ -291,7 +291,7 @@ export default function VariantsPage() {
       <DataTable
         data={rows}
         columns={columns}
-        addButtonLabel="Add variant"
+        addButtonLabel="New Variant"
         searchPlaceholder="Search variants..."
         importSampleFilename="variants-sample.csv"
         exportFilename="variants-export.csv"

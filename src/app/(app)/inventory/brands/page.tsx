@@ -172,7 +172,7 @@ export default function BrandsPage() {
       <DataTable
         data={brandsData}
         columns={brandColumns}
-        addButtonLabel="Add brand"
+        addButtonLabel="New Brand"
         searchPlaceholder="Search brands..."
         importRowMapper={mapImportedBrand}
         importSampleFilename="brands-sample.csv"

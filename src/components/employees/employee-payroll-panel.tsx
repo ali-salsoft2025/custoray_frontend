@@ -7,7 +7,6 @@ import { toast } from "sonner"
 
 import { DataTableColumnHeader } from "@/components/data-table-column-header"
 import { DataTable } from "@/components/data-table"
-import { StatCard, StatCardsGrid } from "@/components/stat-card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -41,13 +40,6 @@ export function EmployeePayrollPanel() {
     (id: number) => employees.find((e) => e.id === id)?.name ?? `Employee #${id}`,
     [employees]
   )
-
-  const stats = useMemo(() => {
-    const paid = records.filter((r) => r.status === "paid")
-    const pending = records.filter((r) => r.status === "pending")
-    const totalPaid = paid.reduce((sum, r) => sum + (Number(r.netPay) || 0), 0)
-    return { paidCount: paid.length, pendingCount: pending.length, totalPaid }
-  }, [records])
 
   const columns = useMemo<ColumnDef<PayrollRecord>[]>(
     () => [
@@ -175,21 +167,10 @@ export function EmployeePayrollPanel() {
         </SheetContent>
       </Sheet>
 
-      <StatCardsGrid className="mb-5">
-        <StatCard label="Records" value={String(records.length)} hint="All payroll runs" />
-        <StatCard label="Pending" value={String(stats.pendingCount)} hint="Awaiting payment" />
-        <StatCard label="Paid runs" value={String(stats.paidCount)} hint="Completed" />
-        <StatCard
-          label="Total paid"
-          value={formatMoney(stats.totalPaid.toFixed(2))}
-          hint="Net pay sum"
-        />
-      </StatCardsGrid>
-
       <DataTable
         data={records}
         columns={columns}
-        addButtonLabel="Add payroll"
+        addButtonLabel="New Payroll"
         searchPlaceholder="Search payroll..."
         onAddClick={() => setOpen(true)}
         onDataChange={setRecords}

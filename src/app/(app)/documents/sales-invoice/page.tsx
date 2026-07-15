@@ -451,7 +451,7 @@ export default function SalesInvoicePage() {
       <DataTable
         data={orders}
         columns={columns}
-        addButtonLabel="Create sales invoice"
+        addButtonLabel="New Sales Invoice"
         searchPlaceholder="Search sales invoices..."
         importRowMapper={mapImportedOrder}
         importSampleFilename="sales-invoices-sample.csv"

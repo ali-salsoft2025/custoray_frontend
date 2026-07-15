@@ -1,10 +1,23 @@
 "use client"
 
 import { usePathname } from "next/navigation"
+
+import { NavUser } from "@/components/nav-user"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { ToggleButton } from "@/components/ui/toggle-button"
 import { TermSwitcher } from "@/components/term-switcher"
+import { cn } from "@/lib/utils"
+
+const headerControlShadow = "shadow-[0_1px_4px_0_rgba(0,0,0,0.16)]"
+
+const headerIconCircleBtn = cn(
+  "size-9 shrink-0 rounded-full border-0 bg-white text-muted-foreground hover:bg-primary/10 hover:text-primary focus-visible:ring-2 focus-visible:ring-primary/35 dark:bg-zinc-950 dark:text-zinc-400 dark:hover:bg-primary/15 dark:hover:text-primary",
+  headerControlShadow
+)
+
+const sidebarTriggerClass =
+  "size-9 shrink-0 rounded-2xl border-0 bg-transparent shadow-none text-muted-foreground hover:bg-primary/10 hover:text-primary focus-visible:ring-2 focus-visible:ring-primary/35 dark:text-zinc-400 dark:hover:bg-primary/15 dark:hover:text-primary"
 
 function titleForPath(pathname: string | null): string {
   if (!pathname) return "Documents"
@@ -67,17 +80,20 @@ export function SiteHeader() {
   const headerTitle = titleForPath(pathname)
 
   return (
-    <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
-      <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
-        <SidebarTrigger className="-ml-1" />
+    <header className="flex h-(--header-height) shrink-0 items-stretch border-b border-zinc-200/70 h-auto rounded-t-2xl transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height) dark:border-zinc-800/80">
+      <div className="flex w-full min-w-0 flex-1 items-center gap-3 px-4 py-3 lg:gap-4 lg:px-6">
+        <SidebarTrigger className={cn(sidebarTriggerClass, "-ms-0.5")} />
         <Separator
           orientation="vertical"
-          className="mx-2 data-[orientation=vertical]:h-4"
+          className="mx-0.5 data-[orientation=vertical]:h-4"
         />
-        <h1 className="min-w-0 flex-1 truncate text-base font-medium">{headerTitle}</h1>
-        <div className="ml-auto flex shrink-0 items-center gap-2">
-          <TermSwitcher />
-          <ToggleButton layout="toolbar" />
+        <h1 className="text-foreground/70 min-w-0 flex-1 truncate text-base font-medium tracking-tight">
+          {headerTitle}
+        </h1>
+        <div className="ms-auto flex shrink-0 items-center gap-2">
+          <TermSwitcher triggerClassName={headerIconCircleBtn} />
+          <ToggleButton layout="toolbar" variant="ghost" className={headerIconCircleBtn} />
+          <NavUser />
         </div>
       </div>
     </header>

@@ -7,6 +7,7 @@ import {
   initialEmployees,
   parsePersistedEmployees,
 } from "@/lib/employees"
+import { normalizePermissions } from "@/lib/employee-permissions"
 
 type EmployeesContextValue = {
   employees: EmployeeRow[]
@@ -26,12 +27,16 @@ export function EmployeesProvider({ children }: { children: React.ReactNode }) {
   const [hydrated, setHydrated] = React.useState(false)
 
   React.useEffect(() => {
-    const saved = parsePersistedEmployees(
-      typeof window !== "undefined"
-        ? window.localStorage.getItem(EMPLOYEES_STORAGE_KEY)
-        : null
-    )
-    if (saved) setEmployees(saved)
+    if (typeof window === "undefined") return
+    const saved =
+      parsePersistedEmployees(window.localStorage.getItem(EMPLOYEES_STORAGE_KEY)) ??
+      parsePersistedEmployees(window.localStorage.getItem("custoray-employees-v1"))
+    if (saved) {
+      setEmployees(saved.map((row) => ({
+        ...row,
+        permissions: normalizePermissions(row.permissions),
+      })))
+    }
     setHydrated(true)
   }, [])
 

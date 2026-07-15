@@ -65,6 +65,9 @@ type NavItem = {
   }[]
 }
 
+const navRowClass = "h-10 gap-3 px-3 py-2"
+const navSubLinkClass = "min-h-10 h-auto px-3 py-2.5"
+
 function NavSubLinkItem({
   subItem,
   pathname,
@@ -79,7 +82,12 @@ function NavSubLinkItem({
       pathname?.startsWith(subItem.url))
   return (
     <SidebarMenuSubItem>
-      <SidebarMenuSubButton asChild isActive={isSubActive}>
+      <SidebarMenuSubButton
+        asChild
+        isActive={isSubActive}
+        size="md"
+        className={navSubLinkClass}
+      >
         <SidebarNavLink href={subItem.url}>
           <span className="min-w-0 truncate">{subItem.title}</span>
           <NavPendingIndicator href={subItem.url} />
@@ -98,8 +106,13 @@ function NavMainLinkItem({
 }) {
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton asChild tooltip={item.title} isActive={isActive}>
-        <SidebarNavLink href={item.url}>
+      <SidebarMenuButton
+        asChild
+        tooltip={item.title}
+        isActive={isActive}
+        className={navRowClass}
+      >
+        <SidebarNavLink href={item.url} className="flex w-full min-w-0 items-center gap-3">
           {item.icon && <item.icon className="size-[1.125rem] shrink-0" strokeWidth={2} data-theme-icon />}
           <span className="min-w-0 truncate">{item.title}</span>
           <NavPendingIndicator href={item.url} />
@@ -139,7 +152,12 @@ function NavCollapsibleItem({
     <SidebarMenuItem>
       <Collapsible open={open} onOpenChange={handleOpenChange} className="group/collapsible w-full">
         <CollapsibleTrigger asChild>
-          <SidebarMenuButton isActive={isActive} title={item.title} type="button">
+          <SidebarMenuButton
+            isActive={isActive}
+            title={item.title}
+            type="button"
+            className={navRowClass}
+          >
             {item.icon && <item.icon data-theme-icon />}
             <span>{item.title}</span>
             <ChevronRight
@@ -151,7 +169,7 @@ function NavCollapsibleItem({
           </SidebarMenuButton>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <SidebarMenuSub>
+          <SidebarMenuSub className="gap-1.5 py-1">
             {item.items?.map((subItem) => (
               <NavSubLinkItem
                 key={subItem.title}
@@ -208,7 +226,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
             </Button>
           </SidebarMenuItem>
         </SidebarMenu>
-        <SidebarMenu>
+        <SidebarMenu className="gap-1.5 px-1">
           {items.map((item) => {
             const isActive =
               pathname === item.url ||

@@ -10,7 +10,6 @@ import { ReturnLineDetail } from "@/components/returns/return-line-detail"
 import { ReturnViewTableOption } from "@/components/returns/return-view-toggle"
 import { DataTableColumnHeader } from "@/components/data-table-column-header"
 import { DataTable, type DataTableTab } from "@/components/data-table"
-import { StatCard, StatCardsGrid, sumNumericField } from "@/components/stat-card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -376,18 +375,6 @@ export default function ReturnsPage() {
 
   const returnLines = useMemo(() => flattenReturnsToLines(returns), [returns])
 
-  const returnStats = useMemo(() => {
-    const salesReturns = returns.filter((row) => row.type === "sales")
-    const pending = returns.filter((row) => row.status === "pending")
-    const total = sumNumericField(returns, (row) => row.totalAmount)
-    return {
-      count: returns.length,
-      total,
-      salesCount: salesReturns.length,
-      pendingCount: pending.length,
-    }
-  }, [returns])
-
   const handleViewModeChange = useCallback((mode: BillItemViewMode) => {
     setViewMode(mode)
     saveReturnViewMode(mode)
@@ -484,25 +471,6 @@ export default function ReturnsPage() {
         </SheetContent>
       </Sheet>
 
-      <StatCardsGrid className="mb-5">
-        <StatCard label="Returns" value={String(returnStats.count)} hint="All return records" />
-        <StatCard
-          label="Return value"
-          value={formatMoney(returnStats.total.toFixed(2))}
-          hint="Total returned amount"
-        />
-        <StatCard
-          label="Sales returns"
-          value={String(returnStats.salesCount)}
-          hint={`${returnStats.count - returnStats.salesCount} purchase`}
-        />
-        <StatCard
-          label="Pending"
-          value={String(returnStats.pendingCount)}
-          hint="Awaiting completion"
-        />
-      </StatCardsGrid>
-
       {viewMode === "bill" ? (
         <DataTable
           data={returns}
@@ -510,6 +478,7 @@ export default function ReturnsPage() {
           searchPlaceholder="Search returns…"
           exportFilename="returns-export.csv"
           showAddButton={false}
+          showImportButton={false}
           tableOptionsExtra={tableOptions}
           tabs={returnTabs}
           defaultTab="all"
@@ -522,6 +491,7 @@ export default function ReturnsPage() {
           searchPlaceholder="Search returned items…"
           exportFilename="return-lines-export.csv"
           showAddButton={false}
+          showImportButton={false}
           tableOptionsExtra={tableOptions}
           tabs={returnTabs}
           defaultTab="all"

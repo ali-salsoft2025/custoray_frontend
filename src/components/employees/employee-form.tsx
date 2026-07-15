@@ -1,287 +1,446 @@
 "use client"
 
 import * as React from "react"
-import type { FormEvent } from "react"
 
 import { CustomerAvatar } from "@/components/customers/customer-avatar"
+import { EmployeePermissionsMatrix } from "@/components/employees/employee-permissions-matrix"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { PasswordInput } from "@/components/ui/password-input"
 import { Separator } from "@/components/ui/separator"
 import { useDepartments } from "@/context/employee-departments-context"
-import type { EmployeeRow } from "@/lib/employees"
+import { normalizePermissions, NO_PERMISSIONS } from "@/lib/employee-permissions"
+import {
+  type EmployeeFormValues,
+  type EmployeeRow,
+} from "@/lib/employees"
+
+export type EmployeeFormHandle = {
+  goNextOrSubmit: () => void
+  goBack: () => void
+  getStep: () => 1 | 2
+  isPortalStepNeeded: () => boolean
+}
 
 type EmployeeFormProps = {
   formId: string
+  mode: "add" | "edit"
   employee: EmployeeRow
-  onSubmit: (e: FormEvent<HTMLFormElement>) => void
+  onSubmit: (values: EmployeeFormValues) => void
+  onStepChange?: (step: 1 | 2) => void
+  onPortalEnabledChange?: (enabled: boolean) => void
 }
 
-function PermissionCheckbox({
-  id,
-  name,
-  label,
-  description,
-  defaultChecked,
-  disabled,
-}: {
-  id: string
-  name: string
-  label: string
-  description: string
-  defaultChecked?: boolean
-  disabled?: boolean
-}) {
-  return (
-    <div className="flex items-start gap-3 rounded-lg border border-border/60 p-3">
-      <Checkbox
-        id={id}
-        name={name}
-        defaultChecked={defaultChecked}
-        disabled={disabled}
-        className="mt-0.5"
-      />
-      <div className="space-y-0.5">
-        <Label htmlFor={id} className="text-sm font-medium">
-          {label}
-        </Label>
-        <p className="text-muted-foreground text-xs leading-relaxed">{description}</p>
-      </div>
-    </div>
-  )
+function toValues(employee: EmployeeRow): EmployeeFormValues {
+  return {
+    name: employee.name,
+    email: employee.email,
+    phone: employee.phone === "—" ? "" : employee.phone,
+    department: employee.department === "—" ? "" : employee.department,
+    designation: employee.designation === "—" ? "" : employee.designation,
+    status: employee.status,
+    hireDate: employee.hireDate,
+    baseSalary: employee.baseSalary,
+    portalEnabled: employee.portalEnabled,
+    portalEmail: employee.portalEmail,
+    portalPassword: "",
+    permissions: normalizePermissions(employee.permissions),
+  }
 }
 
-export function EmployeeForm({ formId, employee, onSubmit }: EmployeeFormProps) {
-  const { departments } = useDepartments()
-  const [portalEnabled, setPortalEnabled] = React.useState(employee.portalEnabled)
-  const [adminChecked, setAdminChecked] = React.useState(employee.permissions.admin)
+export const EmployeeForm = React.forwardRef<EmployeeFormHandle, EmployeeFormProps>(
+  function EmployeeForm(
+    { formId, mode, employee, onSubmit, onStepChange, onPortalEnabledChange },
+    ref
+  ) {
+    const { departments } = useDepartments()
+    const [step, setStep] = React.useState<1 | 2>(1)
+    const [values, setValues] = React.useState<EmployeeFormValues>(() =>
+      toValues(employee)
+    )
+    const [error, setError] = React.useState<string | null>(null)
 
-  return (
-    <form id={formId} className="flex flex-col gap-5 text-sm" onSubmit={onSubmit}>
-      <section className="space-y-4">
-        <div>
-          <p className="text-sm font-semibold">Basic info</p>
-          <p className="text-muted-foreground text-xs">
-            Who this person is and how to reach them.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <CustomerAvatar name={employee.name || "Employee"} size="lg" />
-          <p className="text-muted-foreground text-xs leading-relaxed">
-            Profile photo can be added later.
-          </p>
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor={`${formId}-name`}>Full name</Label>
-          <Input
-            id={`${formId}-name`}
-            name="name"
-            required
-            defaultValue={employee.name}
-            placeholder="e.g. Sara Ahmed"
-          />
-        </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor={`${formId}-email`}>Work email</Label>
-            <Input
-              id={`${formId}-email`}
-              name="email"
-              type="email"
-              defaultValue={employee.email}
-              placeholder="sara@company.com"
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor={`${formId}-phone`}>Phone</Label>
-            <Input
-              id={`${formId}-phone`}
-              name="phone"
-              defaultValue={employee.phone === "—" ? "" : employee.phone}
-              placeholder="+92 300 1234567"
-            />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor={`${formId}-department`}>Department</Label>
-            <select
-              id={`${formId}-department`}
-              name="department"
-              defaultValue={
-                departments.some((d) => d.name === employee.department)
-                  ? employee.department
-                  : employee.department !== "—"
-                    ? employee.department
-                    : ""
+    React.useEffect(() => {
+      setValues(toValues(employee))
+      setStep(1)
+      setError(null)
+    }, [employee])
+
+    React.useEffect(() => {
+      onStepChange?.(step)
+    }, [step, onStepChange])
+
+    React.useEffect(() => {
+      onPortalEnabledChange?.(values.portalEnabled)
+    }, [values.portalEnabled, onPortalEnabledChange])
+
+    const patch = (partial: Partial<EmployeeFormValues>) => {
+      setValues((prev) => ({ ...prev, ...partial }))
+      setError(null)
+    }
+
+    const validateStep1 = (): boolean => {
+      if (!values.name.trim()) {
+        setError("Employee name is required.")
+        return false
+      }
+      if (mode === "edit" && values.portalEnabled) {
+        if (!values.portalEmail.trim()) {
+          setError("Login email is required for portal access.")
+          return false
+        }
+        if (!employee.portalPassword && !values.portalPassword.trim()) {
+          setError("Set a password for portal login.")
+          return false
+        }
+      }
+      return true
+    }
+
+    const validateStep2 = (): boolean => {
+      if (!values.portalEmail.trim()) {
+        setError("Login email is required for portal access.")
+        return false
+      }
+      if (!values.portalPassword.trim() && !employee.portalPassword) {
+        setError("Set a password for portal login.")
+        return false
+      }
+      if (mode === "add" && !values.portalPassword.trim()) {
+        setError("Set a password for portal login.")
+        return false
+      }
+      return true
+    }
+
+    const finish = () => {
+      const withPortal = values.portalEnabled
+      onSubmit({
+        ...values,
+        portalEnabled: withPortal,
+        portalEmail: withPortal ? values.portalEmail : "",
+        portalPassword: withPortal
+          ? values.portalPassword.trim() ||
+            (mode === "edit" ? employee.portalPassword : "")
+          : "",
+        permissions: withPortal
+          ? normalizePermissions(values.permissions)
+          : { ...NO_PERMISSIONS, modules: normalizePermissions(NO_PERMISSIONS).modules },
+      })
+    }
+
+    const goNextOrSubmit = () => {
+      if (step === 1) {
+        if (!validateStep1()) return
+        if (mode === "add" && values.portalEnabled) {
+          if (!values.portalEmail.trim() && values.email.trim()) {
+            setValues((prev) => ({
+              ...prev,
+              portalEmail: prev.email.trim().toLowerCase(),
+            }))
+          }
+          setStep(2)
+          return
+        }
+        finish()
+        return
+      }
+      if (!validateStep2()) return
+      finish()
+    }
+
+    const goBack = () => {
+      setError(null)
+      setStep(1)
+    }
+
+    React.useImperativeHandle(
+      ref,
+      () => ({
+        goNextOrSubmit,
+        goBack,
+        getStep: () => step,
+        isPortalStepNeeded: () => values.portalEnabled,
+      }),
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- sync with latest values/step
+      [step, values, mode, employee.portalPassword]
+    )
+
+    return (
+      <div className="flex flex-col gap-5 text-sm">
+        {mode === "add" ? (
+          <div className="text-muted-foreground flex items-center gap-2 text-xs">
+            <span
+              className={
+                step === 1 ? "text-foreground font-semibold" : "font-medium"
               }
-              className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm shadow-xs outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px]"
             >
-              <option value="">Select department</option>
-              {departments.map((dept) => (
-                <option key={dept.id} value={dept.name}>
-                  {dept.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor={`${formId}-designation`}>Job title</Label>
-            <Input
-              id={`${formId}-designation`}
-              name="designation"
-              defaultValue={employee.designation === "—" ? "" : employee.designation}
-              placeholder="Manager, Clerk…"
-            />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor={`${formId}-hireDate`}>Start date</Label>
-            <Input
-              id={`${formId}-hireDate`}
-              name="hireDate"
-              type="date"
-              defaultValue={employee.hireDate}
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor={`${formId}-baseSalary`}>Monthly salary</Label>
-            <Input
-              id={`${formId}-baseSalary`}
-              name="baseSalary"
-              defaultValue={employee.baseSalary}
-              placeholder="0.00"
-            />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor={`${formId}-status`}>Status</Label>
-            <select
-              id={`${formId}-status`}
-              name="status"
-              defaultValue={employee.status}
-              className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm shadow-xs outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+              1. Basic info
+            </span>
+            <span aria-hidden>/</span>
+            <span
+              className={
+                step === 2 ? "text-foreground font-semibold" : "font-medium"
+              }
             >
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-          </div>
-        </div>
-      </section>
-
-      <Separator />
-
-      <section className="space-y-4">
-        <div>
-          <p className="text-sm font-semibold">Portal access</p>
-          <p className="text-muted-foreground text-xs leading-relaxed">
-            Give this employee their own login to the business portal.
-          </p>
-        </div>
-        <div className="flex items-start gap-3 rounded-lg border border-border/60 p-3">
-          <Checkbox
-            id={`${formId}-portalEnabled`}
-            name="portalEnabled"
-            checked={portalEnabled}
-            onCheckedChange={(value) => setPortalEnabled(value === true)}
-            className="mt-0.5"
-          />
-          <div className="space-y-0.5">
-            <Label htmlFor={`${formId}-portalEnabled`} className="text-sm font-medium">
-              Allow portal login
-            </Label>
-            <p className="text-muted-foreground text-xs leading-relaxed">
-              When off, they cannot sign in even if credentials exist.
-            </p>
-          </div>
-        </div>
-        {portalEnabled ? (
-          <div className="space-y-4 rounded-lg bg-muted/30 p-4">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor={`${formId}-portalEmail`}>Login email</Label>
-              <Input
-                id={`${formId}-portalEmail`}
-                name="portalEmail"
-                type="email"
-                required={portalEnabled}
-                defaultValue={employee.portalEmail}
-                placeholder="sara@custoray.demo"
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor={`${formId}-portalPassword`}>
-                {employee.portalPassword ? "Password" : "Set password"}
-              </Label>
-              <PasswordInput
-                id={`${formId}-portalPassword`}
-                name="portalPassword"
-                autoComplete="new-password"
-                placeholder={
-                  employee.portalPassword ? "Leave blank to keep current" : "Choose a password"
-                }
-              />
-              <p className="text-muted-foreground text-[11px] leading-relaxed">
-                Demo only — stored locally until a real backend is connected.
-              </p>
-            </div>
+              2. Login & permissions
+            </span>
           </div>
         ) : null}
-      </section>
 
-      <Separator />
-
-      <section className="space-y-3">
-        <div>
-          <p className="text-sm font-semibold">Permissions</p>
-          <p className="text-muted-foreground text-xs leading-relaxed">
-            Control what they can do after signing in. Admin includes everything.
+        {error ? (
+          <p className="text-destructive rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs">
+            {error}
           </p>
-        </div>
-        <div className="flex items-start gap-3 rounded-lg border border-border/60 p-3">
-          <Checkbox
-            id={`${formId}-perm-admin`}
-            name="perm_admin"
-            checked={adminChecked}
-            onCheckedChange={(value) => setAdminChecked(value === true)}
-            className="mt-0.5"
-          />
-          <div className="space-y-0.5">
-            <Label htmlFor={`${formId}-perm-admin`} className="text-sm font-medium">
-              Admin
-            </Label>
-            <p className="text-muted-foreground text-xs leading-relaxed">
-              Full access — manage employees, settings, and all records.
-            </p>
-          </div>
-        </div>
-        <PermissionCheckbox
-          id={`${formId}-perm-view`}
-          name="perm_view"
-          label="View"
-          description="See customers, sales, inventory, and reports."
-          defaultChecked={employee.permissions.view || employee.permissions.admin}
-          disabled={adminChecked}
-        />
-        <PermissionCheckbox
-          id={`${formId}-perm-edit`}
-          name="perm_edit"
-          label="Edit"
-          description="Create and update records (orders, products, payments, etc.)."
-          defaultChecked={employee.permissions.edit || employee.permissions.admin}
-          disabled={adminChecked}
-        />
-        <PermissionCheckbox
-          id={`${formId}-perm-delete`}
-          name="perm_delete"
-          label="Delete"
-          description="Remove records when needed."
-          defaultChecked={employee.permissions.delete || employee.permissions.admin}
-          disabled={adminChecked}
-        />
-      </section>
-    </form>
-  )
-}
+        ) : null}
+
+        {step === 1 ? (
+          <>
+            <section className="space-y-4">
+              <div>
+                <p className="text-sm font-semibold">Basic info</p>
+                <p className="text-muted-foreground text-xs">
+                  Who this person is and how to reach them.
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <CustomerAvatar name={values.name || "Employee"} size="lg" />
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  Profile photo can be added later.
+                </p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor={`${formId}-name`}>Full name</Label>
+                <Input
+                  id={`${formId}-name`}
+                  value={values.name}
+                  onChange={(e) => patch({ name: e.target.value })}
+                  placeholder="e.g. Sara Ahmed"
+                />
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor={`${formId}-email`}>Work email</Label>
+                  <Input
+                    id={`${formId}-email`}
+                    type="email"
+                    value={values.email}
+                    onChange={(e) => patch({ email: e.target.value })}
+                    placeholder="sara@company.com"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor={`${formId}-phone`}>Phone</Label>
+                  <Input
+                    id={`${formId}-phone`}
+                    value={values.phone}
+                    onChange={(e) => patch({ phone: e.target.value })}
+                    placeholder="+92 300 1234567"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor={`${formId}-department`}>Department</Label>
+                  <select
+                    id={`${formId}-department`}
+                    value={values.department}
+                    onChange={(e) => patch({ department: e.target.value })}
+                    className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm shadow-xs outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+                  >
+                    <option value="">Select department</option>
+                    {departments.map((dept) => (
+                      <option key={dept.id} value={dept.name}>
+                        {dept.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor={`${formId}-designation`}>Job title</Label>
+                  <Input
+                    id={`${formId}-designation`}
+                    value={values.designation}
+                    onChange={(e) => patch({ designation: e.target.value })}
+                    placeholder="Manager, Clerk…"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor={`${formId}-hireDate`}>Start date</Label>
+                  <Input
+                    id={`${formId}-hireDate`}
+                    type="date"
+                    min="1970-01-01"
+                    max={`${new Date().getFullYear() + 5}-12-31`}
+                    value={values.hireDate}
+                    onChange={(e) => patch({ hireDate: e.target.value })}
+                    className="relative z-10 block w-full min-w-0"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor={`${formId}-baseSalary`}>Monthly salary</Label>
+                  <Input
+                    id={`${formId}-baseSalary`}
+                    value={values.baseSalary}
+                    onChange={(e) => patch({ baseSalary: e.target.value })}
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor={`${formId}-status`}>Status</Label>
+                  <select
+                    id={`${formId}-status`}
+                    value={values.status}
+                    onChange={(e) =>
+                      patch({ status: e.target.value as "active" | "inactive" })
+                    }
+                    className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm shadow-xs outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+              </div>
+            </section>
+
+            <Separator />
+
+            <section className="space-y-3">
+              <div>
+                <p className="text-sm font-semibold">Portal access</p>
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  {mode === "add"
+                    ? "If enabled, step 2 covers login credentials and module permissions."
+                    : "Enable to set login credentials and module permissions."}
+                </p>
+              </div>
+              <div className="flex items-start gap-3 rounded-lg border border-border/60 p-3">
+                <Checkbox
+                  id={`${formId}-portalEnabled`}
+                  checked={values.portalEnabled}
+                  onCheckedChange={(checked) =>
+                    patch({ portalEnabled: checked === true })
+                  }
+                  className="mt-0.5"
+                />
+                <div className="space-y-0.5">
+                  <Label
+                    htmlFor={`${formId}-portalEnabled`}
+                    className="text-sm font-medium"
+                  >
+                    Allow portal login
+                  </Label>
+                  <p className="text-muted-foreground text-xs leading-relaxed">
+                    They can sign in with credentials you set.
+                  </p>
+                </div>
+              </div>
+
+              {mode === "edit" && values.portalEnabled ? (
+                <>
+                  <div className="space-y-4 rounded-lg bg-muted/30 p-4">
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor={`${formId}-portalEmail`}>Login email</Label>
+                      <Input
+                        id={`${formId}-portalEmail`}
+                        type="email"
+                        value={values.portalEmail}
+                        onChange={(e) => patch({ portalEmail: e.target.value })}
+                        placeholder="sara@custoray.demo"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor={`${formId}-portalPassword`}>
+                        {employee.portalPassword ? "Password" : "Set password"}
+                      </Label>
+                      <PasswordInput
+                        id={`${formId}-portalPassword`}
+                        autoComplete="new-password"
+                        value={values.portalPassword}
+                        onChange={(e) =>
+                          patch({ portalPassword: e.target.value })
+                        }
+                        placeholder={
+                          employee.portalPassword
+                            ? "Leave blank to keep current"
+                            : "Choose a password"
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm font-semibold">Module permissions</p>
+                      <p className="text-muted-foreground text-xs leading-relaxed">
+                        Choose Add, Edit, and Delete per module.
+                      </p>
+                    </div>
+                    <EmployeePermissionsMatrix
+                      value={values.permissions}
+                      onChange={(permissions) => patch({ permissions })}
+                    />
+                  </div>
+                </>
+              ) : null}
+            </section>
+          </>
+        ) : (
+          <>
+            <section className="space-y-4">
+              <div>
+                <p className="text-sm font-semibold">Create login credentials</p>
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  These credentials can be viewed and updated later from the
+                  employee profile.
+                </p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor={`${formId}-portalEmail-step2`}>Login email</Label>
+                <Input
+                  id={`${formId}-portalEmail-step2`}
+                  type="email"
+                  value={values.portalEmail}
+                  onChange={(e) => patch({ portalEmail: e.target.value })}
+                  placeholder={values.email || "sara@custoray.demo"}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor={`${formId}-portalPassword-step2`}>Password</Label>
+                <PasswordInput
+                  id={`${formId}-portalPassword-step2`}
+                  autoComplete="new-password"
+                  value={values.portalPassword}
+                  onChange={(e) => patch({ portalPassword: e.target.value })}
+                  placeholder="Choose a password"
+                />
+              </div>
+            </section>
+
+            <Separator />
+
+            <section className="space-y-3">
+              <div>
+                <p className="text-sm font-semibold">Module permissions</p>
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  Choose Add, Edit, and Delete per module. Only applies when they
+                  can sign in.
+                </p>
+              </div>
+              <EmployeePermissionsMatrix
+                value={values.permissions}
+                onChange={(permissions) => patch({ permissions })}
+              />
+            </section>
+          </>
+        )}
+      </div>
+    )
+  }
+)
+
+EmployeeForm.displayName = "EmployeeForm"

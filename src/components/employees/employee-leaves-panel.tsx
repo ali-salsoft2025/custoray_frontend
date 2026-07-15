@@ -7,7 +7,6 @@ import { toast } from "sonner"
 
 import { DataTableColumnHeader } from "@/components/data-table-column-header"
 import { DataTable } from "@/components/data-table"
-import { StatCard, StatCardsGrid } from "@/components/stat-card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -41,15 +40,6 @@ export function EmployeeLeavesPanel() {
     (id: number) => employees.find((e) => e.id === id)?.name ?? `Employee #${id}`,
     [employees]
   )
-
-  const stats = useMemo(() => {
-    const pending = records.filter((r) => r.status === "pending").length
-    const approved = records.filter((r) => r.status === "approved").length
-    const days = records
-      .filter((r) => r.status === "approved")
-      .reduce((sum, r) => sum + r.days, 0)
-    return { pending, approved, days }
-  }, [records])
 
   const columns = useMemo<ColumnDef<LeaveRecord>[]>(
     () => [
@@ -200,17 +190,10 @@ export function EmployeeLeavesPanel() {
         </SheetContent>
       </Sheet>
 
-      <StatCardsGrid className="mb-5">
-        <StatCard label="Requests" value={String(records.length)} hint="All time" />
-        <StatCard label="Pending" value={String(stats.pending)} hint="Needs approval" />
-        <StatCard label="Approved" value={String(stats.approved)} hint="Approved requests" />
-        <StatCard label="Days off" value={String(stats.days)} hint="Approved days" />
-      </StatCardsGrid>
-
       <DataTable
         data={records}
         columns={columns}
-        addButtonLabel="Add leave request"
+        addButtonLabel="New Leave"
         searchPlaceholder="Search leave..."
         onAddClick={() => setOpen(true)}
         onDataChange={setRecords}

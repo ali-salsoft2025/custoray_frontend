@@ -2,6 +2,7 @@ import { z } from "zod"
 
 import {
   employeePermissionsSchema,
+  normalizePermissions,
   NO_PERMISSIONS,
   type EmployeePermissions,
 } from "@/lib/employee-permissions"
@@ -27,7 +28,7 @@ export const employeeSchema = z.object({
 
 export type EmployeeRow = z.infer<typeof employeeSchema>
 
-export const EMPLOYEES_STORAGE_KEY = "custoray-employees-v1"
+export const EMPLOYEES_STORAGE_KEY = "custoray-employees-v2"
 
 export const initialEmployees: EmployeeRow[] = [
   {
@@ -43,7 +44,14 @@ export const initialEmployees: EmployeeRow[] = [
     portalEnabled: true,
     portalEmail: "sara@custoray.demo",
     portalPassword: "staff123",
-    permissions: { view: true, edit: true, delete: false, admin: false },
+    permissions: normalizePermissions({
+      admin: false,
+      modules: {
+        customers: { add: true, edit: true, delete: false },
+        sales: { add: true, edit: true, delete: false },
+        documents: { add: true, edit: true, delete: false },
+      },
+    }),
   },
   {
     id: 2,
@@ -58,7 +66,13 @@ export const initialEmployees: EmployeeRow[] = [
     portalEnabled: true,
     portalEmail: "omar@custoray.demo",
     portalPassword: "staff123",
-    permissions: { view: true, edit: false, delete: false, admin: false },
+    permissions: normalizePermissions({
+      admin: false,
+      modules: {
+        inventory: { add: true, edit: true, delete: false },
+        purchases: { add: true, edit: false, delete: false },
+      },
+    }),
   },
   {
     id: 3,
@@ -73,7 +87,7 @@ export const initialEmployees: EmployeeRow[] = [
     portalEnabled: false,
     portalEmail: "",
     portalPassword: "",
-    permissions: NO_PERMISSIONS,
+    permissions: { ...NO_PERMISSIONS },
   },
 ]
 
@@ -90,51 +104,74 @@ export const EMPTY_EMPLOYEE: EmployeeRow = {
   portalEnabled: false,
   portalEmail: "",
   portalPassword: "",
-  permissions: { view: true, edit: false, delete: false, admin: false },
+  permissions: { ...NO_PERMISSIONS, modules: normalizePermissions(NO_PERMISSIONS).modules },
 }
 
+export type EmployeeFormValues = {
+  name: string
+  email: string
+  phone: string
+  department: string
+  designation: string
+  status: "active" | "inactive"
+  hireDate: string
+  baseSalary: string
+  portalEnabled: boolean
+  portalEmail: string
+  portalPassword: string
+  permissions: EmployeePermissions
+}
+
+export function employeeFromValues(
+  values: EmployeeFormValues,
+  id: number,
+  existing?: EmployeeRow
+): EmployeeRow {
+  const portalEnabled = values.portalEnabled
+  return {
+    id,
+    name: values.name.trim(),
+    email: values.email.trim(),
+    phone: values.phone.trim() || "—",
+    department: values.department.trim() || "—",
+    designation: values.designation.trim() || "—",
+    status: parseStatus(values.status),
+    hireDate: values.hireDate.trim() || new Date().toISOString().slice(0, 10),
+    baseSalary: values.baseSalary.trim() || "0",
+    portalEnabled,
+    portalEmail: portalEnabled ? values.portalEmail.trim().toLowerCase() : "",
+    portalPassword: portalEnabled
+      ? values.portalPassword.trim() || existing?.portalPassword || ""
+      : "",
+    permissions: normalizePermissions(values.permissions),
+  }
+}
+
+/** @deprecated Prefer employeeFromValues for new UI */
 export function employeeFromFormData(
   fd: FormData,
   id: number,
   existing?: EmployeeRow
 ): EmployeeRow {
   const portalEnabled = fd.get("portalEnabled") === "on"
-  const permissions = parsePermissionsFromForm(fd)
-
-  return {
+  return employeeFromValues(
+    {
+      name: String(fd.get("name") ?? ""),
+      email: String(fd.get("email") ?? ""),
+      phone: String(fd.get("phone") ?? ""),
+      department: String(fd.get("department") ?? ""),
+      designation: String(fd.get("designation") ?? ""),
+      status: parseStatus(String(fd.get("status") ?? "active")),
+      hireDate: String(fd.get("hireDate") ?? ""),
+      baseSalary: String(fd.get("baseSalary") ?? "0"),
+      portalEnabled,
+      portalEmail: String(fd.get("portalEmail") ?? ""),
+      portalPassword: String(fd.get("portalPassword") ?? ""),
+      permissions: existing?.permissions ?? NO_PERMISSIONS,
+    },
     id,
-    name: String(fd.get("name") ?? "").trim(),
-    email: String(fd.get("email") ?? "").trim(),
-    phone: String(fd.get("phone") ?? "").trim() || "—",
-    department: String(fd.get("department") ?? "").trim() || "—",
-    designation: String(fd.get("designation") ?? "").trim() || "—",
-    status: parseStatus(String(fd.get("status") ?? "active")),
-    hireDate: String(fd.get("hireDate") ?? "").trim() || new Date().toISOString().slice(0, 10),
-    baseSalary: String(fd.get("baseSalary") ?? "0").trim() || "0",
-    portalEnabled,
-    portalEmail: portalEnabled
-      ? String(fd.get("portalEmail") ?? "").trim().toLowerCase()
-      : "",
-    portalPassword: portalEnabled
-      ? String(fd.get("portalPassword") ?? "").trim() ||
-        existing?.portalPassword ||
-        ""
-      : "",
-    permissions,
-  }
-}
-
-function parsePermissionsFromForm(fd: FormData): EmployeePermissions {
-  const admin = fd.get("perm_admin") === "on"
-  if (admin) {
-    return { view: true, edit: true, delete: true, admin: true }
-  }
-  return {
-    view: fd.get("perm_view") === "on",
-    edit: fd.get("perm_edit") === "on",
-    delete: fd.get("perm_delete") === "on",
-    admin: false,
-  }
+    existing
+  )
 }
 
 export function mapImportedEmployee(
@@ -160,7 +197,7 @@ export function mapImportedEmployee(
     portalEnabled: row.portalEnabled === "true" || row.portalEnabled === "yes",
     portalEmail: (row.portalEmail ?? "").trim().toLowerCase(),
     portalPassword: (row.portalPassword ?? "").trim(),
-    permissions: NO_PERMISSIONS,
+    permissions: { ...NO_PERMISSIONS, modules: normalizePermissions(NO_PERMISSIONS).modules },
   }
 }
 
@@ -171,11 +208,14 @@ export function parsePersistedEmployees(raw: string | null): EmployeeRow[] | nul
     if (!Array.isArray(parsed)) return null
     const rows: EmployeeRow[] = []
     for (const item of parsed) {
+      if (!item || typeof item !== "object") continue
+      const record = item as Record<string, unknown>
       const result = employeeSchema.safeParse({
-        ...item,
+        ...record,
+        permissions: normalizePermissions(record.permissions),
         baseSalary:
-          typeof item === "object" && item && "baseSalary" in item
-            ? (item as EmployeeRow).baseSalary
+          typeof record.baseSalary === "string" || typeof record.baseSalary === "number"
+            ? String(record.baseSalary)
             : "0",
       })
       if (result.success) rows.push(result.data)

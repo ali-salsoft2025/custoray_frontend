@@ -251,7 +251,7 @@ export default function Inventory() {
       <DataTable
         data={data as InventoryItem[]}
         columns={inventoryColumns}
-        addButtonLabel="Add item"
+        addButtonLabel="New Item"
         searchPlaceholder="Search inventory..."
         importRowMapper={mapImportedInventoryItem}
         importSampleFilename="inventory-sample.csv"

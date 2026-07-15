@@ -949,7 +949,7 @@ export default function ProductsPage() {
             <div
               key={
                 sidebar.mode === "add"
-                  ? "add"
+                  ? `add-${addFormKey}`
                   : `${sheetProduct?.srNo}-${sheetMode}`
               }
               className="min-h-0 flex-1 overflow-y-auto px-6 py-5"
@@ -1037,11 +1037,12 @@ export default function ProductsPage() {
     <DataTable
       data={rows}
       columns={columns}
+      addButtonLabel="New Product"
       onAddClick={() => {
         setAddFormKey((k) => k + 1)
         setSidebar({ mode: "add" })
       }}
-      addButtonLabel="Add product"
+      defaultColumnVisibility={{ actions: false }}
       searchPlaceholder="Search products..."
       importRowMapper={mapImportedProduct}
       importSampleFilename="products-sample.csv"

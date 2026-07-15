@@ -15,8 +15,6 @@ import { CustomerDetail } from "@/components/customers/customer-detail"
 import { CustomerForm } from "@/components/customers/customer-form"
 import { DataTableColumnHeader } from "@/components/data-table-column-header"
 import { DataTable, type DataTableTab } from "@/components/data-table"
-import { StatCard, StatCardsGrid, sumNumericField } from "@/components/stat-card"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -46,7 +44,6 @@ import {
   EMPTY_CUSTOMER,
   formatMoney,
   mapImportedCustomer,
-  statusBadgeClass,
   statusLabel,
   type CustomerRow,
 } from "@/lib/customers"
@@ -133,51 +130,45 @@ function getCustomerColumns(
         <DataTableColumnHeader column={column} title="Description" />
       ),
       cell: ({ row }) => (
-        <span className="text-muted-foreground max-w-[12rem] truncate">
+        <span className="text-muted-foreground text-sm leading-snug whitespace-normal">
           {row.original.description}
         </span>
       ),
-      meta: { dataTableFilter: false },
+      meta: { dataTableFilter: false, cellClassName: "whitespace-normal max-w-xs" },
     },
     {
       accessorKey: "openingBalance",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Opening balance" align="center" />
+        <DataTableColumnHeader column={column} title="Opening balance" />
       ),
       cell: ({ row }) => (
-        <div className="flex justify-center">
-          <span className="text-foreground tabular-nums">
-            {formatMoney(row.original.openingBalance)}
-          </span>
-        </div>
+        <span className="text-foreground tabular-nums">
+          {formatMoney(row.original.openingBalance)}
+        </span>
       ),
       meta: { dataTableFilter: false },
     },
     {
       accessorKey: "totalSales",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Total sales" align="center" />
+        <DataTableColumnHeader column={column} title="Total sales" />
       ),
       cell: ({ row }) => (
-        <div className="flex justify-center">
-          <span className="text-foreground tabular-nums">
-            {formatMoney(row.original.totalSales)}
-          </span>
-        </div>
+        <span className="text-foreground tabular-nums">
+          {formatMoney(row.original.totalSales)}
+        </span>
       ),
       meta: { dataTableFilter: false },
     },
     {
       accessorKey: "totalPayments",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Total payments" align="center" />
+        <DataTableColumnHeader column={column} title="Total payments" />
       ),
       cell: ({ row }) => (
-        <div className="flex justify-center">
-          <span className="text-foreground tabular-nums">
-            {formatMoney(row.original.totalPayments)}
-          </span>
-        </div>
+        <span className="text-foreground tabular-nums">
+          {formatMoney(row.original.totalPayments)}
+        </span>
       ),
       meta: { dataTableFilter: false },
     },
@@ -185,22 +176,20 @@ function getCustomerColumns(
       id: "balance",
       accessorFn: (row) => Number(computeBalance(row)),
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Balance" align="center" />
+        <DataTableColumnHeader column={column} title="Balance" />
       ),
       cell: ({ row }) => {
         const balance = computeBalance(row.original)
         return (
-          <div className="flex justify-center">
-            <span
-              className={
-                Number(balance) > 0
-                  ? "text-amber-700 tabular-nums dark:text-amber-400"
-                  : "text-muted-foreground tabular-nums"
-              }
-            >
-              {formatMoney(balance)}
-            </span>
-          </div>
+          <span
+            className={
+              Number(balance) > 0
+                ? "text-orange-600 tabular-nums dark:text-orange-400"
+                : "text-muted-foreground tabular-nums"
+            }
+          >
+            {formatMoney(balance)}
+          </span>
         )
       },
       meta: { dataTableFilter: false },
@@ -219,15 +208,16 @@ function getCustomerColumns(
       accessorKey: "status",
       header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
       cell: ({ row }) => (
-        <Badge variant="outline" className={statusBadgeClass(row.original.status)}>
+        <span className="text-muted-foreground text-sm">
           {statusLabel(row.original.status)}
-        </Badge>
+        </span>
       ),
       meta: { dataTableFilter: false },
     },
     {
       id: "actions",
       enableSorting: false,
+      enableHiding: false,
       cell: ({ row }) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -275,21 +265,6 @@ export default function CustomersPage() {
     duplicateCustomer,
   } = useCustomers()
   const [sidebar, setSidebar] = useState<CustomerSidebarState>(null)
-
-  const customerStats = useMemo(() => {
-    const active = customers.filter((customer) => customer.status === "active")
-    const outstanding = customers.reduce((acc, customer) => {
-      const balance = Number(computeBalance(customer))
-      return acc + (Number.isFinite(balance) && balance > 0 ? balance : 0)
-    }, 0)
-    const totalSales = sumNumericField(customers, (customer) => customer.totalSales)
-    return {
-      count: customers.length,
-      activeCount: active.length,
-      outstanding,
-      totalSales,
-    }
-  }, [customers])
 
   const closeSidebar = () => setSidebar(null)
 
@@ -471,39 +446,17 @@ export default function CustomersPage() {
         </SheetContent>
       </Sheet>
 
-      <StatCardsGrid className="mb-5">
-        <StatCard
-          label="Customers"
-          value={String(customerStats.count)}
-          hint={`${customerStats.activeCount} active`}
-        />
-        <StatCard
-          label="Active"
-          value={String(customerStats.activeCount)}
-          hint={`${customerStats.count - customerStats.activeCount} inactive`}
-        />
-        <StatCard
-          label="Outstanding"
-          value={formatMoney(customerStats.outstanding.toFixed(2))}
-          hint="Receivable balance"
-        />
-        <StatCard
-          label="Total sales"
-          value={formatMoney(customerStats.totalSales.toFixed(2))}
-          hint="Lifetime volume"
-        />
-      </StatCardsGrid>
-
       <DataTable
         data={customers}
         columns={columns}
-        addButtonLabel="Add customer"
+        addButtonLabel="New Customer"
         searchPlaceholder="Search customers..."
         importRowMapper={mapImportedCustomer}
         importSampleFilename="customers-sample.csv"
         exportFilename="customers-export.csv"
         onDataChange={setCustomers}
         onAddClick={() => setSidebar({ mode: "add" })}
+        defaultColumnVisibility={{ status: false, actions: false }}
         bulkActions={[
           {
             id: "delete",

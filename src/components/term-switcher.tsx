@@ -30,7 +30,7 @@ function termDateRange(viewing: TermListEntry, plannedEndIso: string): string {
   return formatShortDate(viewing.startedAt)
 }
 
-export function TermSwitcher() {
+export function TermSwitcher({ triggerClassName }: { triggerClassName?: string } = {}) {
   const { state, termsList, viewing, plannedEndIso, setViewingTermId } =
     useFiscalTerms()
 
@@ -44,9 +44,12 @@ export function TermSwitcher() {
       <DropdownMenuTrigger asChild>
         <Button
           type="button"
-          variant="outline"
+          variant={triggerClassName ? "ghost" : "outline"}
           size="icon"
-          className="border-input bg-background text-foreground hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 relative shrink-0 shadow-xs"
+          className={cn(
+            triggerClassName ??
+              "border-input bg-background text-foreground hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 relative shrink-0 shadow-xs"
+          )}
           aria-label={viewing ? `Select fiscal term, ${triggerLabel}` : "Select fiscal term"}
         >
           <Calendar className="size-4" strokeWidth={2} aria-hidden />

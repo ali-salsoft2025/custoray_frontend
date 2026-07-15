@@ -1,14 +1,22 @@
 "use client"
 
+import { useRef } from "react"
 import { useRouter } from "next/navigation"
-import type { FormEvent } from "react"
 import Link from "next/link"
 import { toast } from "sonner"
 
-import { EmployeeForm } from "@/components/employees/employee-form"
+import {
+  EmployeeForm,
+  type EmployeeFormHandle,
+} from "@/components/employees/employee-form"
 import { Button } from "@/components/ui/button"
 import { useEmployees } from "@/context/employees-context"
-import { EMPTY_EMPLOYEE, employeeFromFormData, type EmployeeRow } from "@/lib/employees"
+import {
+  EMPTY_EMPLOYEE,
+  employeeFromValues,
+  type EmployeeFormValues,
+  type EmployeeRow,
+} from "@/lib/employees"
 
 export function EmployeeFormPage({
   mode,
@@ -18,33 +26,15 @@ export function EmployeeFormPage({
   employee?: EmployeeRow
 }) {
   const router = useRouter()
+  const formRef = useRef<EmployeeFormHandle>(null)
   const { addEmployee, updateEmployee } = useEmployees()
-  const formId = mode === "add" ? "employee-add-form" : `employee-edit-${employee?.id}`
+  const formId =
+    mode === "add" ? "employee-add-form" : `employee-edit-${employee?.id}`
   const formEmployee = mode === "add" ? EMPTY_EMPLOYEE : employee ?? EMPTY_EMPLOYEE
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const fd = new FormData(e.currentTarget)
-    const name = String(fd.get("name") ?? "").trim()
-    if (!name) {
-      toast.error("Employee name is required.")
-      return
-    }
-
-    const portalEnabled = fd.get("portalEnabled") === "on"
-    const portalEmail = String(fd.get("portalEmail") ?? "").trim()
-    if (portalEnabled && !portalEmail) {
-      toast.error("Login email is required when portal access is enabled.")
-      return
-    }
-
+  const handleSubmit = (values: EmployeeFormValues) => {
     if (mode === "add") {
-      const portalPassword = String(fd.get("portalPassword") ?? "").trim()
-      if (portalEnabled && !portalPassword) {
-        toast.error("Set a password for portal login.")
-        return
-      }
-      const created = addEmployee(employeeFromFormData(fd, 0))
+      const created = addEmployee(employeeFromValues(values, 0))
       toast.success("Employee created.")
       router.push(`/employees/${created.id}`)
       return
@@ -53,7 +43,7 @@ export function EmployeeFormPage({
     if (employee) {
       updateEmployee(
         employee.id,
-        employeeFromFormData(fd, employee.id, employee)
+        employeeFromValues(values, employee.id, employee)
       )
       toast.success("Employee saved.")
       router.push(`/employees/${employee.id}`)
@@ -61,28 +51,40 @@ export function EmployeeFormPage({
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="mx-auto max-w-3xl space-y-6">
       <div>
         <h3 className="text-lg font-semibold">
           {mode === "add" ? "Add new employee" : `Edit ${employee?.name}`}
         </h3>
         <p className="text-muted-foreground mt-1 text-sm">
           {mode === "add"
-            ? "Create a team member profile, set salary, and optionally enable portal login."
-            : "Update profile details, salary, portal credentials, and permissions."}
+            ? "Create a team member profile, set module permissions, and optionally portal login."
+            : "Update profile details, module permissions, and portal credentials."}
         </p>
       </div>
 
       <div className="rounded-xl border border-border/60 bg-card p-5 shadow-sm">
-        <EmployeeForm formId={formId} employee={formEmployee} onSubmit={handleSubmit} />
+        <EmployeeForm
+          ref={formRef}
+          formId={formId}
+          mode={mode}
+          employee={formEmployee}
+          onSubmit={handleSubmit}
+        />
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <Button type="submit" form={formId}>
+        <Button type="button" onClick={() => formRef.current?.goNextOrSubmit()}>
           {mode === "add" ? "Create employee" : "Save changes"}
         </Button>
         <Button type="button" variant="outline" asChild>
-          <Link href={mode === "edit" && employee ? `/employees/${employee.id}` : "/employees"}>
+          <Link
+            href={
+              mode === "edit" && employee
+                ? `/employees/${employee.id}`
+                : "/employees"
+            }
+          >
             Cancel
           </Link>
         </Button>

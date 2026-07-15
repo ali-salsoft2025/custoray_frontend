@@ -25,11 +25,14 @@ export function DepartmentsProvider({ children }: { children: React.ReactNode })
   const [hydrated, setHydrated] = React.useState(false)
 
   React.useEffect(() => {
-    const saved = parsePersistedDepartments(
-      typeof window !== "undefined"
-        ? window.localStorage.getItem(DEPARTMENTS_STORAGE_KEY)
-        : null
-    )
+    if (typeof window === "undefined") return
+    const saved =
+      parsePersistedDepartments(
+        window.localStorage.getItem(DEPARTMENTS_STORAGE_KEY)
+      ) ??
+      parsePersistedDepartments(
+        window.localStorage.getItem("custoray-departments-v1")
+      )
     if (saved) setDepartments(saved)
     setHydrated(true)
   }, [])

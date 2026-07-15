@@ -52,18 +52,16 @@ import {
   User,
   UserCheck,
   UserCircle,
-  UserPlus,
   Users,
   UsersRound,
   Wallet,
 } from "lucide-react"
 import { NavMain } from "@/components/nav-main"
-import { NavUser } from "@/components/nav-user"
 import {
   SidebarNavLink,
   SidebarNavPendingProvider,
 } from "@/components/sidebar-nav-pending"
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, useSidebar } from "@/components/ui/sidebar";
+import { Sidebar, SidebarContent, SidebarHeader, useSidebar } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/auth-context"
 import { cn } from "@/lib/utils"
 import { useTheme } from "next-themes"
@@ -148,7 +146,6 @@ const data = {
       icon: UserCircle,
       items: [
         { title: "Team", url: "/employees", icon: Users },
-        { title: "Add employee", url: "/employees/new", icon: UserPlus },
         { title: "Permissions", url: "/employees/permissions", icon: ShieldCheck },
         { title: "Payroll", url: "/employees/payroll", icon: Wallet },
         { title: "Leave", url: "/employees/leaves", icon: CalendarDays },
@@ -290,9 +287,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarContent className="hide-scrollbar overflow-y-auto h-full">
           <NavMain items={navItems} />
         </SidebarContent>
-        <SidebarFooter>
-          <NavUser />
-        </SidebarFooter>
       </Sidebar>
     </SidebarNavPendingProvider>
   )
