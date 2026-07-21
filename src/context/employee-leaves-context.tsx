@@ -7,6 +7,7 @@ import {
   initialLeaveRecords,
   parsePersistedLeaves,
 } from "@/lib/employee-leaves"
+import { nextUniqueNumericId } from "@/lib/utils"
 
 type LeavesContextValue = {
   records: LeaveRecord[]
@@ -43,8 +44,8 @@ export function LeavesProvider({ children }: { children: React.ReactNode }) {
   const addRecord = React.useCallback((row: Omit<LeaveRecord, "id">) => {
     let created = { ...row, id: 0 } as LeaveRecord
     setRecords((prev) => {
-      const maxId = prev.reduce((m, x) => Math.max(m, x.id), 0)
-      created = { ...row, id: maxId + 1 }
+      const id = nextUniqueNumericId(prev)
+      created = { ...row, id }
       return [...prev, created]
     })
     return created

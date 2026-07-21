@@ -15,6 +15,7 @@ import { EmployeesProvider } from "@/context/employees-context"
 import { DepartmentsProvider } from "@/context/employee-departments-context"
 import { PayrollProvider } from "@/context/employee-payroll-context"
 import { LeavesProvider } from "@/context/employee-leaves-context"
+import { ZakatProvider } from "@/context/zakat-context"
 
 export function DashboardProviders({ children }: { children: React.ReactNode }) {
   return (
@@ -32,7 +33,7 @@ export function DashboardProviders({ children }: { children: React.ReactNode }) 
                 <ReturnsProvider>
                   <PaymentsProvider>
                     <ProductsProvider>
-                      {children}
+                      <ZakatProvider>{children}</ZakatProvider>
                     </ProductsProvider>
                   </PaymentsProvider>
                 </ReturnsProvider>

@@ -11,6 +11,7 @@ import {
 } from "@tabler/icons-react"
 import { toast } from "sonner"
 
+import { EmployeeDetail } from "@/components/employees/employee-detail"
 import {
   EmployeeForm,
   type EmployeeFormHandle,
@@ -58,6 +59,7 @@ const employeeTabs: DataTableTab[] = [
 
 type EmployeeSidebarState =
   | { mode: "add" }
+  | { mode: "view"; employee: EmployeeRow }
   | { mode: "edit"; employee: EmployeeRow }
   | null
 
@@ -75,6 +77,7 @@ export function EmployeeList() {
     addEmployee,
     updateEmployee,
     removeEmployee,
+    getEmployee,
   } = useEmployees()
   const [sidebar, setSidebar] = useState<EmployeeSidebarState>(null)
   const [formStep, setFormStep] = useState<1 | 2>(1)
@@ -85,6 +88,14 @@ export function EmployeeList() {
     setSidebar(null)
     setFormStep(1)
   }
+
+  const openSidebar = useCallback(
+    (row: EmployeeRow, mode: "view" | "edit") => {
+      setSidebar({ mode, employee: row })
+      setFormStep(1)
+    },
+    []
+  )
 
   const handleDelete = useCallback(
     async (employee: EmployeeRow) => {
@@ -98,7 +109,11 @@ export function EmployeeList() {
         return
       }
       removeEmployee(employee.id)
-      if (sidebar?.mode === "edit" && sidebar.employee.id === employee.id) {
+      if (
+        sidebar &&
+        sidebar.mode !== "add" &&
+        sidebar.employee.id === employee.id
+      ) {
         closeSidebar()
       }
       toast.message(`Removed ${employee.name}.`)
@@ -138,7 +153,9 @@ export function EmployeeList() {
                 table.getIsAllPageRowsSelected() ||
                 (table.getIsSomePageRowsSelected() && "indeterminate")
               }
-              onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+              onCheckedChange={(value) =>
+                table.toggleAllPageRowsSelected(!!value)
+              }
               aria-label="Select all"
             />
           </div>
@@ -161,12 +178,13 @@ export function EmployeeList() {
           <DataTableColumnHeader column={column} title="Name" />
         ),
         cell: ({ row }) => (
-          <Link
-            href={`/employees/${row.original.id}`}
-            className="text-foreground font-medium hover:underline"
+          <button
+            type="button"
+            className="text-foreground text-left font-medium hover:underline"
+            onClick={() => openSidebar(row.original, "view")}
           >
             {row.original.name}
-          </Link>
+          </button>
         ),
         enableHiding: false,
         meta: { dataTableFilter: false },
@@ -177,7 +195,9 @@ export function EmployeeList() {
           <DataTableColumnHeader column={column} title="Department" />
         ),
         cell: ({ row }) => (
-          <span className="text-muted-foreground">{row.original.department}</span>
+          <span className="text-muted-foreground">
+            {row.original.department}
+          </span>
         ),
         meta: { dataTableFilter: false },
       },
@@ -241,24 +261,29 @@ export function EmployeeList() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="size-8" size="icon">
                 <IconDotsVertical />
+                <span className="sr-only">Open menu</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem asChild>
-                <Link href={`/employees/${row.original.id}`}>
-                  <IconEye />
-                  View profile
-                </Link>
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuItem
+                onClick={() => openSidebar(row.original, "view")}
+              >
+                <IconEye />
+                View
               </DropdownMenuItem>
               {canAdmin ? (
                 <>
                   <DropdownMenuItem
-                    onClick={() =>
-                      setSidebar({ mode: "edit", employee: row.original })
-                    }
+                    onClick={() => openSidebar(row.original, "edit")}
                   >
                     <IconPencil />
                     Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href={`/employees/${row.original.id}`}>
+                      <IconEye />
+                      Full profile
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
@@ -269,17 +294,29 @@ export function EmployeeList() {
                     Delete
                   </DropdownMenuItem>
                 </>
-              ) : null}
+              ) : (
+                <DropdownMenuItem asChild>
+                  <Link href={`/employees/${row.original.id}`}>
+                    <IconEye />
+                    Full profile
+                  </Link>
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         ),
       },
     ],
-    [canAdmin, handleDelete]
+    [canAdmin, handleDelete, openSidebar]
   )
 
+  const sheetEmployeeId =
+    sidebar && sidebar.mode !== "add" ? sidebar.employee.id : null
   const sheetEmployee =
-    sidebar?.mode === "edit" ? sidebar.employee : null
+    sheetEmployeeId != null
+      ? (getEmployee(sheetEmployeeId) ??
+        (sidebar && sidebar.mode !== "add" ? sidebar.employee : null))
+      : null
   const formEmployee =
     sidebar?.mode === "add" ? EMPTY_EMPLOYEE : sheetEmployee ?? EMPTY_EMPLOYEE
   const formId =
@@ -299,26 +336,39 @@ export function EmployeeList() {
       >
         <SheetContent
           side="right"
-          className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-xl"
+          className={`flex w-full flex-col gap-0 overflow-hidden p-0 ${
+            sidebar?.mode === "view" ? "sm:max-w-lg" : "sm:max-w-xl"
+          }`}
         >
           {sidebar ? (
             <>
               <SheetHeader className="border-border/60 space-y-1 border-b px-6 py-5 text-left">
                 <SheetTitle className="text-lg leading-tight">
-                  {sidebar.mode === "add" ? "Add employee" : "Edit employee"}
+                  {sidebar.mode === "add"
+                    ? "Add employee"
+                    : sidebar.mode === "edit"
+                      ? "Edit employee"
+                      : sheetEmployee?.name}
                 </SheetTitle>
                 <SheetDescription>
                   {sidebar.mode === "add" ? (
                     formStep === 1
                       ? "Step 1 — basic info and portal access."
                       : "Step 2 — login credentials and module permissions."
-                  ) : sheetEmployee ? (
+                  ) : sidebar.mode === "edit" && sheetEmployee ? (
                     <>
                       {sheetEmployee.name}
                       <span className="text-muted-foreground">
                         {" "}
                         · {sheetEmployee.department || "No department"}
                       </span>
+                    </>
+                  ) : sheetEmployee ? (
+                    <>
+                      ID {sheetEmployee.id}
+                      {sheetEmployee.designation
+                        ? ` · ${sheetEmployee.designation}`
+                        : ""}
                     </>
                   ) : null}
                 </SheetDescription>
@@ -327,48 +377,81 @@ export function EmployeeList() {
                 key={
                   sidebar.mode === "add"
                     ? "add"
-                    : `${sheetEmployee?.id}-edit`
+                    : `${sheetEmployee?.id}-${sidebar.mode}`
                 }
                 className="min-h-0 flex-1 overflow-y-auto px-6 py-5"
               >
-                <EmployeeForm
-                  ref={formRef}
-                  formId={formId}
-                  mode={sidebar.mode}
-                  employee={formEmployee}
-                  onSubmit={handleSubmit}
-                  onStepChange={setFormStep}
-                  onPortalEnabledChange={setPortalEnabled}
-                />
+                {sidebar.mode === "view" && sheetEmployee ? (
+                  <EmployeeDetail employee={sheetEmployee} />
+                ) : sidebar.mode === "edit" || sidebar.mode === "add" ? (
+                  <EmployeeForm
+                    ref={formRef}
+                    formId={formId}
+                    mode={sidebar.mode}
+                    employee={formEmployee}
+                    onSubmit={handleSubmit}
+                    onStepChange={setFormStep}
+                    onPortalEnabledChange={setPortalEnabled}
+                  />
+                ) : null}
               </div>
               <SheetFooter className="border-border/60 gap-2 border-t px-6 py-4 sm:flex-row sm:justify-end">
-                {sidebar.mode === "add" && formStep === 2 ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => formRef.current?.goBack()}
-                  >
-                    Back
-                  </Button>
-                ) : (
-                  <SheetClose asChild>
-                    <Button variant="outline" type="button">
-                      Cancel
+                {sidebar.mode === "view" ? (
+                  <>
+                    {canAdmin ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full sm:w-auto"
+                        onClick={() =>
+                          sheetEmployee &&
+                          setSidebar({ mode: "edit", employee: sheetEmployee })
+                        }
+                      >
+                        Edit
+                      </Button>
+                    ) : null}
+                    <SheetClose asChild>
+                      <Button type="button" className="w-full sm:w-auto">
+                        Close
+                      </Button>
+                    </SheetClose>
+                  </>
+                ) : sidebar.mode === "add" && formStep === 2 ? (
+                  <>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => formRef.current?.goBack()}
+                    >
+                      Back
                     </Button>
-                  </SheetClose>
+                    <Button
+                      type="button"
+                      onClick={() => formRef.current?.goNextOrSubmit()}
+                    >
+                      Create employee
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <SheetClose asChild>
+                      <Button variant="outline" type="button">
+                        Cancel
+                      </Button>
+                    </SheetClose>
+                    <Button
+                      type="button"
+                      onClick={() => formRef.current?.goNextOrSubmit()}
+                    >
+                      {sidebar.mode === "add"
+                        ? portalEnabled
+                          ? "Continue"
+                          : "Create employee"
+                        : "Save employee"}
+                    </Button>
+                  </>
                 )}
-                <Button
-                  type="button"
-                  onClick={() => formRef.current?.goNextOrSubmit()}
-                >
-                  {sidebar.mode === "add"
-                    ? formStep === 2
-                      ? "Create employee"
-                      : portalEnabled
-                        ? "Continue"
-                        : "Create employee"
-                    : "Save employee"}
-                </Button>
               </SheetFooter>
             </>
           ) : null}
@@ -390,8 +473,9 @@ export function EmployeeList() {
             return
           }
           setSidebar({ mode: "add" })
+          setFormStep(1)
         }}
-        defaultColumnVisibility={{ actions: false }}
+        defaultColumnVisibility={{}}
         bulkActions={
           canAdmin
             ? [

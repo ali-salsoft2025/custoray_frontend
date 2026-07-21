@@ -7,6 +7,7 @@ import {
   type EmployeePermissions,
 } from "@/lib/employee-permissions"
 import { parseStatus, statusBadgeClass, statusLabel } from "@/lib/customers"
+import { normalizeUniqueNumericIds, nextUniqueNumericId } from "@/lib/utils"
 
 export { statusBadgeClass, statusLabel, parseStatus }
 
@@ -178,11 +179,14 @@ export function mapImportedEmployee(
   row: Record<string, string>,
   existing: EmployeeRow[]
 ): EmployeeRow | null {
-  const maxId = existing.reduce((m, x) => Math.max(m, x.id), 0)
-  const id = Number(row.id)
-  const finalId = Number.isFinite(id) && id > 0 ? id : maxId + 1
   const name = (row.name ?? "").trim()
   if (!name) return null
+
+  const parsedId = Number(row.id)
+  const finalId = nextUniqueNumericId(
+    existing,
+    Number.isFinite(parsedId) && parsedId > 0 ? parsedId : undefined
+  )
 
   return {
     id: finalId,
@@ -220,7 +224,7 @@ export function parsePersistedEmployees(raw: string | null): EmployeeRow[] | nul
       })
       if (result.success) rows.push(result.data)
     }
-    return rows.length > 0 ? rows : null
+    return rows.length > 0 ? normalizeUniqueNumericIds(rows) : null
   } catch {
     return null
   }

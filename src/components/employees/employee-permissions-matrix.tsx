@@ -1,5 +1,7 @@
 "use client"
 
+import { IconInfoCircle } from "@tabler/icons-react"
+
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   Table,
@@ -9,6 +11,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import {
   FULL_PERMISSIONS,
   MODULE_IDS,
@@ -25,6 +32,18 @@ import {
   type ModulePermission,
 } from "@/lib/employee-permissions"
 import { cn } from "@/lib/utils"
+
+const ACTION_LABELS: Record<keyof ModulePermission, string> = {
+  add: "Add",
+  edit: "Edit",
+  delete: "Delete",
+}
+
+const ACTION_HINTS: Record<keyof ModulePermission, string> = {
+  add: "Create new records in this module",
+  edit: "View and modify existing records",
+  delete: "Remove records permanently",
+}
 
 type EmployeePermissionsMatrixProps = {
   value: EmployeePermissions
@@ -60,7 +79,7 @@ export function EmployeePermissionsMatrix({
 
   return (
     <div className={cn("space-y-3", className)}>
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-1">
         <div className="flex items-center gap-2">
           <Checkbox
             id="perm-admin"
@@ -96,15 +115,34 @@ export function EmployeePermissionsMatrix({
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-md border">
+      {isAdmin ? (
+        <div className="bg-muted/50 flex items-start gap-2 rounded-md px-3 py-2 text-sm">
+          <IconInfoCircle className="text-muted-foreground mt-0.5 size-4 shrink-0" />
+          <p className="text-muted-foreground leading-relaxed">
+            Admin unlocked everything. Uncheck admin to edit modules.
+          </p>
+        </div>
+      ) : null}
+
+      <div className="overflow-x-auto rounded-md border border-border/60">
         <Table>
-          <TableHeader className="bg-muted">
+          <TableHeader className="bg-muted/50">
             <TableRow className="hover:bg-transparent">
-              <TableHead className="min-w-[9rem] px-3">Module</TableHead>
+              <TableHead className="min-w-[8rem] px-3">Module</TableHead>
               {(["add", "edit", "delete"] as const).map((action) => (
-                <TableHead key={action} className="w-20 px-2 text-center capitalize">
+                <TableHead key={action} className="w-20 px-2 text-center">
                   <div className="flex flex-col items-center gap-1.5 py-1">
-                    <span>{action}</span>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="inline-flex cursor-help items-center gap-1 text-xs capitalize">
+                          {ACTION_LABELS[action]}
+                          <IconInfoCircle className="text-muted-foreground size-3" />
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">
+                        {ACTION_HINTS[action]}
+                      </TooltipContent>
+                    </Tooltip>
                     <Checkbox
                       aria-label={`Select all ${action}`}
                       checked={isActionFullySelected(value, action)}
@@ -116,19 +154,23 @@ export function EmployeePermissionsMatrix({
                   </div>
                 </TableHead>
               ))}
-              <TableHead className="w-16 px-2 text-center">All</TableHead>
+              <TableHead className="w-14 px-2 text-center text-xs">All</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {MODULE_IDS.map((moduleId) => {
               const row = effective.modules[moduleId]
+              const hasAny = row.add || row.edit || row.delete
               return (
-                <TableRow key={moduleId}>
-                  <TableCell className="px-3 py-2.5 font-medium">
+                <TableRow
+                  key={moduleId}
+                  className={cn(hasAny && !isAdmin && "bg-muted/30")}
+                >
+                  <TableCell className="px-3 py-2 text-sm font-medium">
                     {MODULE_LABELS[moduleId]}
                   </TableCell>
                   {(["add", "edit", "delete"] as const).map((action) => (
-                    <TableCell key={action} className="px-2 py-2.5 text-center">
+                    <TableCell key={action} className="px-2 py-2 text-center">
                       <div className="flex justify-center">
                         <Checkbox
                           aria-label={`${MODULE_LABELS[moduleId]} ${action}`}
@@ -141,14 +183,16 @@ export function EmployeePermissionsMatrix({
                       </div>
                     </TableCell>
                   ))}
-                  <TableCell className="px-2 py-2.5 text-center">
+                  <TableCell className="px-2 py-2 text-center">
                     <div className="flex justify-center">
                       <Checkbox
                         aria-label={`${MODULE_LABELS[moduleId]} all`}
                         checked={isModuleFullySelected(value, moduleId)}
                         disabled={locked}
                         onCheckedChange={(checked) =>
-                          onChange(setModuleAll(value, moduleId, checked === true))
+                          onChange(
+                            setModuleAll(value, moduleId, checked === true)
+                          )
                         }
                       />
                     </div>

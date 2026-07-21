@@ -521,14 +521,15 @@ function DataTableFiltersPopover<TData>({
 
   return (
     <Popover modal={false}>
-      <div className="border-border/70 bg-background inline-flex h-9 shrink-0 items-center overflow-hidden rounded-full border shadow-sm">
+      <div className="border-border/70 bg-background inline-flex h-9 shrink-0 items-center overflow-visible rounded-full border shadow-sm">
         <PopoverTrigger asChild>
           <Button
             type="button"
             variant="ghost"
             size="icon"
             className={cn(
-              "text-muted-foreground hover:bg-muted/50 hover:text-foreground relative size-9 rounded-none border-0 shadow-none",
+              "text-muted-foreground hover:bg-muted/50 hover:text-foreground relative size-9 border-0 shadow-none",
+              showLayoutToggle ? "rounded-l-full rounded-r-none" : "rounded-full",
               filterCount > 0 && "bg-primary/5 text-foreground"
             )}
             aria-label="Open filters"
@@ -548,7 +549,7 @@ function DataTableFiltersPopover<TData>({
               type="button"
               variant="ghost"
               size="icon"
-              className="text-muted-foreground hover:bg-muted/50 hover:text-foreground size-9 rounded-none border-0 shadow-none"
+            className="text-muted-foreground hover:bg-muted/50 hover:text-foreground size-9 rounded-r-full rounded-l-none border-0 shadow-none"
               aria-label="Toggle layout"
               onClick={() =>
                 onLayoutViewChange(layoutView === "list" ? "grid" : "list")
@@ -911,6 +912,8 @@ export function DataTable<TData>({
   onDataChange,
   showAddButton = true,
   showImportButton = true,
+  toolbarExtra,
+  toolbarActions,
   tableOptionsExtra,
   onImportRows,
   importSampleCsvContent,
@@ -938,6 +941,10 @@ export function DataTable<TData>({
   onDataChange?: (data: TData[]) => void
   showAddButton?: boolean
   showImportButton?: boolean
+  /** Custom controls rendered visibly beside the table search. */
+  toolbarExtra?: React.ReactNode
+  /** Custom action buttons rendered between Export and Add. */
+  toolbarActions?: React.ReactNode
   /** Custom controls rendered at the top of the table options popover. */
   tableOptionsExtra?: React.ReactNode
   /** Custom CSV import handler; return number of rows added. */
@@ -1298,6 +1305,9 @@ export function DataTable<TData>({
               tableOptionsExtra={tableOptionsExtra}
             />
           </div>
+          {toolbarExtra ? (
+            <div className="flex flex-wrap items-end gap-2">{toolbarExtra}</div>
+          ) : null}
         </div>
         <div className="flex flex-wrap items-center gap-2 lg:shrink-0">
           {showImportButton ? (
@@ -1320,6 +1330,7 @@ export function DataTable<TData>({
             <IconCloudDownload />
             <span className="hidden sm:inline">Export</span>
           </Button>
+          {toolbarActions}
           {showAddButton ? (
             <Button
               variant="default"

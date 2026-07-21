@@ -6,8 +6,10 @@ import {
   IconCopy,
   IconDotsVertical,
   IconEye,
+  IconFilter,
   IconPencil,
   IconTrash,
+  IconX,
 } from "@tabler/icons-react"
 import { toast } from "sonner"
 
@@ -18,6 +20,8 @@ import { DataTable, type DataTableTab } from "@/components/data-table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,6 +45,7 @@ import {
 } from "@/lib/confirm-action"
 import {
   EMPTY_PAYMENT,
+  PAYMENT_METHODS,
   formatDate,
   formatMoney,
   mapImportedPayment,
@@ -272,21 +277,42 @@ export function PaymentsPageContent({ paymentType }: PaymentsPageContentProps) {
     duplicatePayment,
   } = usePayments()
   const [sidebar, setSidebar] = useState<PaymentSidebarState>(null)
+  const [dateFrom, setDateFrom] = useState("")
+  const [dateTo, setDateTo] = useState("")
+  const [methodFilter, setMethodFilter] = useState("all")
+  const [partyFilter, setPartyFilter] = useState("all")
 
   const typePayments = useMemo(
     () => payments.filter((row) => row.type === paymentType),
     [payments, paymentType]
   )
+  const parties = useMemo(
+    () =>
+      [...new Set(typePayments.map((row) => row.partyName))]
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b)),
+    [typePayments]
+  )
+  const filteredPayments = useMemo(
+    () =>
+      typePayments.filter((row) => {
+        if (dateFrom && row.paymentDate < dateFrom) return false
+        if (dateTo && row.paymentDate > dateTo) return false
+        if (methodFilter !== "all" && row.paymentMethod !== methodFilter) {
+          return false
+        }
+        if (partyFilter !== "all" && row.partyName !== partyFilter) return false
+        return true
+      }),
+    [typePayments, dateFrom, dateTo, methodFilter, partyFilter]
+  )
+  const activeFilterCount =
+    Number(Boolean(dateFrom)) +
+    Number(Boolean(dateTo)) +
+    Number(methodFilter !== "all") +
+    Number(partyFilter !== "all")
 
   const closeSidebar = () => setSidebar(null)
-
-  const mergeTypePayments = useCallback(
-    (nextTypeRows: PaymentRow[]) => {
-      const other = payments.filter((row) => row.type !== paymentType)
-      setPayments([...other, ...nextTypeRows])
-    },
-    [payments, paymentType, setPayments]
-  )
 
   const handleDelete = useCallback(
     async (payment: PaymentRow) => {
@@ -504,14 +530,112 @@ export function PaymentsPageContent({ paymentType }: PaymentsPageContentProps) {
         </SheetContent>
       </Sheet>
 
+      <div className="mb-5 rounded-xl border border-border/60 bg-card p-4">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <IconFilter className="text-muted-foreground size-4" />
+            <div>
+              <p className="text-sm font-semibold">Payment filters</p>
+              <p className="text-muted-foreground text-xs">
+                Narrow payments by date, method, or {partyLabel.toLowerCase()}.
+              </p>
+            </div>
+          </div>
+          {activeFilterCount > 0 ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setDateFrom("")
+                setDateTo("")
+                setMethodFilter("all")
+                setPartyFilter("all")
+              }}
+            >
+              <IconX className="size-4" />
+              Clear {activeFilterCount}
+            </Button>
+          ) : null}
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="space-y-1.5">
+            <Label htmlFor={`${paymentType}-payment-from`} className="text-xs">
+              From date
+            </Label>
+            <Input
+              id={`${paymentType}-payment-from`}
+              type="date"
+              value={dateFrom}
+              max={dateTo || undefined}
+              onChange={(event) => setDateFrom(event.target.value)}
+              className="h-9"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor={`${paymentType}-payment-to`} className="text-xs">
+              To date
+            </Label>
+            <Input
+              id={`${paymentType}-payment-to`}
+              type="date"
+              value={dateTo}
+              min={dateFrom || undefined}
+              onChange={(event) => setDateTo(event.target.value)}
+              className="h-9"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor={`${paymentType}-payment-method`} className="text-xs">
+              Payment method
+            </Label>
+            <select
+              id={`${paymentType}-payment-method`}
+              value={methodFilter}
+              onChange={(event) => setMethodFilter(event.target.value)}
+              className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm shadow-xs"
+            >
+              <option value="all">All methods</option>
+              {PAYMENT_METHODS.map((method) => (
+                <option key={method} value={method}>
+                  {method}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor={`${paymentType}-payment-party`} className="text-xs">
+              {partyLabel}
+            </Label>
+            <select
+              id={`${paymentType}-payment-party`}
+              value={partyFilter}
+              onChange={(event) => setPartyFilter(event.target.value)}
+              className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm shadow-xs"
+            >
+              <option value="all">All {partyLabel.toLowerCase()}s</option>
+              {parties.map((party) => (
+                <option key={party} value={party}>
+                  {party}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <p className="text-muted-foreground mt-3 text-xs">
+          Showing {filteredPayments.length} of {typePayments.length} payments
+        </p>
+      </div>
+
       <DataTable
-        data={typePayments}
+        data={filteredPayments}
         columns={columns}
         addButtonLabel={addButtonLabel}
         searchPlaceholder={searchPlaceholder}
         importSampleFilename={importSampleFilename}
         exportFilename={exportFilename}
-        onDataChange={mergeTypePayments}
         onImportRows={handleImportRows}
         onAddClick={() => setSidebar({ mode: "add" })}
         bulkActions={[

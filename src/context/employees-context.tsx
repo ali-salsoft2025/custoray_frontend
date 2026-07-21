@@ -8,6 +8,7 @@ import {
   parsePersistedEmployees,
 } from "@/lib/employees"
 import { normalizePermissions } from "@/lib/employee-permissions"
+import { nextUniqueNumericId } from "@/lib/utils"
 
 type EmployeesContextValue = {
   employees: EmployeeRow[]
@@ -53,8 +54,8 @@ export function EmployeesProvider({ children }: { children: React.ReactNode }) {
   const addEmployee = React.useCallback((employee: Omit<EmployeeRow, "id">) => {
     let created = { ...employee, id: 0 } as EmployeeRow
     setEmployees((prev) => {
-      const maxId = prev.reduce((m, x) => Math.max(m, x.id), 0)
-      created = { ...employee, id: maxId + 1 }
+      const id = nextUniqueNumericId(prev)
+      created = { ...employee, id }
       return [...prev, created]
     })
     return created

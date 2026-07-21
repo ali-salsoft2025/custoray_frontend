@@ -32,7 +32,7 @@ type EmployeeFormProps = {
   onPortalEnabledChange?: (enabled: boolean) => void
 }
 
-function toValues(employee: EmployeeRow): EmployeeFormValues {
+function toValues(employee: EmployeeRow, mode: "add" | "edit"): EmployeeFormValues {
   return {
     name: employee.name,
     email: employee.email,
@@ -44,7 +44,8 @@ function toValues(employee: EmployeeRow): EmployeeFormValues {
     baseSalary: employee.baseSalary,
     portalEnabled: employee.portalEnabled,
     portalEmail: employee.portalEmail,
-    portalPassword: "",
+    // Admins can view and update existing portal passwords when editing.
+    portalPassword: mode === "edit" ? employee.portalPassword : "",
     permissions: normalizePermissions(employee.permissions),
   }
 }
@@ -57,15 +58,15 @@ export const EmployeeForm = React.forwardRef<EmployeeFormHandle, EmployeeFormPro
     const { departments } = useDepartments()
     const [step, setStep] = React.useState<1 | 2>(1)
     const [values, setValues] = React.useState<EmployeeFormValues>(() =>
-      toValues(employee)
+      toValues(employee, mode)
     )
     const [error, setError] = React.useState<string | null>(null)
 
     React.useEffect(() => {
-      setValues(toValues(employee))
+      setValues(toValues(employee, mode))
       setStep(1)
       setError(null)
-    }, [employee])
+    }, [employee, mode])
 
     React.useEffect(() => {
       onStepChange?.(step)
@@ -90,8 +91,8 @@ export const EmployeeForm = React.forwardRef<EmployeeFormHandle, EmployeeFormPro
           setError("Login email is required for portal access.")
           return false
         }
-        if (!employee.portalPassword && !values.portalPassword.trim()) {
-          setError("Set a password for portal login.")
+        if (!values.portalPassword.trim()) {
+          setError("Password is required for portal login.")
           return false
         }
       }
@@ -316,7 +317,7 @@ export const EmployeeForm = React.forwardRef<EmployeeFormHandle, EmployeeFormPro
                 <p className="text-muted-foreground text-xs leading-relaxed">
                   {mode === "add"
                     ? "If enabled, step 2 covers login credentials and module permissions."
-                    : "Enable to set login credentials and module permissions."}
+                    : "Admins can view and update login credentials when portal access is enabled."}
                 </p>
               </div>
               <div className="flex items-start gap-3 rounded-lg border border-border/60 p-3">
@@ -336,14 +337,20 @@ export const EmployeeForm = React.forwardRef<EmployeeFormHandle, EmployeeFormPro
                     Allow portal login
                   </Label>
                   <p className="text-muted-foreground text-xs leading-relaxed">
-                    They can sign in with credentials you set.
+                    They can sign in with the credentials below.
                   </p>
                 </div>
               </div>
 
               {mode === "edit" && values.portalEnabled ? (
                 <>
-                  <div className="space-y-4 rounded-lg bg-muted/30 p-4">
+                  <div className="space-y-4 rounded-lg border border-border/60 p-4">
+                    <div>
+                      <p className="text-sm font-medium">Login credentials</p>
+                      <p className="text-muted-foreground text-xs leading-relaxed">
+                        View or change the email and password used to sign in.
+                      </p>
+                    </div>
                     <div className="flex flex-col gap-2">
                       <Label htmlFor={`${formId}-portalEmail`}>Login email</Label>
                       <Input
@@ -352,11 +359,12 @@ export const EmployeeForm = React.forwardRef<EmployeeFormHandle, EmployeeFormPro
                         value={values.portalEmail}
                         onChange={(e) => patch({ portalEmail: e.target.value })}
                         placeholder="sara@custoray.demo"
+                        autoComplete="username"
                       />
                     </div>
                     <div className="flex flex-col gap-2">
                       <Label htmlFor={`${formId}-portalPassword`}>
-                        {employee.portalPassword ? "Password" : "Set password"}
+                        Password
                       </Label>
                       <PasswordInput
                         id={`${formId}-portalPassword`}
@@ -365,11 +373,7 @@ export const EmployeeForm = React.forwardRef<EmployeeFormHandle, EmployeeFormPro
                         onChange={(e) =>
                           patch({ portalPassword: e.target.value })
                         }
-                        placeholder={
-                          employee.portalPassword
-                            ? "Leave blank to keep current"
-                            : "Choose a password"
-                        }
+                        placeholder="Enter portal password"
                       />
                     </div>
                   </div>

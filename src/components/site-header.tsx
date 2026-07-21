@@ -47,6 +47,9 @@ function titleForPath(pathname: string | null): string {
   if (pathname === "/pos/reports") return "POS reports"
   if (pathname === "/pos/settings") return "POS settings"
   if (pathname.startsWith("/pos")) return "POS"
+  if (pathname === "/qr-storefront" || pathname.startsWith("/qr-storefront/")) {
+    return "QR Storefront"
+  }
   if (pathname === "/inventory") return "Inventory"
   if (pathname.startsWith("/inventory/")) {
     if (pathname.includes("year-closing")) return "Year closing"
@@ -62,10 +65,18 @@ function titleForPath(pathname: string | null): string {
   if (pathname === "/employees/new") return "Add employee"
   if (pathname === "/employees/permissions") return "Permissions"
   if (pathname === "/employees/payroll") return "Payroll"
+  if (pathname === "/employees/attendance") return "Attendance"
   if (pathname === "/employees/leaves") return "Leave management"
   if (pathname === "/employees/departments") return "Departments"
   if (pathname.startsWith("/employees/") && pathname.endsWith("/edit")) return "Edit employee"
   if (pathname.startsWith("/employees/")) return "Employee profile"
+  if (pathname === "/zakat") return "Zakat overview"
+  if (pathname === "/zakat/assets") return "Zakat assets"
+  if (pathname === "/zakat/liabilities") return "Zakat liabilities"
+  if (pathname === "/zakat/history") return "Zakat history"
+  if (pathname === "/zakat/settings") return "Zakat settings"
+  if (pathname === "/zakat/calculator") return "Zakat overview"
+  if (pathname.startsWith("/zakat")) return "Zakat"
   if (pathname === "/tax") return "Tax Helper"
   if (pathname === "/tax/profit-loss") return "Profit & loss"
   if (pathname === "/tax/balance-sheet") return "Balance sheet"

@@ -14,7 +14,7 @@ export function PageLoader({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center gap-4 p-8",
+        "flex flex-col items-center justify-center gap-5 p-8",
         fullScreen
           ? "bg-background/90 fixed inset-0 z-50 backdrop-blur-sm"
           : "min-h-[40vh] flex-1",
@@ -24,10 +24,11 @@ export function PageLoader({
       aria-live="polite"
       aria-busy="true"
     >
-      <LoadingSpinner size="xl" label={message ?? "Loading page"} />
-      {message ? (
-        <p className="text-muted-foreground text-sm">{message}</p>
-      ) : null}
+      <LoadingSpinner
+        size="xl"
+        className="size-25 -translate-y-3"
+        label={message ?? "Loading page"}
+      />
     </div>
   )
 }

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist_Mono, Poppins } from "next/font/google";
 import { RootProviders } from "@/components/root-providers";
 import { ThemeProvider } from "@/components/theme/theme-provider";
+import "react-big-calendar/lib/css/react-big-calendar.css";
 import "./globals.css";
 
 const poppins = Poppins({

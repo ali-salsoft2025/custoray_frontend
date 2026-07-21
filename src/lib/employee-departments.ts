@@ -1,5 +1,6 @@
 import { z } from "zod"
 
+import { normalizeUniqueNumericIds, nextUniqueNumericId } from "@/lib/utils"
 export const departmentSchema = z.object({
   id: z.number(),
   name: z.string(),
@@ -68,7 +69,7 @@ export function parsePersistedDepartments(
       })
       if (result.success) rows.push(result.data)
     }
-    return rows.length > 0 ? rows : null
+    return rows.length > 0 ? normalizeUniqueNumericIds(rows) : null
   } catch {
     return null
   }
@@ -92,9 +93,11 @@ export function mapImportedDepartment(
 ): DepartmentRow | null {
   const name = (row.name ?? "").trim()
   if (!name) return null
-  const maxId = existing.reduce((m, x) => Math.max(m, x.id), 0)
-  const id = Number(row.id)
-  const finalId = Number.isFinite(id) && id > 0 ? id : maxId + 1
+  const parsedId = Number(row.id)
+  const finalId = nextUniqueNumericId(
+    existing,
+    Number.isFinite(parsedId) && parsedId > 0 ? parsedId : undefined
+  )
   return {
     id: finalId,
     name,

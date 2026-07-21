@@ -270,3 +270,84 @@ export function isModuleFullySelected(
   const m = getModulePermission(permissions, moduleId)
   return m.add && m.edit && m.delete
 }
+
+export const PERMISSION_PRESET_IDS = [
+  "none",
+  "viewer",
+  "contributor",
+  "manager",
+  "admin",
+] as const
+
+export type PermissionPresetId = (typeof PERMISSION_PRESET_IDS)[number]
+
+export const PERMISSION_PRESET_LABELS: Record<PermissionPresetId, string> = {
+  none: "No access",
+  viewer: "View only",
+  contributor: "Contributor",
+  manager: "Manager",
+  admin: "Admin",
+}
+
+export const PERMISSION_PRESET_DESCRIPTIONS: Record<PermissionPresetId, string> = {
+  none: "Cannot access any modules.",
+  viewer: "Can view and edit existing records, but not add or delete.",
+  contributor: "Can add and edit records across all modules.",
+  manager: "Full add, edit, and delete access on all modules.",
+  admin: "Unrestricted access to everything, including settings.",
+}
+
+function moduleMapWith(
+  row: ModulePermission,
+  moduleIds: readonly ModuleId[] = MODULE_IDS
+): Record<ModuleId, ModulePermission> {
+  const modules = emptyModuleMap()
+  for (const id of moduleIds) {
+    modules[id] = { ...row }
+  }
+  return modules
+}
+
+export function permissionPreset(id: PermissionPresetId): EmployeePermissions {
+  switch (id) {
+    case "none":
+      return { admin: false, modules: emptyModuleMap() }
+    case "viewer":
+      return {
+        admin: false,
+        modules: moduleMapWith({ add: false, edit: true, delete: false }),
+      }
+    case "contributor":
+      return {
+        admin: false,
+        modules: moduleMapWith({ add: true, edit: true, delete: false }),
+      }
+    case "manager":
+      return { admin: false, modules: fullModuleMap() }
+    case "admin":
+      return { admin: true, modules: fullModuleMap() }
+  }
+}
+
+export function permissionsEqual(
+  a: EmployeePermissions,
+  b: EmployeePermissions
+): boolean {
+  const left = normalizePermissions(a)
+  const right = normalizePermissions(b)
+  if (left.admin !== right.admin) return false
+  return MODULE_IDS.every((id) => {
+    const lm = left.modules[id]
+    const rm = right.modules[id]
+    return lm.add === rm.add && lm.edit === rm.edit && lm.delete === rm.delete
+  })
+}
+
+export function countGrantedModules(permissions: EmployeePermissions): number {
+  const effective = effectivePermissions(permissions)
+  if (effective.admin) return MODULE_IDS.length
+  return MODULE_IDS.filter((id) => {
+    const m = effective.modules[id]
+    return m.add || m.edit || m.delete
+  }).length
+}

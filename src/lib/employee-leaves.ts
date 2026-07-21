@@ -1,5 +1,6 @@
 import { z } from "zod"
 
+import { normalizeUniqueNumericIds } from "@/lib/utils"
 export const LEAVE_TYPES = ["annual", "sick", "unpaid", "other"] as const
 export type LeaveType = (typeof LEAVE_TYPES)[number]
 
@@ -126,7 +127,7 @@ export function parsePersistedLeaves(raw: string | null): LeaveRecord[] | null {
       const result = leaveRecordSchema.safeParse(item)
       if (result.success) rows.push(result.data)
     }
-    return rows.length > 0 ? rows : null
+    return rows.length > 0 ? normalizeUniqueNumericIds(rows) : null
   } catch {
     return null
   }

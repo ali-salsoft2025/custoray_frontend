@@ -7,6 +7,7 @@ import {
   initialPayrollRecords,
   parsePersistedPayroll,
 } from "@/lib/employee-payroll"
+import { nextUniqueNumericId } from "@/lib/utils"
 
 type PayrollContextValue = {
   records: PayrollRecord[]
@@ -43,8 +44,8 @@ export function PayrollProvider({ children }: { children: React.ReactNode }) {
   const addRecord = React.useCallback((row: Omit<PayrollRecord, "id">) => {
     let created = { ...row, id: 0 } as PayrollRecord
     setRecords((prev) => {
-      const maxId = prev.reduce((m, x) => Math.max(m, x.id), 0)
-      created = { ...row, id: maxId + 1 }
+      const id = nextUniqueNumericId(prev)
+      created = { ...row, id }
       return [...prev, created]
     })
     return created

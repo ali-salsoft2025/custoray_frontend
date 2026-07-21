@@ -7,6 +7,7 @@ import {
   initialDepartments,
   parsePersistedDepartments,
 } from "@/lib/employee-departments"
+import { nextUniqueNumericId } from "@/lib/utils"
 
 type DepartmentsContextValue = {
   departments: DepartmentRow[]
@@ -45,8 +46,8 @@ export function DepartmentsProvider({ children }: { children: React.ReactNode })
   const addDepartment = React.useCallback((row: Omit<DepartmentRow, "id">) => {
     let created = { ...row, id: 0 } as DepartmentRow
     setDepartments((prev) => {
-      const maxId = prev.reduce((m, x) => Math.max(m, x.id), 0)
-      created = { ...row, id: maxId + 1 }
+      const id = nextUniqueNumericId(prev)
+      created = { ...row, id }
       return [...prev, created]
     })
     return created

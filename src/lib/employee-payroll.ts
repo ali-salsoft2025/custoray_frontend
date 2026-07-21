@@ -1,6 +1,7 @@
 import { z } from "zod"
 
 import { formatMoney } from "@/lib/customers"
+import { normalizeUniqueNumericIds } from "@/lib/utils"
 
 export { formatMoney }
 
@@ -13,6 +14,7 @@ export const payrollRecordSchema = z.object({
   period: z.string(),
   baseSalary: z.string(),
   bonuses: z.string(),
+  commissions: z.string().default("0"),
   deductions: z.string(),
   netPay: z.string(),
   status: z.enum(PAYROLL_STATUSES),
@@ -31,6 +33,7 @@ export const initialPayrollRecords: PayrollRecord[] = [
     period: "2026-05",
     baseSalary: "85000.00",
     bonuses: "5000.00",
+    commissions: "0.00",
     deductions: "2500.00",
     netPay: "87500.00",
     status: "paid",
@@ -43,6 +46,7 @@ export const initialPayrollRecords: PayrollRecord[] = [
     period: "2026-05",
     baseSalary: "45000.00",
     bonuses: "0.00",
+    commissions: "0.00",
     deductions: "1200.00",
     netPay: "43800.00",
     status: "paid",
@@ -55,6 +59,7 @@ export const initialPayrollRecords: PayrollRecord[] = [
     period: "2026-06",
     baseSalary: "85000.00",
     bonuses: "0.00",
+    commissions: "3500.00",
     deductions: "2500.00",
     netPay: "82500.00",
     status: "pending",
@@ -69,6 +74,7 @@ export const EMPTY_PAYROLL: PayrollRecord = {
   period: new Date().toISOString().slice(0, 7),
   baseSalary: "0",
   bonuses: "0",
+  commissions: "0",
   deductions: "0",
   netPay: "0",
   status: "draft",
@@ -79,12 +85,14 @@ export const EMPTY_PAYROLL: PayrollRecord = {
 export function computeNetPay(
   baseSalary: string,
   bonuses: string,
-  deductions: string
+  deductions: string,
+  commissions = "0"
 ): string {
   const base = Number(baseSalary) || 0
   const bonus = Number(bonuses) || 0
+  const commission = Number(commissions) || 0
   const deduct = Number(deductions) || 0
-  return (base + bonus - deduct).toFixed(2)
+  return (base + bonus + commission - deduct).toFixed(2)
 }
 
 export function payrollStatusLabel(status: PayrollStatus): string {
@@ -106,6 +114,7 @@ export function payrollStatusClass(status: PayrollStatus): string {
 export function payrollFromFormData(fd: FormData, id: number): PayrollRecord {
   const baseSalary = String(fd.get("baseSalary") ?? "0").trim() || "0"
   const bonuses = String(fd.get("bonuses") ?? "0").trim() || "0"
+  const commissions = String(fd.get("commissions") ?? "0").trim() || "0"
   const deductions = String(fd.get("deductions") ?? "0").trim() || "0"
   return {
     id,
@@ -113,8 +122,9 @@ export function payrollFromFormData(fd: FormData, id: number): PayrollRecord {
     period: String(fd.get("period") ?? "").trim(),
     baseSalary,
     bonuses,
+    commissions,
     deductions,
-    netPay: computeNetPay(baseSalary, bonuses, deductions),
+    netPay: computeNetPay(baseSalary, bonuses, deductions, commissions),
     status: (String(fd.get("status") ?? "draft") as PayrollStatus) || "draft",
     paidDate: String(fd.get("paidDate") ?? "").trim(),
     notes: String(fd.get("notes") ?? "").trim(),
@@ -131,7 +141,7 @@ export function parsePersistedPayroll(raw: string | null): PayrollRecord[] | nul
       const result = payrollRecordSchema.safeParse(item)
       if (result.success) rows.push(result.data)
     }
-    return rows.length > 0 ? rows : null
+    return rows.length > 0 ? normalizeUniqueNumericIds(rows) : null
   } catch {
     return null
   }
