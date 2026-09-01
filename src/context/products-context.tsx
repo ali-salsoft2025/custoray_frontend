@@ -8,6 +8,29 @@ import {
   nextSku,
   parsePersistedProducts,
 } from "@/lib/products"
+import { apiListProducts } from "@/lib/api/business"
+
+const USE_API = process.env.NEXT_PUBLIC_API_PRODUCTS === "true"
+
+function mapApiProduct(p: Awaited<ReturnType<typeof apiListProducts>>["items"][0], index: number): ProductRow {
+  return {
+    id: index + 1,
+    srNo: p.srNo ?? index + 1,
+    sku: p.sku,
+    name: p.name,
+    brand: p.brand?.name ?? "",
+    category: p.category?.name ?? "General",
+    variant: p.variant?.name ?? "Others",
+    status: p.status,
+    productStatus: p.productStatus ?? "active",
+    lifecycle: (p.lifecycle as ProductRow["lifecycle"]) ?? "active",
+    stock: p.stock,
+    orders: p.ordersCount ?? 0,
+    costPrice: Number(p.costPrice),
+    salePrice: Number(p.salePrice),
+    imageUrls: (p.imageUrls as string[]) ?? [],
+  }
+}
 
 type ProductsContextValue = {
   products: ProductRow[]
@@ -16,6 +39,7 @@ type ProductsContextValue = {
   addProduct: (product: Omit<ProductRow, "id" | "srNo">) => ProductRow
   updateProduct: (id: number, patch: Partial<ProductRow>) => void
   removeProduct: (id: number) => void
+  loading: boolean
 }
 
 const ProductsContext = React.createContext<ProductsContextValue | null>(null)
@@ -23,8 +47,19 @@ const ProductsContext = React.createContext<ProductsContextValue | null>(null)
 export function ProductsProvider({ children }: { children: React.ReactNode }) {
   const [products, setProducts] = React.useState<ProductRow[]>(() => [...initialProducts])
   const [hydrated, setHydrated] = React.useState(false)
+  const [loading, setLoading] = React.useState(USE_API)
 
   React.useEffect(() => {
+    if (USE_API) {
+      apiListProducts({ limit: 500 })
+        .then((res) => setProducts(res.items.map(mapApiProduct)))
+        .catch(() => {})
+        .finally(() => {
+          setLoading(false)
+          setHydrated(true)
+        })
+      return
+    }
     const saved = parsePersistedProducts(
       typeof window !== "undefined"
         ? window.localStorage.getItem(PRODUCTS_STORAGE_KEY)
@@ -35,7 +70,7 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   React.useEffect(() => {
-    if (!hydrated || typeof window === "undefined") return
+    if (!hydrated || typeof window === "undefined" || USE_API) return
     window.localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(products))
   }, [products, hydrated])
 
@@ -77,8 +112,9 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
       addProduct,
       updateProduct,
       removeProduct,
+      loading,
     }),
-    [products, getProduct, addProduct, updateProduct, removeProduct]
+    [products, getProduct, addProduct, updateProduct, removeProduct, loading]
   )
 
   return (

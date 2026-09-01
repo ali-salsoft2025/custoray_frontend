@@ -2,11 +2,10 @@
 
 import Link from "next/link"
 import {
-  Bell,
-  ChevronsUpDown,
   CreditCard,
   LogIn,
   LogOut,
+  Palette,
   Settings,
   UserCircle,
 } from "lucide-react"
@@ -52,30 +51,18 @@ export function NavUser({ className }: { className?: string }) {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
+          aria-label="Account menu"
           className={cn(
-            "flex min-w-0 items-center gap-2.5 rounded-2xl ps-1 text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35 sm:ps-2",
+            "flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full border-0 p-0",
             className
           )}
         >
-          <Avatar className="size-9 shrink-0 rounded-full shadow-[0_1px_4px_0_rgba(0,0,0,0.16)]">
-            <AvatarImage src={user.avatar} alt={user.name} className="rounded-full" />
-            <AvatarFallback className="rounded-full text-xs font-semibold">
+          <Avatar className="size-9">
+            <AvatarImage src={user.avatar} alt={user.name} />
+            <AvatarFallback className="bg-transparent text-xs font-semibold">
               {initials(user.name)}
             </AvatarFallback>
           </Avatar>
-          <div className="hidden min-w-0 max-w-[10rem] flex-col sm:flex lg:max-w-[14rem]">
-            <span className="truncate text-sm font-semibold leading-tight">
-              {user.name}
-            </span>
-            <span className="text-muted-foreground truncate text-xs leading-tight">
-              {accessLabel}
-            </span>
-          </div>
-          <ChevronsUpDown
-            className="text-muted-foreground hidden size-4 shrink-0 sm:block"
-            strokeWidth={2}
-            aria-hidden
-          />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
@@ -86,49 +73,57 @@ export function NavUser({ className }: { className?: string }) {
       >
         <DropdownMenuLabel className="p-0 font-normal">
           <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-            <Avatar className="h-8 w-8 rounded-full shadow-[0_1px_4px_0_rgba(0,0,0,0.16)]">
-              <AvatarImage src={user.avatar} alt={user.name} className="rounded-full" />
-              <AvatarFallback className="rounded-full">{initials(user.name)}</AvatarFallback>
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={user.avatar} alt={user.name} />
+              <AvatarFallback className="text-xs font-semibold">
+                {initials(user.name)}
+              </AvatarFallback>
             </Avatar>
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate font-medium">{user.name}</span>
               <span className="text-muted-foreground truncate text-xs">
-                {user.email}
+                {isAuthenticated ? user.email : accessLabel}
               </span>
             </div>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>
-            <UserCircle className="size-4" strokeWidth={2} aria-hidden />
-            Account
+          <DropdownMenuItem asChild>
+            <Link href="/settings/account">
+              <UserCircle />
+              Account
+            </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            <CreditCard className="size-4" strokeWidth={2} aria-hidden />
-            Billing
+          <DropdownMenuItem asChild>
+            <Link href="/settings/billing">
+              <CreditCard />
+              Plans & billing
+            </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Bell className="size-4" strokeWidth={2} aria-hidden />
-            Notifications
+          <DropdownMenuItem asChild>
+            <Link href="/settings/appearance">
+              <Palette />
+              Appearance
+            </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link href="/settings">
-              <Settings className="size-4" strokeWidth={2} aria-hidden />
+              <Settings />
               Settings
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         {isAuthenticated ? (
-          <DropdownMenuItem onClick={logout}>
-            <LogOut className="size-4" strokeWidth={2} aria-hidden />
+          <DropdownMenuItem onClick={() => void logout()}>
+            <LogOut />
             Log out
           </DropdownMenuItem>
         ) : (
           <DropdownMenuItem asChild>
             <Link href="/">
-              <LogIn className="size-4" strokeWidth={2} aria-hidden />
+              <LogIn />
               Sign in
             </Link>
           </DropdownMenuItem>

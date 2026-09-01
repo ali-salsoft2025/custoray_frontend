@@ -529,6 +529,23 @@ html {
   font-size: var(--app-font-size);
 }
 
+html[data-density="compact"] [data-slot="table-head"] {
+  height: 2rem;
+}
+
+html[data-density="compact"] [data-slot="table-cell"] {
+  padding-block: 0.25rem;
+}
+
+html[data-reduce-motion="true"] *,
+html[data-reduce-motion="true"] *::before,
+html[data-reduce-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
 /* Optional mappings */
 html:has([data-font='sm']) {
   --app-font-size: 0.875rem;

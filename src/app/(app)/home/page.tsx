@@ -26,29 +26,6 @@ function sectionTabFilter(row: DocRow, tab: string) {
   return row.lifecycle !== "archived"
 }
 
-function mapImportedDocument(
-  row: Record<string, string>,
-  existing: DocRow[]
-): DocRow | null {
-  const maxId = existing.reduce((m, x) => Math.max(m, x.id), 0)
-  const id = Number(row.id)
-  const finalId = Number.isFinite(id) && id > 0 ? id : maxId + 1
-  if (!(row.header ?? "").trim()) return null
-  const lc = (row.lifecycle ?? "active").toLowerCase()
-  const lifecycle =
-    lc === "inactive" || lc === "archived" ? lc : "active"
-  return {
-    id: finalId,
-    header: row.header ?? "",
-    type: row.type ?? "Narrative",
-    status: row.status ?? "In Process",
-    target: row.target ?? "0",
-    limit: row.limit ?? "0",
-    reviewer: row.reviewer ?? "Assign reviewer",
-    lifecycle,
-  }
-}
-
 export default function DashboardPage() {
   return (
     <>
@@ -57,11 +34,11 @@ export default function DashboardPage() {
       <DataTable
         data={data}
         columns={defaultColumns}
-        addButtonLabel="Add section"
-        searchPlaceholder="Search sections..."
-        importRowMapper={mapImportedDocument}
-        importSampleFilename="sections-sample.csv"
-        exportFilename="sections-export.csv"
+        showSearch={false}
+        showFilters={false}
+        showImportButton={false}
+        showExportButton={false}
+        showAddButton={false}
         bulkActions={[
           {
             id: "approve",

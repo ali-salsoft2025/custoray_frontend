@@ -1,13 +1,20 @@
 import { LoginForm } from "@/components/loginForm"
-import { ToggleButton } from "@/components/ui/toggle-button"
 
-export default function LoginPage() {
+function safeNextPath(path?: string) {
+  if (!path || !path.startsWith("/") || path.startsWith("//")) return undefined
+  return path
+}
+
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ expired?: string; redirect?: string }>
+}) {
+  const params = await searchParams
   return (
-    <div className="relative flex min-h-svh flex-col items-center justify-center p-6 md:p-10">
-      <ToggleButton />
-      <div className="w-full max-w-md sm:max-w-2xl md:max-w-4xl lg:max-w-5xl">
-        <LoginForm />
-      </div>
-    </div>
+    <LoginForm
+      expiredNotice={params.expired === "1"}
+      redirectTo={safeNextPath(params.redirect)}
+    />
   )
 }

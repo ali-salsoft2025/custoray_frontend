@@ -1,11 +1,8 @@
 "use client";
 import * as React from "react"
-import Image from "next/image"
 import {
   Banknote,
   BarChart3,
-  BookMarked,
-  BookOpen,
   Box,
   Building2,
   Calendar,
@@ -13,29 +10,20 @@ import {
   CircleArrowDown,
   CircleArrowUp,
   Coins,
-  Database,
   FileBarChart,
   FileChartColumn,
   FileCheck,
-  FilePlus,
-  FileSpreadsheet,
   FileText,
-  Folder,
   Folders,
   History,
   LayoutDashboard,
   LayoutTemplate,
   LineChart,
-  List,
-  NotebookPen,
   Package,
-  PieChart,
   QrCode,
   Receipt,
-  ReceiptText,
   RotateCcw,
   Settings,
-  Settings2,
   ShieldCheck,
   ShoppingCart,
   Store,
@@ -45,14 +33,12 @@ import {
   Wallet,
 } from "lucide-react"
 import { NavMain } from "@/components/nav-main"
-import {
-  SidebarNavLink,
-  SidebarNavPendingProvider,
-} from "@/components/sidebar-nav-pending"
-import { Sidebar, SidebarContent, SidebarHeader, useSidebar } from "@/components/ui/sidebar";
+import { SidebarNavPendingProvider } from "@/components/sidebar-nav-pending"
+import { CompanySwitcher } from "@/components/company-switcher"
+import { PlanStatusCard } from "@/components/saas/plan-status-card"
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, useSidebar } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/auth-context"
 import { cn } from "@/lib/utils"
-import { useTheme } from "next-themes"
 
 const data = {
   navMain: [
@@ -158,48 +144,16 @@ const data = {
       url: "#",
       icon: FileBarChart,
       items: [
-        { title: "Sales Reports", url: "#", icon: LineChart },
-        { title: "Purchase Reports", url: "#", icon: BarChart3 },
-        { title: "Inventory Reports", url: "#", icon: FileChartColumn },
-        { title: "Financial Reports", url: "#", icon: PieChart },
-        { title: "Tax Reports", url: "#", icon: ReceiptText },
-        { title: "Employee Reports", url: "#", icon: UserCircle },
-        { title: "Payment Reports", url: "#", icon: Banknote },
-        { title: "POS Reports", url: "#", icon: ShoppingCart },
-        { title: "Ledger Reports", url: "#", icon: BookOpen },
-        { title: "Custom Reports", url: "#", icon: FileSpreadsheet },
-      ],
-    },
-    {
-      title: "Ledger",
-      url: "#",
-      icon: BookOpen,
-      items: [
-        { title: "Ledger", url: "#", icon: BookOpen },
-        { title: "General Ledger", url: "#", icon: BookMarked },
-        { title: "Account Ledger", url: "#", icon: List },
-        { title: "Ledger Reports", url: "#", icon: FileBarChart },
-        { title: "Journal", url: "#", icon: NotebookPen },
-        { title: "Journal Entries", url: "#", icon: FilePlus },
-        { title: "Journal Vouchers", url: "#", icon: Receipt },
-        { title: "Journal Reports", url: "#", icon: FileText },
-        { title: "Accounts", url: "#", icon: Database },
-        { title: "Chart of Accounts", url: "#", icon: PieChart },
-        { title: "Account Groups", url: "#", icon: Folder },
-        { title: "Account Settings", url: "#", icon: Settings2 },
+        { title: "Sales Reports", url: "/reports/sales", icon: LineChart },
+        { title: "Purchase Reports", url: "/reports/purchases", icon: BarChart3 },
+        { title: "Inventory Reports", url: "/reports/inventory", icon: FileChartColumn },
+        { title: "Payment Reports", url: "/reports/payments", icon: Banknote },
       ],
     },
     {
       title: "QR Storefront",
       url: "/qr-storefront",
       icon: QrCode,
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Settings",
-      url: "/settings",
-      icon: Settings,
     },
   ],
 }
@@ -209,47 +163,11 @@ function SidebarBrand() {
   const collapsed = state === "collapsed"
 
   return (
-    <SidebarHeader className={cn(collapsed && "items-center")}>
-      <SidebarNavLink
-        href="/home"
-        aria-label="Custoray home"
-        className={cn(
-          "hover:bg-sidebar-accent/60 flex items-center rounded-lg px-2 py-1.5 transition-colors",
-          collapsed && "mx-auto size-8 justify-center p-0"
-        )}
-      >
-        <SidebarLogo collapsed={collapsed} />
-      </SidebarNavLink>
+    <SidebarHeader
+      className={cn(collapsed && "items-center px-1.5 pt-4 pb-2")}
+    >
+      <CompanySwitcher />
     </SidebarHeader>
-  )
-}
-
-function SidebarLogo({ collapsed }: { collapsed: boolean }) {
-  const { resolvedTheme } = useTheme()
-  const [mounted, setMounted] = React.useState(false)
-
-  React.useEffect(() => setMounted(true), [])
-
-  const isDark = mounted && resolvedTheme === "dark"
-  const logoSrc = collapsed
-    ? "/assets/logo-6.png"
-    : isDark
-      ? "/assets/logo-3.png"
-      : "/assets/logo-2.png"
-
-  return (
-    <Image
-      src={logoSrc}
-      alt="Custoray"
-      width={320}
-      height={96}
-      className={cn(
-        "object-contain",
-        collapsed ? "size-8" : "h-10 w-auto max-w-full"
-      )}
-      sizes={collapsed ? "32px" : "(max-width: 768px) 100vw, 280px"}
-      priority
-    />
   )
 }
 
@@ -288,6 +206,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarContent className="hide-scrollbar overflow-y-auto h-full">
           <NavMain items={navItems} />
         </SidebarContent>
+        <SidebarFooter>
+          <PlanStatusCard />
+        </SidebarFooter>
       </Sidebar>
     </SidebarNavPendingProvider>
   )

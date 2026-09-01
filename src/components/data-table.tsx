@@ -912,6 +912,9 @@ export function DataTable<TData>({
   onDataChange,
   showAddButton = true,
   showImportButton = true,
+  showExportButton = true,
+  showSearch = true,
+  showFilters = true,
   toolbarExtra,
   toolbarActions,
   tableOptionsExtra,
@@ -941,6 +944,9 @@ export function DataTable<TData>({
   onDataChange?: (data: TData[]) => void
   showAddButton?: boolean
   showImportButton?: boolean
+  showExportButton?: boolean
+  showSearch?: boolean
+  showFilters?: boolean
   /** Custom controls rendered visibly beside the table search. */
   toolbarExtra?: React.ReactNode
   /** Custom action buttons rendered between Export and Add. */
@@ -1042,6 +1048,10 @@ export function DataTable<TData>({
     getFacetedUniqueValues: getFacetedUniqueValues(),
   })
 
+  const showToolbarActions =
+    showImportButton || showExportButton || showAddButton || Boolean(toolbarActions)
+  const showToolbar =
+    showSearch || showFilters || Boolean(toolbarExtra) || showToolbarActions
   const [importOpen, setImportOpen] = React.useState(false)
   const [exportOpen, setExportOpen] = React.useState(false)
   const [layoutView, setLayoutView] = React.useState<"list" | "grid">("list")
@@ -1287,28 +1297,36 @@ export function DataTable<TData>({
             .rows.map((r) => ({ ...(r.original as Record<string, unknown>) }))
         }
       />
+      {showToolbar ? (
       <div className="mb-3 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:gap-3">
-          <div className="flex min-w-0 flex-1 items-center gap-2 sm:max-w-md">
-            <SearchInput
-              placeholder={searchPlaceholder}
-              value={globalFilter}
-              onChange={(e) => setGlobalFilter(e.target.value)}
-              icon={<IconSearch className="size-4" />}
-              className="rounded-full shadow-sm focus-visible:ring-0 focus-visible:ring-offset-0 hover:ring-0 focus:ring-0 focus:outline-none min-w-0 flex-1"
-            />
-            <DataTableFiltersPopover
-              table={table}
-              enableLayoutToggle={enableLayoutToggle}
-              layoutView={layoutView}
-              onLayoutViewChange={setLayoutView}
-              tableOptionsExtra={tableOptionsExtra}
-            />
-          </div>
+          {showSearch || showFilters ? (
+            <div className="flex min-w-0 flex-1 items-center gap-2 sm:max-w-md">
+              {showSearch ? (
+                <SearchInput
+                  placeholder={searchPlaceholder}
+                  value={globalFilter}
+                  onChange={(e) => setGlobalFilter(e.target.value)}
+                  icon={<IconSearch className="size-4" />}
+                  className="rounded-full shadow-sm focus-visible:ring-0 focus-visible:ring-offset-0 hover:ring-0 focus:ring-0 focus:outline-none min-w-0 flex-1"
+                />
+              ) : null}
+              {showFilters ? (
+                <DataTableFiltersPopover
+                  table={table}
+                  enableLayoutToggle={enableLayoutToggle}
+                  layoutView={layoutView}
+                  onLayoutViewChange={setLayoutView}
+                  tableOptionsExtra={tableOptionsExtra}
+                />
+              ) : null}
+            </div>
+          ) : null}
           {toolbarExtra ? (
             <div className="flex flex-wrap items-end gap-2">{toolbarExtra}</div>
           ) : null}
         </div>
+        {showToolbarActions ? (
         <div className="flex flex-wrap items-center gap-2 lg:shrink-0">
           {showImportButton ? (
             <Button
@@ -1321,15 +1339,17 @@ export function DataTable<TData>({
               <span className="hidden sm:inline">Import</span>
             </Button>
           ) : null}
-          <Button
-            type="button"
-            variant="outline"
-            className="h-9 rounded-full px-7 shadow-sm"
-            onClick={() => setExportOpen(true)}
-          >
-            <IconCloudDownload />
-            <span className="hidden sm:inline">Export</span>
-          </Button>
+          {showExportButton ? (
+            <Button
+              type="button"
+              variant="outline"
+              className="h-9 rounded-full px-7 shadow-sm"
+              onClick={() => setExportOpen(true)}
+            >
+              <IconCloudDownload />
+              <span className="hidden sm:inline">Export</span>
+            </Button>
+          ) : null}
           {toolbarActions}
           {showAddButton ? (
             <Button
@@ -1343,7 +1363,9 @@ export function DataTable<TData>({
             </Button>
           ) : null}
         </div>
+        ) : null}
       </div>
+      ) : null}
       {(tabs && tabs.length > 0) || selectedRowCount > 0 ? (
         <div
           className="border-border mb-4 flex w-full min-w-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b px-3 sm:px-4"

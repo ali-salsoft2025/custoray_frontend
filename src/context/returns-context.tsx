@@ -6,6 +6,7 @@ import {
   applyReturnToPurchase,
   type ReturnRow,
   RETURNS_STORAGE_KEY,
+  initialReturns,
   nextReturnNumber,
   parsePersistedReturns,
 } from "@/lib/returns"
@@ -31,7 +32,7 @@ type ReturnsContextValue = {
 const ReturnsContext = React.createContext<ReturnsContextValue | null>(null)
 
 export function ReturnsProvider({ children }: { children: React.ReactNode }) {
-  const [returns, setReturns] = React.useState<ReturnRow[]>([])
+  const [returns, setReturns] = React.useState<ReturnRow[]>(() => [...initialReturns])
   const [hydrated, setHydrated] = React.useState(false)
 
   React.useEffect(() => {

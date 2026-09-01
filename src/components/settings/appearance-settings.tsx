@@ -1,187 +1,236 @@
 "use client"
 
-import {
-  IconDeviceDesktop,
-  IconMoon,
-  IconSun,
-} from "@tabler/icons-react"
+import { Check } from "lucide-react"
+import { useTheme } from "next-themes"
+import { useEffect, useState, type ReactNode } from "react"
 
-import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
+import { useAppearance } from "@/components/theme/appearance-provider"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { SettingsSection } from "@/components/settings/settings-section"
+  ACCENT_PRESETS,
+  presetColor,
+} from "@/lib/appearance-prefs"
 import { cn } from "@/lib/utils"
 
-const FONT_SIZES = {
-  sm: "Small",
-  base: "Default",
-  lg: "Large",
-  xl: "Extra large",
-} as const
-
-type FontSizeKey = keyof typeof FONT_SIZES
-
-const COLOR_THEMES = [
-  { id: "default", label: "Default", color: "oklch(0.45 0.02 260)" },
-  { id: "green", label: "Green", color: "#92c720" },
-  { id: "blue", label: "Blue", color: "hsl(221.2 83.2% 53.3%)" },
-  { id: "violet", label: "Violet", color: "hsl(262.1 83.3% 57.8%)" },
-  { id: "purple", label: "Purple", color: "hsl(270 70% 50%)" },
-  { id: "red", label: "Red", color: "hsl(0 84.2% 60.2%)" },
-  { id: "rose", label: "Rose", color: "hsl(346.8 77.2% 49.8%)" },
-  { id: "orange", label: "Orange", color: "hsl(24.6 95% 53.1%)" },
-  { id: "amber", label: "Amber", color: "hsl(38 92% 50%)" },
-  { id: "yellow", label: "Yellow", color: "hsl(47.9 95.8% 53.1%)" },
-  { id: "lime", label: "Lime", color: "hsl(84 81% 44%)" },
-  { id: "emerald", label: "Emerald", color: "hsl(160 84% 39%)" },
-  { id: "teal", label: "Teal", color: "hsl(173 80% 40%)" },
-  { id: "cyan", label: "Cyan", color: "hsl(189 94% 43%)" },
-  { id: "sky", label: "Sky", color: "hsl(199 89% 48%)" },
-  { id: "indigo", label: "Indigo", color: "hsl(239 84% 67%)" },
-  { id: "pink", label: "Pink", color: "hsl(330 81% 60%)" },
-  { id: "fuchsia", label: "Fuchsia", color: "hsl(292 84% 61%)" },
-] as const
-
-const LANGUAGES = [
-  { value: "en", label: "English" },
-  { value: "ar", label: "Arabic (العربية)" },
-]
-
-const THEME_MODES = [
-  { value: "light", label: "Light", icon: IconSun },
-  { value: "dark", label: "Dark", icon: IconMoon },
-  { value: "system", label: "System", icon: IconDeviceDesktop },
-] as const
-
-type ThemeMode = (typeof THEME_MODES)[number]["value"]
-
-type AppearanceSettingsProps = {
-  theme: ThemeMode
-  onThemeChange: (value: ThemeMode) => void
-  colorTheme: string
-  onColorThemeChange: (value: string) => void
-  fontSize: FontSizeKey
-  onFontSizeChange: (value: FontSizeKey) => void
-  language: string
-  onLanguageChange: (value: string) => void
-  rtlEnabled: boolean
-}
-
-export function AppearanceSettings({
-  theme,
-  onThemeChange,
-  colorTheme,
-  onColorThemeChange,
-  fontSize,
-  onFontSizeChange,
-  language,
-  onLanguageChange,
-  rtlEnabled,
-}: AppearanceSettingsProps) {
+function MiniUi({ dark }: { dark?: boolean }) {
   return (
-    <SettingsSection
-      title="Appearance"
-      description="Theme, accent color, typography, and language."
-    >
-      <div className="space-y-2">
-        <Label>Display mode</Label>
-        <div className="bg-muted/30 grid grid-cols-3 gap-2 rounded-xl p-1 ring-1 ring-border/30">
-          {THEME_MODES.map(({ value, label, icon: Icon }) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => onThemeChange(value)}
-              className={cn(
-                "flex flex-col items-center gap-1.5 rounded-lg px-3 py-2.5 text-xs font-medium transition-colors",
-                theme === value
-                  ? "bg-background text-foreground shadow-sm ring-1 ring-border/40"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <Icon className="size-4" stroke={1.75} />
-              {label}
-            </button>
-          ))}
+    <div className={cn("flex h-full min-h-[8.5rem]", dark ? "bg-zinc-900" : "bg-zinc-100")}>
+      <div className={cn("w-[22%]", dark ? "bg-zinc-800" : "bg-white")} />
+      <div className="flex flex-1 flex-col gap-1.5 p-2.5">
+        <div className="bg-primary/80 h-2 w-1/2 rounded-sm" />
+        <div className={cn("h-1.5 w-full rounded-sm", dark ? "bg-zinc-700" : "bg-zinc-200")} />
+        <div className={cn("h-1.5 w-4/5 rounded-sm", dark ? "bg-zinc-700" : "bg-zinc-200")} />
+        <div className="mt-auto grid grid-cols-3 gap-1">
+          <div className="bg-primary/25 h-7 rounded" />
+          <div className={cn("h-7 rounded", dark ? "bg-zinc-700" : "bg-zinc-200")} />
+          <div className={cn("h-7 rounded", dark ? "bg-zinc-700" : "bg-zinc-200")} />
         </div>
       </div>
-
-      <div className="space-y-2">
-        <Label>Accent color</Label>
-        <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 lg:grid-cols-9">
-          {COLOR_THEMES.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              title={item.label}
-              onClick={() => onColorThemeChange(item.id)}
-              className={cn(
-                "flex flex-col items-center gap-1.5 rounded-lg p-2 transition-colors",
-                colorTheme === item.id
-                  ? "bg-muted ring-2 ring-primary ring-offset-2 ring-offset-background"
-                  : "hover:bg-muted/60"
-              )}
-            >
-              <span
-                className="size-7 rounded-full ring-1 ring-border/40"
-                style={{ backgroundColor: item.color }}
-              />
-              <span className="text-muted-foreground w-full truncate text-center text-[10px]">
-                {item.label}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="settings-font-size">Font size</Label>
-          <Select
-            value={fontSize}
-            onValueChange={(value) => onFontSizeChange(value as FontSizeKey)}
-          >
-            <SelectTrigger id="settings-font-size" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {(Object.entries(FONT_SIZES) as [FontSizeKey, string][]).map(
-                ([value, label]) => (
-                  <SelectItem key={value} value={value}>
-                    {label}
-                  </SelectItem>
-                )
-              )}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="settings-language">Language</Label>
-          <Select value={language} onValueChange={onLanguageChange}>
-            <SelectTrigger id="settings-language" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {LANGUAGES.map((lang) => (
-                <SelectItem key={lang.value} value={lang.value}>
-                  {lang.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <p className="text-muted-foreground text-xs">
-            {rtlEnabled ? "Right-to-left layout enabled" : "Left-to-right layout enabled"}
-          </p>
-        </div>
-      </div>
-    </SettingsSection>
+    </div>
   )
 }
 
-export { FONT_SIZES }
-export type { FontSizeKey, ThemeMode }
+function TablePreview({ compact }: { compact?: boolean }) {
+  const rows = compact ? 5 : 3
+  return (
+    <div className="bg-muted/40 flex min-h-[8.5rem] flex-col gap-1 p-3">
+      {Array.from({ length: rows }).map((_, index) => (
+        <div
+          key={index}
+          className={cn(
+            "bg-background flex items-center gap-2 rounded-md border px-2",
+            compact ? "h-5" : "h-8"
+          )}
+        >
+          <span className="bg-muted h-2 w-8 rounded-sm" />
+          <span className="bg-muted h-2 flex-1 rounded-sm" />
+          <span className="bg-primary/40 h-2 w-10 rounded-sm" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function ChoiceCard({
+  selected,
+  onClick,
+  label,
+  description,
+  children,
+}: {
+  selected: boolean
+  onClick: () => void
+  label: string
+  description?: string
+  children: ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "relative flex cursor-pointer flex-col overflow-hidden rounded-xl border text-left transition-colors",
+        selected
+          ? "border-primary bg-primary/5 ring-primary/30 ring-2"
+          : "border-border hover:border-primary/40 bg-card"
+      )}
+    >
+      {selected ? (
+        <span className="bg-primary text-primary-foreground absolute top-2.5 right-2.5 z-10 flex size-5 items-center justify-center rounded-full">
+          <Check className="size-3" strokeWidth={3} />
+        </span>
+      ) : null}
+      <div className="overflow-hidden">{children}</div>
+      <div className="px-3 py-2.5">
+        <p className="text-sm font-medium">{label}</p>
+        {description ? (
+          <p className="text-muted-foreground mt-0.5 text-xs">{description}</p>
+        ) : null}
+      </div>
+    </button>
+  )
+}
+
+export function AppearanceSettings() {
+  const { prefs, update } = useAppearance()
+  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const mode = mounted ? (theme ?? "system") : "system"
+  const customHex =
+    prefs.colorTheme === "custom" ? prefs.customColor : presetColor(prefs.colorTheme)
+
+  return (
+    <div className="divide-border flex flex-col divide-y">
+      <section className="pb-8">
+        <h2 className="text-base font-semibold">Themes</h2>
+        <p className="text-muted-foreground mt-1 text-sm">
+          Choose your style or customize your theme.
+        </p>
+        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          <ChoiceCard
+            selected={mode === "light"}
+            onClick={() => setTheme("light")}
+            label="Light mode"
+            description="Bright workspace for daytime use."
+          >
+            <MiniUi />
+          </ChoiceCard>
+          <ChoiceCard
+            selected={mode === "dark"}
+            onClick={() => setTheme("dark")}
+            label="Dark mode"
+            description="Lower contrast for low light."
+          >
+            <MiniUi dark />
+          </ChoiceCard>
+          <ChoiceCard
+            selected={mode === "system"}
+            onClick={() => setTheme("system")}
+            label="System preferences"
+            description="Follow your device setting."
+          >
+            <div className="grid min-h-[8.5rem] grid-cols-2 overflow-hidden">
+              <MiniUi />
+              <MiniUi dark />
+            </div>
+          </ChoiceCard>
+        </div>
+      </section>
+
+      <section className="py-8">
+        <h2 className="text-base font-semibold">Accent colors</h2>
+        <p className="text-muted-foreground mt-1 text-sm">
+          Use a preset or a custom accent color.
+        </p>
+        <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-3">
+            {ACCENT_PRESETS.map((item) => {
+              const selected = prefs.colorTheme === item.id
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  title={item.label}
+                  aria-label={item.label}
+                  onClick={() =>
+                    update({ colorTheme: item.id, customColor: item.color })
+                  }
+                  className={cn(
+                    "size-8 rounded-full ring-2 ring-offset-2 ring-offset-background transition-shadow",
+                    selected ? "ring-foreground" : "ring-transparent hover:ring-border"
+                  )}
+                  style={{ backgroundColor: item.color }}
+                />
+              )
+            })}
+          </div>
+          <label className="flex items-center gap-2.5">
+            <span className="text-muted-foreground text-sm">Custom color</span>
+            <input
+              value={customHex}
+              onChange={(event) => {
+                const value = event.target.value
+                update({
+                  customColor: value,
+                  colorTheme: /^#([0-9a-fA-F]{6})$/.test(value) ? "custom" : prefs.colorTheme,
+                })
+              }}
+              className="border-input h-9 w-[7.5rem] rounded-md border bg-transparent px-2.5 font-mono text-sm outline-none focus-visible:ring-2"
+              spellCheck={false}
+              aria-label="Custom accent hex"
+            />
+            <span
+              className="size-8 rounded-full border"
+              style={{ backgroundColor: customHex }}
+            />
+          </label>
+        </div>
+      </section>
+
+      <section className="flex items-start justify-between gap-6 py-8">
+        <div>
+          <h2 className="text-base font-semibold">Show animations</h2>
+          <p className="text-muted-foreground mt-1 text-sm">
+            Enable or disable UI animations.
+          </p>
+        </div>
+        <Switch
+          checked={!prefs.reduceMotion}
+          onCheckedChange={(checked) => update({ reduceMotion: !checked })}
+          className="h-6 w-11"
+          aria-label="Show animations"
+        />
+      </section>
+
+      <section className="pt-8">
+        <h2 className="text-base font-semibold">Tables view</h2>
+        <p className="text-muted-foreground mt-1 text-sm">
+          Customize how tables are displayed in your app.
+        </p>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <ChoiceCard
+            selected={!prefs.compactLayout}
+            onClick={() => update({ compactLayout: false })}
+            label="Comfortable"
+            description="More space between rows."
+          >
+            <TablePreview />
+          </ChoiceCard>
+          <ChoiceCard
+            selected={prefs.compactLayout}
+            onClick={() => update({ compactLayout: true })}
+            label="Compact"
+            description="Tighter rows for dense lists."
+          >
+            <TablePreview compact />
+          </ChoiceCard>
+        </div>
+      </section>
+    </div>
+  )
+}

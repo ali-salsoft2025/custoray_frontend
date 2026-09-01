@@ -1,82 +1,86 @@
 "use client"
-import { cn } from "@/lib/utils"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
+
+import { Mail } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useState, type FormEvent } from "react"
+import { toast } from "sonner"
+
 import {
-  Card, CardContent, CardDescription,
-  CardTitle,
-} from "@/components/ui/card"
-import { PasswordInput } from "@/components/ui/password-input"
-import Link from 'next/link'
-import { Input } from "@/components/ui/input" 
+  AUTH_BUTTON,
+  AUTH_INPUT,
+  AuthHeading,
+  AuthShell,
+  AuthSwitch,
+} from "@/components/auth/auth-shell"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useTheme } from "next-themes"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { apiForgotPassword } from "@/lib/api/auth"
 
-export function EmailForm({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
-  const { resolvedTheme } = useTheme()
+export function EmailForm() {
+  const router = useRouter()
+  const [sending, setSending] = useState(false)
 
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const fd = new FormData(event.currentTarget)
+    const email = String(fd.get("email") ?? "").trim()
+    if (!email) {
+      toast.error("Enter your email")
+      return
+    }
+
+    setSending(true)
+    try {
+      await apiForgotPassword(email)
+      toast.success("Enter the 6-digit code we sent to your email.")
+      router.push(`/resetCode?email=${encodeURIComponent(email)}`)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not send reset email")
+    } finally {
+      setSending(false)
+    }
+  }
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card className="overflow-hidden p-0 shadow-lg md:min-h-[32rem]">
-        <CardContent className="grid p-0 md:grid-cols-2 md:min-h-[32rem]">
-          <form className="p-8 md:p-10 lg:p-12">
-            <div className="flex flex-col justify-center gap-7 min-h-[24rem] md:min-h-[28rem]">
-               
-              <div className="flex flex-col gap-1">
-                <CardTitle className="text-xl md:text-2xl">Forgot Password</CardTitle>
-                <CardDescription className="text-sm md:text-base">
-                Enter your email address to receive a password reset link.
-                </CardDescription>
-              </div>
-              <div className="grid gap-3">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="jhon.doe@example.com"
-                  required
-                  className="h-11"
-                />
-              </div>
-             
-              <Button type="submit" className="h-11 w-full bg-[#8cc91a] text-base hover:bg-[black] text-white">
-                Send Reset Link
-              </Button>
-
-              <div className="text-center text-sm">
-                Already have an account?{" "}
-                <a href="#" className="underline underline-offset-4">
-                  Sign In
-                </a>
-              </div>
-            </div>
-          </form>
-          <div className="bg-muted relative hidden md:flex flex-col justify-center">
-            {resolvedTheme ? <Image
-                src="/assets/logo-2.png"
-                alt="logo"
-                height={50}
-                width={140}
-                className="absolute bottom-0 right-0 p-4 z-10"
-              /> : <div className="h-10 w-32 bg-transparent animate-pulse rounded-md mb-12"></div>}
-            <Image
-                          src="/assets/forgotPassword.png" // Change this path to your image
-                          alt="reset password Illustration"
-                          height={300}
-                          width={550}
-                          className="contain "
-                        />
+    <AuthShell hero="reset_email">
+      <AuthHeading
+        title="Forgot password"
+        accent="password"
+        subtitle="Enter your email and we’ll send reset instructions if an account exists."
+      />
+      <form className="space-y-3.5" onSubmit={handleSubmit}>
+        <div className="grid gap-1.5">
+          <Label htmlFor="email">Email</Label>
+          <div className="relative">
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              placeholder="you@company.com"
+              required
+              autoComplete="email"
+              className={`${AUTH_INPUT} pr-10`}
+            />
+            <Mail
+              className="text-muted-foreground pointer-events-none absolute right-3 top-1/2 size-3.5 -translate-y-1/2"
+              aria-hidden
+            />
           </div>
-        </CardContent>
-      </Card>
-      <div className="text-muted-foreground *:[a]:hover:text-primary text-center text-xs text-balance *:[a]:underline *:[a]:underline-offset-4">
-        By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
-        and <a href="#">Privacy Policy</a>.
-      </div>
-    </div>
+        </div>
+        <Button type="submit" className={AUTH_BUTTON} disabled={sending}>
+          {sending ? (
+            <span className="flex items-center justify-center gap-2">
+              <LoadingSpinner size="sm" />
+              Sending…
+            </span>
+          ) : (
+            "Send reset email"
+          )}
+        </Button>
+        <AuthSwitch prompt="Remembered it?" href="/" label="Sign in" />
+      </form>
+    </AuthShell>
   )
 }

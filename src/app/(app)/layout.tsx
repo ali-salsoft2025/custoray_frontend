@@ -2,6 +2,7 @@
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { DashboardProviders } from "@/components/dashboard-providers";
+import { SubscriptionGate } from "@/components/saas/subscription-gate";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { SiteHeader } from "@/components/site-header";
 import React from "react";
@@ -13,6 +14,7 @@ export default function DashboardLayout({
 }) {
   return (
     <DashboardProviders>
+    <SubscriptionGate>
     <SidebarProvider
       style={
         {
@@ -33,6 +35,7 @@ export default function DashboardLayout({
         </div>
       </SidebarInset>
     </SidebarProvider>
+    </SubscriptionGate>
     </DashboardProviders>
   );
 }

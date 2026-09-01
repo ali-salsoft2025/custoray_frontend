@@ -59,7 +59,97 @@ export const returnSchema = z.object({
 
 export type ReturnRow = z.infer<typeof returnSchema>
 
-export const RETURNS_STORAGE_KEY = "custoray-returns-v1"
+export const RETURNS_STORAGE_KEY = "custoray-returns-v2"
+
+export const initialReturns: ReturnRow[] = [
+  {
+    id: 1,
+    returnNumber: "RET-1001",
+    type: "sales",
+    sourceId: 3,
+    referenceNumber: "INV-1003",
+    partyName: "Contoso Foods",
+    returnDate: "2026-07-21",
+    description: "Partial return — damaged goods",
+    totalAmount: "2480.00",
+    refundedAmount: "2480.00",
+    sourcePaidAmount: "12400.00",
+    sourceTotalBefore: "12400.00",
+    sourceTotalAfter: "9920.00",
+    refundDue: "0.00",
+    balanceDue: "0.00",
+    status: "completed",
+    lines: [
+      {
+        id: 1,
+        sourceLineId: 1,
+        productName: "Frozen Chicken 10kg",
+        quantity: 2,
+        maxQuantity: 10,
+        unitPrice: "1240.00",
+        lineTotal: "2480.00",
+      },
+    ],
+  },
+  {
+    id: 2,
+    returnNumber: "RET-1002",
+    type: "sales",
+    sourceId: 0,
+    referenceNumber: "POS-1002",
+    partyName: "Walk-in Customer",
+    returnDate: "2026-07-29",
+    description: "POS return",
+    totalAmount: "1240.00",
+    refundedAmount: "1240.00",
+    sourcePaidAmount: "3720.00",
+    sourceTotalBefore: "3720.00",
+    sourceTotalAfter: "2480.00",
+    refundDue: "0.00",
+    balanceDue: "0.00",
+    status: "completed",
+    lines: [
+      {
+        id: 1,
+        sourceLineId: 1,
+        productName: "Frozen Chicken 10kg",
+        quantity: 1,
+        maxQuantity: 3,
+        unitPrice: "1240.00",
+        lineTotal: "1240.00",
+      },
+    ],
+  },
+  {
+    id: 3,
+    returnNumber: "RET-1003",
+    type: "sales",
+    sourceId: 7,
+    referenceNumber: "INV-1006",
+    partyName: "Acme Retail Co.",
+    returnDate: "2026-08-01",
+    description: "Wrong item shipped",
+    totalAmount: "3200.00",
+    refundedAmount: "3200.00",
+    sourcePaidAmount: "18600.00",
+    sourceTotalBefore: "18600.00",
+    sourceTotalAfter: "15400.00",
+    refundDue: "0.00",
+    balanceDue: "0.00",
+    status: "completed",
+    lines: [
+      {
+        id: 1,
+        sourceLineId: 1,
+        productName: "Premium Basmati Rice 25kg",
+        quantity: 1,
+        maxQuantity: 4,
+        unitPrice: "3200.00",
+        lineTotal: "3200.00",
+      },
+    ],
+  },
+]
 
 export const EMPTY_RETURN_LINE: ReturnLineRow = {
   id: 1,

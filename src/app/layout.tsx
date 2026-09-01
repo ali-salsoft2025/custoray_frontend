@@ -35,6 +35,11 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`${poppins.variable} ${geistMono.variable} font-sans antialiased`}
       >
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var p=JSON.parse(localStorage.getItem("custoray-appearance-v1")||"null");if(!p)return;var r=document.documentElement;var hex=/^#([0-9a-fA-F]{6})$/;if(p.colorTheme==="custom"&&hex.test(p.customColor||"")){r.setAttribute("data-theme","custom");r.style.setProperty("--primary",p.customColor);r.style.setProperty("--ring",p.customColor);r.style.setProperty("--sidebar-primary",p.customColor);}else if(p.colorTheme&&p.colorTheme!=="green"){r.setAttribute("data-theme",p.colorTheme);}r.setAttribute("data-density",p.compactLayout?"compact":"comfortable");r.setAttribute("data-reduce-motion",p.reduceMotion?"true":"false");var sizes={sm:"0.875rem",base:"0.9375rem",lg:"1.125rem",xl:"1.25rem"};if(sizes[p.fontSize])r.style.setProperty("--app-font-size",sizes[p.fontSize]);if(p.language==="ar"){r.setAttribute("dir","rtl");r.setAttribute("lang","ar");}}catch(e){}})();`,
+          }}
+        />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

@@ -37,6 +37,10 @@ function titleForPath(pathname: string | null): string {
   if (pathname.startsWith("/documents")) return "Documents"
   if (pathname === "/purchases") return "Purchases"
   if (pathname === "/sales") return "Sales report"
+  if (pathname === "/reports/sales") return "Sales reports"
+  if (pathname === "/reports/purchases") return "Purchase reports"
+  if (pathname === "/reports/inventory") return "Inventory reports"
+  if (pathname === "/reports/payments") return "Payment reports"
   if (pathname === "/returns") return "Returns"
   if (pathname === "/payments") return "Payments"
   if (pathname === "/payments/customer") return "Customer payments"
@@ -60,7 +64,7 @@ function titleForPath(pathname: string | null): string {
     if (pathname.includes("/variants")) return "Variants"
     return "Inventory"
   }
-  if (pathname === "/settings") return "Settings"
+  if (pathname === "/plans" || pathname.startsWith("/settings")) return "Settings"
   if (pathname === "/employees") return "Employees"
   if (pathname === "/employees/new") return "Add employee"
   if (pathname === "/employees/permissions") return "Permissions"
@@ -104,7 +108,7 @@ export function SiteHeader() {
         <div className="ms-auto flex shrink-0 items-center gap-2">
           <TermSwitcher triggerClassName={headerIconCircleBtn} />
           <ToggleButton layout="toolbar" variant="ghost" className={headerIconCircleBtn} />
-          <NavUser />
+          <NavUser className={headerIconCircleBtn} />
         </div>
       </div>
     </header>
