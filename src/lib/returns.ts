@@ -1,6 +1,7 @@
 import { z } from "zod"
 
 import { formatMoney, parseMoney } from "@/lib/customers"
+import { ALL_ITEMS_RETURNED_NAME } from "@/lib/return-eligibility"
 import { computeLineTotal, computeOrderTotal, type OrderRow } from "@/lib/orders"
 import { computePurchaseTotal, type PurchaseRow } from "@/lib/purchases"
 import {
@@ -238,7 +239,7 @@ export function nextReturnNumber(
 
 export function buildReturnFromOrder(
   order: OrderRow,
-  options?: { lineIds?: number[] }
+  options?: { lineIds?: number[]; quantities?: Record<number, number> }
 ): Omit<ReturnRow, "id"> {
   const lineFilter = options?.lineIds?.length
     ? (line: OrderRow["lines"][number]) => options.lineIds!.includes(line.id)
@@ -246,15 +247,19 @@ export function buildReturnFromOrder(
 
   const lines: ReturnLineRow[] = (order.lines ?? [])
     .filter(lineFilter)
-    .map((line, index) => ({
-      id: index + 1,
-      sourceLineId: line.id,
-      productName: line.productName,
-      quantity: line.quantity,
-      maxQuantity: line.quantity,
-      unitPrice: line.unitPrice,
-      lineTotal: line.lineTotal,
-    }))
+    .map((line, index) => {
+      const requested = options?.quantities?.[line.id] ?? line.quantity
+      const quantity = Math.min(Math.max(1, requested), line.quantity)
+      return {
+        id: index + 1,
+        sourceLineId: line.id,
+        productName: line.productName,
+        quantity,
+        maxQuantity: line.quantity,
+        unitPrice: line.unitPrice,
+        lineTotal: computeLineTotal(quantity, line.unitPrice),
+      }
+    })
 
   const totalAmount = computeReturnTotal(lines)
   const impact = computePaymentImpact(order.paidAmount, order.totalAmount, totalAmount)
@@ -427,16 +432,23 @@ export function applyReturnToOrder(order: OrderRow, returnDoc: ReturnRow): Order
       : [
           {
             id: 1,
-            productName: "(All items returned)",
+            productName: ALL_ITEMS_RETURNED_NAME,
             quantity: 1,
             unitPrice: "0",
             lineTotal: "0.00",
           },
         ]
 
+  const totalAmount = computeOrderTotal(lines)
+  const paid = Number(order.paidAmount)
+  const safePaid = Number.isFinite(paid) ? paid : 0
+  const nextTotal = Number(totalAmount)
+  const paidAmount = Math.min(safePaid, nextTotal).toFixed(2)
+
   return {
     ...order,
-    totalAmount: computeOrderTotal(lines),
+    totalAmount,
+    paidAmount,
     lines,
   }
 }
@@ -469,7 +481,7 @@ export function applyReturnToPurchase(
       : [
           {
             id: 1,
-            productName: "(All items returned)",
+            productName: ALL_ITEMS_RETURNED_NAME,
             quantity: 1,
             unitPrice: "0",
             lineTotal: "0.00",
@@ -543,4 +555,21 @@ export function parsePersistedReturns(raw: string | null): ReturnRow[] | null {
   } catch {
     return null
   }
+}
+
+export function returnsForCustomer(
+  returns: ReturnRow[],
+  customerName: string
+): ReturnRow[] {
+  const normalized = customerName.trim().toLowerCase()
+  if (!normalized || normalized === "—") return []
+
+  return returns
+    .filter(
+      (doc) =>
+        doc.type === "sales" &&
+        doc.status !== "cancelled" &&
+        doc.partyName.trim().toLowerCase() === normalized
+    )
+    .sort((a, b) => b.returnDate.localeCompare(a.returnDate) || b.id - a.id)
 }

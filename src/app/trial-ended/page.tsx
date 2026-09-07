@@ -17,12 +17,14 @@ import {
 } from "@/lib/api/auth"
 import { FALLBACK_PLANS, formatTrialEndDate } from "@/lib/subscription-access"
 import { cn } from "@/lib/utils"
+import { useTranslation } from "react-i18next"
 
 function formatPrice(cents: number) {
   return `Rs ${(cents / 100).toFixed(0)}`
 }
 
 function TrialEndedContent() {
+  const { t } = useTranslation("plans")
   const router = useRouter()
   const params = useSearchParams()
   const { access, hydrated, isAuthenticated, refreshAccess, logout } = useAuth()
@@ -69,7 +71,7 @@ function TrialEndedContent() {
 
   async function requestTrial() {
     if (reason.trim().length < 8) {
-      toast.error("Please explain why you need more time (at least 8 characters).")
+      toast.error(t("toasts.reasonShort"))
       return
     }
     setPending(true)
@@ -77,9 +79,9 @@ function TrialEndedContent() {
       await apiRequestTrial(reason.trim())
       setRequested(true)
       await refreshAccess()
-      toast.success("Request sent. We will email you when an admin responds.")
+      toast.success(t("toasts.requestSent"))
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not send request")
+      toast.error(err instanceof Error ? err.message : t("toasts.couldNotSend"))
     } finally {
       setPending(false)
     }
@@ -91,17 +93,17 @@ function TrialEndedContent() {
       const result = await apiCheckout(planCode, "monthly", "/trial-ended")
       if (result.applied) {
         await refreshAccess()
-        toast.success("Subscription is active")
+        toast.success(t("toasts.subscriptionActive"))
         router.replace("/home")
         return
       }
       if (!result.checkoutUrl) {
-        toast.error("Stripe did not return a checkout page.")
+        toast.error(t("toasts.noCheckout"))
         return
       }
       window.location.assign(result.checkoutUrl)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not start checkout")
+      toast.error(err instanceof Error ? err.message : t("toasts.couldNotCheckout"))
     } finally {
       setPending(false)
     }
@@ -111,47 +113,54 @@ function TrialEndedContent() {
     <div className="mx-auto flex min-h-svh w-full max-w-4xl flex-col justify-center gap-6 px-4 py-12">
       <div className="text-center">
         <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
-          Your trial has ended
+          {t("trialEnded")}
         </h1>
         <p className="text-muted-foreground mt-2 text-sm">
-          {access?.planName ? `${access.planName} trial` : "Trial"} for this
-          company is over
-          {access?.trialEndsAt ? ` (${formatTrialEndDate(access.trialEndsAt)})` : ""}.
-          Your data is saved. Choose how to continue.
+          {access?.planName
+            ? t("trialOver", {
+                plan: access.planName,
+                date: access?.trialEndsAt
+                  ? ` (${formatTrialEndDate(access.trialEndsAt)})`
+                  : "",
+              })
+            : t("trialOverGeneric", {
+                date: access?.trialEndsAt
+                  ? ` (${formatTrialEndDate(access.trialEndsAt)})`
+                  : "",
+              })}{" "}
+          {t("dataSaved")}
         </p>
       </div>
 
       {!isOwner ? (
         <Card>
           <CardContent className="p-6 text-sm">
-            Ask the business owner to buy a subscription or request another trial.
-            You cannot open the app until they do.
+            {t("staffMessage")}
           </CardContent>
         </Card>
       ) : (
         <>
           <Card>
             <CardHeader>
-              <CardTitle>Request another trial</CardTitle>
+              <CardTitle>{t("requestTrial")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {requested ? (
                 <p className="text-sm">
-                  Your request is with an admin. You can still buy a plan below
-                  while you wait.
+                  {t("requestPending")}
                 </p>
               ) : (
                 <>
-                  <Label htmlFor="trial-reason">Why do you need more time?</Label>
+                  <Label htmlFor="trial-reason">{t("reasonLabel")}</Label>
                   <textarea
                     id="trial-reason"
                     className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring min-h-24 w-full rounded-md border px-3 py-2 text-sm outline-none focus-visible:ring-2"
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
-                    placeholder="A few more days to finish setup / waiting on payment…"
+                    placeholder={t("reasonPlaceholder")}
                   />
                   <Button type="button" variant="outline" disabled={pending} onClick={() => void requestTrial()}>
-                    Send request
+                    {t("sendRequest")}
                   </Button>
                 </>
               )}
@@ -159,7 +168,7 @@ function TrialEndedContent() {
           </Card>
 
           <div>
-            <h2 className="mb-3 text-lg font-semibold">Buy a subscription</h2>
+            <h2 className="mb-3 text-lg font-semibold">{t("buySubscription")}</h2>
             <div className="grid gap-3 sm:grid-cols-2">
               {plans.map((plan) => (
                 <button
@@ -175,13 +184,21 @@ function TrialEndedContent() {
                   <p className="font-semibold">{plan.displayName}</p>
                   <p className="mt-1 text-lg font-semibold">
                     {formatPrice(plan.priceMonthly)}
-                    <span className="text-muted-foreground text-sm font-normal">/mo</span>
+                    <span className="text-muted-foreground text-sm font-normal">
+                      {t("perMonth")}
+                    </span>
                   </p>
                   <p className="text-muted-foreground mt-2 text-xs">
-                    {plan.maxStores} stores · {plan.maxUsers} users ·{" "}
-                    {plan.maxProducts >= 999999 ? "Unlimited" : plan.maxProducts} products
+                    {t("planMeta", {
+                      stores: plan.maxStores,
+                      users: plan.maxUsers,
+                      products:
+                        plan.maxProducts >= 999999
+                          ? t("unlimited")
+                          : plan.maxProducts,
+                    })}
                   </p>
-                  <p className="mt-3 text-sm font-medium">Subscribe</p>
+                  <p className="mt-3 text-sm font-medium">{t("subscribe")}</p>
                 </button>
               ))}
             </div>
@@ -190,17 +207,17 @@ function TrialEndedContent() {
       )}
 
       <p className="text-muted-foreground text-center text-xs">
-        An admin can also extend your trial or assign a subscription.{" "}
+        {t("adminHint")}{" "}
         <button
           type="button"
           className="underline"
           onClick={() => void refreshAccess().then((next) => next?.allowed && router.replace("/home"))}
         >
-          Check access
+          {t("checkAccess")}
         </button>
         {" · "}
         <button type="button" className="underline" onClick={() => void logout()}>
-          Sign out
+          {t("signOut")}
         </button>
       </p>
     </div>

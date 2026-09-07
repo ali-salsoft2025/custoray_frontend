@@ -3,6 +3,7 @@
 import * as React from "react"
 import { IconPlus, IconTrash } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -33,6 +34,7 @@ export function TaxManualEntries({
   compact?: boolean
   className?: string
 }) {
+  const { t } = useTranslation("tax")
   const { settings, updateSettings } = useTaxSettings()
   const fmt = useTaxFormatMoney()
   const [label, setLabel] = React.useState("")
@@ -40,12 +42,11 @@ export function TaxManualEntries({
   const [category, setCategory] = React.useState<TaxManualEntryCategory>("extra_income")
   const [note, setNote] = React.useState("")
 
-  const selectedHint =
-    TAX_MANUAL_ENTRY_CATEGORIES.find((item) => item.value === category)?.hint ?? ""
+  const selectedHint = t(`categories.${category}Hint`)
 
   const handleAdd = () => {
     if (!label.trim()) {
-      toast.error("Give this entry a short name.")
+      toast.error(t("manual.nameRequired"))
       return
     }
     const entry = createManualEntry({
@@ -58,7 +59,7 @@ export function TaxManualEntries({
     setLabel("")
     setAmount("")
     setNote("")
-    toast.success("Entry added.")
+    toast.success(t("manual.added"))
   }
 
   const handleRemove = (id: string) => {
@@ -70,10 +71,9 @@ export function TaxManualEntries({
   return (
     <div className={cn(panelClass, "overflow-hidden", className)}>
       <div className="border-border/40 border-b px-4 py-3.5 sm:px-5">
-        <p className="text-sm font-semibold">Add anything missing</p>
+        <p className="text-sm font-semibold">{t("manual.addMissing")}</p>
         <p className="text-muted-foreground mt-0.5 text-xs leading-relaxed">
-          Not everything shows up in sales or purchases — add cash, loans, or one-off
-          items here. Your reports update instantly.
+          {t("manual.addMissingHint")}
         </p>
       </div>
 
@@ -81,16 +81,16 @@ export function TaxManualEntries({
         <div className="space-y-3 border-border/40 border-b px-4 py-4 sm:px-5">
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1">
-              <Label className="text-xs">What is it?</Label>
+              <Label className="text-xs">{t("manual.whatIsIt")}</Label>
               <Input
                 className="h-9"
-                placeholder="e.g. Bank interest, Equipment"
+                placeholder={t("manual.whatPlaceholder")}
                 value={label}
                 onChange={(e) => setLabel(e.target.value)}
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Amount</Label>
+              <Label className="text-xs">{t("manual.amount")}</Label>
               <Input
                 className="h-9"
                 type="number"
@@ -103,7 +103,7 @@ export function TaxManualEntries({
             </div>
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Type</Label>
+            <Label className="text-xs">{t("manual.type")}</Label>
             <Select
               value={category}
               onValueChange={(v) => setCategory(v as TaxManualEntryCategory)}
@@ -114,7 +114,7 @@ export function TaxManualEntries({
               <SelectContent>
                 {TAX_MANUAL_ENTRY_CATEGORIES.map((item) => (
                   <SelectItem key={item.value} value={item.value}>
-                    {item.label}
+                    {t(`categories.${item.value}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -122,26 +122,24 @@ export function TaxManualEntries({
             <p className="text-muted-foreground text-[11px]">{selectedHint}</p>
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Note (optional)</Label>
+            <Label className="text-xs">{t("manual.noteOptional")}</Label>
             <Input
               className="h-9"
-              placeholder="Short note for your accountant"
+              placeholder={t("manual.notePlaceholder")}
               value={note}
               onChange={(e) => setNote(e.target.value)}
             />
           </div>
           <Button type="button" size="sm" onClick={handleAdd}>
             <IconPlus className="size-4" />
-            Add entry
+            {t("manual.addEntry")}
           </Button>
         </div>
       ) : null}
 
       <div className="px-4 py-3 sm:px-5">
         {settings.manualEntries.length === 0 ? (
-          <p className="text-muted-foreground py-2 text-sm">
-            No extra entries yet — that is OK if Custoray has everything.
-          </p>
+          <p className="text-muted-foreground py-2 text-sm">{t("manual.empty")}</p>
         ) : (
           <div className="divide-border/30 divide-y">
             {settings.manualEntries.map((entry) => (
@@ -152,10 +150,7 @@ export function TaxManualEntries({
                 <div className="min-w-0">
                   <p className="text-sm font-medium">{entry.label}</p>
                   <p className="text-muted-foreground text-xs">
-                    {
-                      TAX_MANUAL_ENTRY_CATEGORIES.find((c) => c.value === entry.category)
-                        ?.label
-                    }
+                    {t(`categories.${entry.category}`)}
                     {entry.note ? ` · ${entry.note}` : ""}
                   </p>
                 </div>
@@ -169,7 +164,7 @@ export function TaxManualEntries({
                     size="icon"
                     className="text-muted-foreground size-8"
                     onClick={() => handleRemove(entry.id)}
-                    aria-label={`Remove ${entry.label}`}
+                    aria-label={t("manual.removeAria", { label: entry.label })}
                   >
                     <IconTrash className="size-3.5" />
                   </Button>

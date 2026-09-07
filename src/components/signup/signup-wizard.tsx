@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ArrowRight, Building2, ChevronLeft, Mail, Phone, User } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 
 import { AuthSocialButtons } from "@/components/auth/auth-social"
@@ -52,12 +53,13 @@ function StepBar({
   step: 1 | 2
   onBack: () => void
 }) {
+  const { t } = useTranslation("auth")
   return (
     <div className="-mt-2 mb-4">
       <div className="grid grid-cols-2 gap-1.5">
         <button
           type="button"
-          aria-label="Account"
+          aria-label={t("signup.ariaAccount")}
           className="h-0.5 rounded-full bg-primary"
           onClick={step === 2 ? onBack : undefined}
           disabled={step === 1}
@@ -70,7 +72,7 @@ function StepBar({
         />
       </div>
       <p className="text-muted-foreground mt-1.5 text-right text-[11px]">
-        {step} of 2
+        {t("signup.stepOf", { step })}
       </p>
     </div>
   )
@@ -82,6 +84,7 @@ function FieldError({ message }: { message?: string }) {
 }
 
 export function SignupWizard({ planCode }: { planCode?: string }) {
+  const { t } = useTranslation("auth")
   const router = useRouter()
   const { signup, session, hydrated, access } = useAuth()
   const plan = planFromUrl(planCode)
@@ -118,11 +121,11 @@ export function SignupWizard({ planCode }: { planCode?: string }) {
   function goToCompany(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const next: FieldErrors = {}
-    if (values.ownerName.trim().length < 2) next.ownerName = "Enter your full name"
+    if (values.ownerName.trim().length < 2) next.ownerName = t("signup.errors.fullName")
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim())) {
-      next.email = "Enter a valid email"
+      next.email = t("signup.errors.email")
     }
-    if (values.password.length < 8) next.password = "Use at least 8 characters"
+    if (values.password.length < 8) next.password = t("signup.errors.password")
     setErrors(next)
     if (Object.keys(next).length) return
     setStep(2)
@@ -131,10 +134,10 @@ export function SignupWizard({ planCode }: { planCode?: string }) {
   async function createAccount(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const next: FieldErrors = {}
-    if (values.businessName.trim().length < 2) next.businessName = "Enter your company name"
-    if (!values.industry) next.industry = "Select an industry"
-    if (values.phone.trim().length < 7) next.phone = "Enter a valid phone number"
-    if (!acceptedTerms) next.terms = "Agree to continue"
+    if (values.businessName.trim().length < 2) next.businessName = t("signup.errors.company")
+    if (!values.industry) next.industry = t("signup.errors.industry")
+    if (values.phone.trim().length < 7) next.phone = t("signup.errors.phone")
+    if (!acceptedTerms) next.terms = t("signup.errors.terms")
     setErrors(next)
     if (Object.keys(next).length) return
 
@@ -156,10 +159,10 @@ export function SignupWizard({ planCode }: { planCode?: string }) {
         toast.error(result.error)
         return
       }
-      toast.success("Welcome to Custoray")
+      toast.success(t("signup.toastWelcome"))
       router.replace(result.accessAllowed ? "/onboarding" : "/trial-ended")
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Signup failed")
+      toast.error(err instanceof Error ? err.message : t("signup.toastFailed"))
     } finally {
       setLoading(false)
     }
@@ -170,19 +173,19 @@ export function SignupWizard({ planCode }: { planCode?: string }) {
       {step === 1 ? (
         <>
           <AuthHeading
-            title="Create your account"
+            title={t("signup.titleAccount")}
             accent="account"
-            subtitle="Use email or continue with Google."
+            subtitle={t("signup.subtitleAccount")}
           />
           <StepBar step={step} onBack={() => setStep(1)} />
           <form className="space-y-3" onSubmit={goToCompany}>
             <div className="grid gap-1.5">
-              <Label htmlFor="ownerName">Full name</Label>
+              <Label htmlFor="ownerName">{t("signup.fullName")}</Label>
               <div className="relative">
                 <Input
                   id="ownerName"
                   name="ownerName"
-                  placeholder="Ali Hussain"
+                  placeholder={t("signup.fullNamePlaceholder")}
                   autoComplete="name"
                   required
                   minLength={2}
@@ -199,13 +202,13 @@ export function SignupWizard({ planCode }: { planCode?: string }) {
               <FieldError message={errors.ownerName} />
             </div>
             <div className="grid gap-1.5">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("signup.email")}</Label>
               <div className="relative">
                 <Input
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="you@company.com"
+                  placeholder={t("signup.emailPlaceholder")}
                   autoComplete="email"
                   required
                   value={values.email}
@@ -222,7 +225,7 @@ export function SignupWizard({ planCode }: { planCode?: string }) {
             </div>
             <div className="grid gap-1.5">
               <div className="flex items-center justify-between gap-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t("signup.password")}</Label>
                 <span
                   className={cn(
                     "text-[11px]",
@@ -231,7 +234,7 @@ export function SignupWizard({ planCode }: { planCode?: string }) {
                       : "text-muted-foreground"
                   )}
                 >
-                  8+ characters
+                  {t("signup.passwordHint")}
                 </span>
               </div>
               <PasswordInput
@@ -249,7 +252,7 @@ export function SignupWizard({ planCode }: { planCode?: string }) {
               <FieldError message={errors.password} />
             </div>
             <Button type="submit" className={AUTH_BUTTON}>
-              Continue
+              {t("signup.continue")}
               <ArrowRight className="size-3.5" />
             </Button>
             <AuthSocialButtons
@@ -257,15 +260,15 @@ export function SignupWizard({ planCode }: { planCode?: string }) {
                 stayOnSignup.current = true
               }}
             />
-            <AuthSwitch prompt="Already have an account?" href="/" label="Sign in" />
+            <AuthSwitch prompt={t("signup.haveAccount")} href="/" label={t("signup.signIn")} />
           </form>
         </>
       ) : (
         <>
           <AuthHeading
-            title="Your company"
+            title={t("signup.titleCompany")}
             accent="company"
-            subtitle="Used on invoices, reports, and your workspace."
+            subtitle={t("signup.subtitleCompany")}
           />
           <StepBar step={step} onBack={() => setStep(1)} />
           <p className="text-muted-foreground -mt-1 mb-3 truncate text-[11px]">
@@ -276,17 +279,17 @@ export function SignupWizard({ planCode }: { planCode?: string }) {
               className="text-primary font-medium hover:underline"
               onClick={() => setStep(1)}
             >
-              Change
+              {t("signup.change")}
             </button>
           </p>
           <form className="space-y-3" onSubmit={(e) => void createAccount(e)}>
             <div className="grid gap-1.5">
-              <Label htmlFor="businessName">Company name</Label>
+              <Label htmlFor="businessName">{t("signup.companyName")}</Label>
               <div className="relative">
                 <Input
                   id="businessName"
                   name="businessName"
-                  placeholder="Al-Noor Traders"
+                  placeholder={t("signup.companyPlaceholder")}
                   required
                   minLength={2}
                   value={values.businessName}
@@ -302,7 +305,7 @@ export function SignupWizard({ planCode }: { planCode?: string }) {
               <FieldError message={errors.businessName} />
             </div>
             <div className="grid gap-1.5">
-              <Label htmlFor="industry">Industry</Label>
+              <Label htmlFor="industry">{t("signup.industry")}</Label>
               <Select
                 value={values.industry || undefined}
                 onValueChange={(value) => update("industry", value)}
@@ -312,7 +315,7 @@ export function SignupWizard({ planCode }: { planCode?: string }) {
                   aria-invalid={Boolean(errors.industry)}
                   className={SELECT_TRIGGER}
                 >
-                  <SelectValue placeholder="Select industry" />
+                  <SelectValue placeholder={t("signup.industryPlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
                   {SIGNUP_INDUSTRIES.map((industry) => (
@@ -330,7 +333,7 @@ export function SignupWizard({ planCode }: { planCode?: string }) {
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="grid gap-1.5">
-                <Label htmlFor="country">Country</Label>
+                <Label htmlFor="country">{t("signup.country")}</Label>
                 <Select
                   value={values.country}
                   onValueChange={(value) => update("country", value)}
@@ -348,13 +351,13 @@ export function SignupWizard({ planCode }: { planCode?: string }) {
                 </Select>
               </div>
               <div className="grid gap-1.5">
-                <Label htmlFor="phone">Phone</Label>
+                <Label htmlFor="phone">{t("signup.phone")}</Label>
                 <div className="relative">
                   <Input
                     id="phone"
                     name="phone"
                     type="tel"
-                    placeholder="+92 300 1234567"
+                    placeholder={t("signup.phonePlaceholder")}
                     autoComplete="tel"
                     required
                     minLength={7}
@@ -382,13 +385,13 @@ export function SignupWizard({ planCode }: { planCode?: string }) {
                   }}
                 />
                 <span className="text-muted-foreground leading-none">
-                  I agree to the{" "}
+                  {t("signup.agreePrefix")}{" "}
                   <Link href="/legal/terms" className="text-primary font-medium hover:underline">
-                    Terms
+                    {t("signup.terms")}
                   </Link>{" "}
-                  and{" "}
+                  {t("signup.and")}{" "}
                   <Link href="/legal/privacy" className="text-primary font-medium hover:underline">
-                    Privacy Policy
+                    {t("signup.privacy")}
                   </Link>
                   .
                 </span>
@@ -399,10 +402,10 @@ export function SignupWizard({ planCode }: { planCode?: string }) {
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
                   <LoadingSpinner size="sm" />
-                  Creating account…
+                  {t("signup.creating")}
                 </span>
               ) : (
-                "Create account"
+                t("signup.createAccount")
               )}
             </Button>
             <button
@@ -411,7 +414,7 @@ export function SignupWizard({ planCode }: { planCode?: string }) {
               onClick={() => setStep(1)}
             >
               <ChevronLeft className="size-3.5" />
-              Back to account
+              {t("signup.backToAccount")}
             </button>
           </form>
         </>

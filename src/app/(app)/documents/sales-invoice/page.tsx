@@ -10,11 +10,13 @@ import {
   IconTrash,
 } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
+import type { TFunction } from "i18next"
 
 import { OrderDetail } from "@/components/orders/order-detail"
 import { OrderForm } from "@/components/orders/order-form"
 import { DataTableColumnHeader } from "@/components/data-table-column-header"
-import { DataTable, type DataTableTab } from "@/components/data-table"
+import { DataTable } from "@/components/data-table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -35,6 +37,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import { useOrders } from "@/context/orders-context"
+import { useInvoiceLineReturn } from "@/hooks/use-invoice-line-return"
 import {
   confirmDeleteAction,
   confirmDuplicateAction,
@@ -51,13 +54,7 @@ import {
   statusLabel,
   type OrderRow,
 } from "@/lib/orders"
-
-const invoiceTabs: DataTableTab[] = [
-  { value: "all", label: "All" },
-  { value: "pending", label: "Pending" },
-  { value: "completed", label: "Completed" },
-  { value: "cancelled", label: "Cancelled" },
-]
+import { canReturnDocument } from "@/lib/return-eligibility"
 
 type InvoiceSidebarState =
   | { mode: "view"; order: OrderRow }
@@ -71,6 +68,8 @@ function invoiceTabFilter(row: OrderRow, tab: string) {
 }
 
 function getInvoiceColumns(
+  t: TFunction<"documents">,
+  tc: TFunction<"common">,
   openInvoiceSidebar: (row: OrderRow, mode: "view" | "edit") => void,
   onDelete: (row: OrderRow) => void,
   onDuplicate: (row: OrderRow) => void
@@ -86,7 +85,7 @@ function getInvoiceColumns(
               (table.getIsSomePageRowsSelected() && "indeterminate")
             }
             onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-            aria-label="Select all"
+            aria-label={tc("table.selectAll")}
           />
         </div>
       ),
@@ -95,7 +94,7 @@ function getInvoiceColumns(
           <Checkbox
             checked={row.getIsSelected()}
             onCheckedChange={(value) => row.toggleSelected(!!value)}
-            aria-label="Select row"
+            aria-label={tc("table.selectRow")}
           />
         </div>
       ),
@@ -105,7 +104,7 @@ function getInvoiceColumns(
     {
       accessorKey: "invoiceNumber",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Invoice #" />
+        <DataTableColumnHeader column={column} title={t("table.invoiceNumber")} />
       ),
       cell: ({ row }) => (
         <button
@@ -122,7 +121,7 @@ function getInvoiceColumns(
     {
       accessorKey: "customerName",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Customer" />
+        <DataTableColumnHeader column={column} title={t("labels.customer")} />
       ),
       cell: ({ row }) => (
         <span className="text-foreground max-w-[10rem] truncate">
@@ -135,7 +134,7 @@ function getInvoiceColumns(
       id: "items",
       accessorFn: (row) => row.lines.length,
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Items" align="center" />
+        <DataTableColumnHeader column={column} title={t("table.items")} align="center" />
       ),
       cell: ({ row }) => (
         <div className="flex justify-center">
@@ -149,7 +148,7 @@ function getInvoiceColumns(
     {
       accessorKey: "orderDate",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Date" />
+        <DataTableColumnHeader column={column} title={t("labels.date")} />
       ),
       cell: ({ row }) => (
         <span className="text-muted-foreground tabular-nums text-xs">
@@ -161,7 +160,7 @@ function getInvoiceColumns(
     {
       accessorKey: "totalAmount",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Total amount" align="center" />
+        <DataTableColumnHeader column={column} title={t("table.totalAmount")} align="center" />
       ),
       cell: ({ row }) => (
         <div className="flex justify-center">
@@ -175,7 +174,7 @@ function getInvoiceColumns(
     {
       accessorKey: "paidAmount",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Paid amount" align="center" />
+        <DataTableColumnHeader column={column} title={t("table.paidAmount")} align="center" />
       ),
       cell: ({ row }) => (
         <div className="flex justify-center">
@@ -190,7 +189,7 @@ function getInvoiceColumns(
       id: "balance",
       accessorFn: (row) => Number(computeBalance(row)),
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Balance" align="center" />
+        <DataTableColumnHeader column={column} title={t("labels.balance")} align="center" />
       ),
       cell: ({ row }) => {
         const balance = computeBalance(row.original)
@@ -212,7 +211,7 @@ function getInvoiceColumns(
     },
     {
       accessorKey: "status",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+      header: ({ column }) => <DataTableColumnHeader column={column} title={t("labels.status")} />,
       cell: ({ row }) => (
         <Badge variant="outline" className={statusBadgeClass(row.original.status)}>
           {statusLabel(row.original.status)}
@@ -232,26 +231,26 @@ function getInvoiceColumns(
               size="icon"
             >
               <IconDotsVertical />
-              <span className="sr-only">Open menu</span>
+              <span className="sr-only">{tc("actions.openMenu")}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40">
             <DropdownMenuItem onClick={() => openInvoiceSidebar(row.original, "view")}>
               <IconEye />
-              View
+              {tc("actions.view")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => openInvoiceSidebar(row.original, "edit")}>
               <IconPencil />
-              Edit
+              {tc("actions.edit")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onDuplicate(row.original)}>
               <IconCopy />
-              Duplicate
+              {tc("actions.duplicate")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem variant="destructive" onClick={() => onDelete(row.original)}>
               <IconTrash />
-              Delete
+              {tc("actions.delete")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -261,8 +260,11 @@ function getInvoiceColumns(
 }
 
 export default function SalesInvoicePage() {
-  const { orders, setOrders, addOrder, updateOrder, removeOrder, duplicateOrder } =
+  const { t } = useTranslation("documents")
+  const { t: tc } = useTranslation("common")
+  const { orders, setOrders, getOrder, addOrder, updateOrder, removeOrder, duplicateOrder } =
     useOrders()
+  const { returnInvoiceLine, returningLineId } = useInvoiceLineReturn()
   const [sidebar, setSidebar] = useState<InvoiceSidebarState>(null)
 
   const closeSidebar = () => setSidebar(null)
@@ -272,7 +274,7 @@ export default function SalesInvoicePage() {
       if (
         !(await confirmDeleteAction({
           itemName: order.invoiceNumber,
-          entityLabel: "sales invoice",
+          entityLabel: t("entity.salesInvoice"),
         }))
       ) {
         return
@@ -281,7 +283,7 @@ export default function SalesInvoicePage() {
       if (sidebar?.mode !== "add" && sidebar?.order.id === order.id) {
         closeSidebar()
       }
-      toast.message(`Removed ${order.invoiceNumber} (demo).`)
+      toast.message(t("toasts.removedNamed", { name: order.invoiceNumber }))
     },
     [removeOrder, sidebar]
   )
@@ -291,13 +293,13 @@ export default function SalesInvoicePage() {
       if (
         !(await confirmDuplicateAction({
           itemName: order.invoiceNumber,
-          entityLabel: "sales invoice",
+          entityLabel: t("entity.salesInvoice"),
         }))
       ) {
         return
       }
       const copy = duplicateOrder(order.id)
-      if (copy) toast.success(`Duplicated ${order.invoiceNumber} (demo).`)
+      if (copy) toast.success(t("toasts.duplicatedNamed", { name: order.invoiceNumber }))
     },
     [duplicateOrder]
   )
@@ -308,7 +310,7 @@ export default function SalesInvoicePage() {
       const fd = new FormData(e.currentTarget)
       const customerName = String(fd.get("customerName") ?? "").trim()
       if (!customerName) {
-        toast.error("Customer name is required.")
+        toast.error(t("toasts.customerRequired"))
         return
       }
 
@@ -317,20 +319,20 @@ export default function SalesInvoicePage() {
         sidebar?.mode === "edit" && sidebar.order ? sidebar.order.id : 0
       )
       if (parsed.lines.length === 0 || !parsed.lines.some((l) => l.productName.trim())) {
-        toast.error("Add at least one line item with a product name.")
+        toast.error(t("toasts.lineRequired"))
         return
       }
 
       if (sidebar?.mode === "add") {
         addOrder(parsed)
-        toast.success("Sales invoice created (demo).")
+        toast.success(t("toasts.salesCreated"))
         closeSidebar()
         return
       }
 
       if (sidebar?.mode === "edit" && sidebar.order) {
         updateOrder(sidebar.order.id, parsed)
-        toast.success("Sales invoice saved (demo).")
+        toast.success(t("toasts.salesSaved"))
         closeSidebar()
       }
     },
@@ -340,23 +342,26 @@ export default function SalesInvoicePage() {
   const columns = useMemo(
     () =>
       getInvoiceColumns(
+        t,
+        tc,
         (row, mode) => setSidebar({ order: row, mode }),
         handleDelete,
         handleDuplicate
       ),
-    [handleDelete, handleDuplicate]
+    [handleDelete, handleDuplicate, t, tc]
   )
 
   const sheetOrder = sidebar && sidebar.mode !== "add" ? sidebar.order : null
+  const liveSheetOrder = sheetOrder ? (getOrder(sheetOrder.id) ?? sheetOrder) : null
   const formOrder =
     sidebar?.mode === "add"
       ? { ...EMPTY_ORDER, invoiceNumber: nextInvoiceNumber(orders) }
-      : sheetOrder ?? EMPTY_ORDER
+      : liveSheetOrder ?? EMPTY_ORDER
   const formId =
     sidebar?.mode === "add"
       ? "sales-invoice-add-form"
-      : sheetOrder
-        ? `sales-invoice-edit-${sheetOrder.id}`
+      : liveSheetOrder
+        ? `sales-invoice-edit-${liveSheetOrder.id}`
         : "sales-invoice-edit"
 
   return (
@@ -369,32 +374,32 @@ export default function SalesInvoicePage() {
       >
         <SheetContent
           side="right"
-          className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg"
+          className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-xl"
         >
           {sidebar ? (
             <>
               <SheetHeader className="border-border/60 space-y-1 border-b px-6 py-5 text-left">
                 <SheetTitle className="text-lg leading-tight">
                   {sidebar.mode === "add"
-                    ? "Create sales invoice"
+                    ? t("sheet.createSales")
                     : sidebar.mode === "edit"
-                      ? "Edit sales invoice"
-                      : sheetOrder?.invoiceNumber}
+                      ? t("sheet.editSales")
+                      : liveSheetOrder?.invoiceNumber}
                 </SheetTitle>
                 <SheetDescription>
                   {sidebar.mode === "add" ? (
-                    "Add customer, line items, and payment details. Saving is demo only."
-                  ) : sidebar.mode === "edit" && sheetOrder ? (
+                    t("sheet.addSalesHint")
+                  ) : sidebar.mode === "edit" && liveSheetOrder ? (
                     <>
-                      {sheetOrder.invoiceNumber}
-                      <span className="text-muted-foreground"> · ID {sheetOrder.id}</span>
+                      {liveSheetOrder.invoiceNumber}
+                      <span className="text-muted-foreground"> · {t("sheet.id", { id: liveSheetOrder.id })}</span>
                     </>
-                  ) : sheetOrder ? (
+                  ) : liveSheetOrder ? (
                     <>
-                      {sheetOrder.customerName}
+                      {liveSheetOrder.customerName}
                       <span className="text-muted-foreground">
                         {" "}
-                        · {formatDate(sheetOrder.orderDate)}
+                        · {formatDate(liveSheetOrder.orderDate)}
                       </span>
                     </>
                   ) : null}
@@ -404,13 +409,34 @@ export default function SalesInvoicePage() {
                 key={
                   sidebar.mode === "add"
                     ? "add"
-                    : `${sheetOrder?.id}-${sidebar.mode}`
+                    : `${liveSheetOrder?.id}-${sidebar.mode}-${liveSheetOrder?.lines.map((line) => `${line.id}:${line.quantity}`).join(",")}`
                 }
                 className="min-h-0 flex-1 overflow-y-auto px-6 py-5"
               >
-                {sidebar.mode === "view" && sheetOrder ? (
-                  <OrderDetail order={sheetOrder} />
-                ) : sidebar.mode === "edit" || sidebar.mode === "add" ? (
+                {sidebar.mode === "view" && liveSheetOrder ? (
+                  <OrderDetail order={liveSheetOrder} />
+                ) : sidebar.mode === "edit" && liveSheetOrder ? (
+                  canReturnDocument(liveSheetOrder) ? (
+                    <div className="flex flex-col gap-6">
+                      <OrderDetail
+                        order={liveSheetOrder}
+                        mode="edit"
+                        returningLineId={returningLineId}
+                        onReturnLine={(line) => {
+                          void returnInvoiceLine(liveSheetOrder, line)
+                        }}
+                      />
+                      <div className="border-border/60 border-t pt-5">
+                        <p className="text-muted-foreground mb-4 text-xs font-medium uppercase tracking-wide">
+                          {t("sheet.invoiceDetails")}
+                        </p>
+                        <OrderForm formId={formId} order={formOrder} onSubmit={handleSubmit} />
+                      </div>
+                    </div>
+                  ) : (
+                    <OrderForm formId={formId} order={formOrder} onSubmit={handleSubmit} />
+                  )
+                ) : sidebar.mode === "add" ? (
                   <OrderForm formId={formId} order={formOrder} onSubmit={handleSubmit} />
                 ) : null}
               </div>
@@ -421,24 +447,24 @@ export default function SalesInvoicePage() {
                       variant="outline"
                       className="w-full sm:w-auto"
                       onClick={() =>
-                        sheetOrder && setSidebar({ mode: "edit", order: sheetOrder })
+                        liveSheetOrder && setSidebar({ mode: "edit", order: liveSheetOrder })
                       }
                     >
-                      Edit
+                      {tc("actions.edit")}
                     </Button>
                     <SheetClose asChild>
-                      <Button className="w-full sm:w-auto">Close</Button>
+                      <Button className="w-full sm:w-auto">{tc("actions.close")}</Button>
                     </SheetClose>
                   </>
                 ) : (
                   <>
                     <SheetClose asChild>
                       <Button variant="outline" type="button">
-                        Cancel
+                        {tc("actions.cancel")}
                       </Button>
                     </SheetClose>
                     <Button type="submit" form={formId}>
-                      {sidebar.mode === "add" ? "Create invoice" : "Save invoice"}
+                      {sidebar.mode === "add" ? t("sheet.createInvoice") : t("sheet.saveInvoice")}
                     </Button>
                   </>
                 )}
@@ -451,8 +477,8 @@ export default function SalesInvoicePage() {
       <DataTable
         data={orders}
         columns={columns}
-        addButtonLabel="New Sales Invoice"
-        searchPlaceholder="Search sales invoices..."
+        addButtonLabel={t("table.newSalesInvoice")}
+        searchPlaceholder={t("table.searchSales")}
         importRowMapper={mapImportedOrder}
         importSampleFilename="sales-invoices-sample.csv"
         exportFilename="sales-invoices-export.csv"
@@ -461,14 +487,14 @@ export default function SalesInvoicePage() {
         bulkActions={[
           {
             id: "delete",
-            label: "Delete selected",
+            label: tc("actions.deleteSelected"),
             icon: <IconTrash className="size-4" />,
             variant: "destructive",
             onClick: async (selected) => {
               if (
                 !(await confirmDeleteAction({
                   count: selected.length,
-                  entityLabel: "sales invoice",
+                  entityLabel: t("entity.salesInvoice"),
                 }))
               ) {
                 return
@@ -476,12 +502,17 @@ export default function SalesInvoicePage() {
               const ids = new Set(selected.map((s) => s.id))
               setOrders((prev) => prev.filter((r) => !ids.has(r.id)))
               toast.message(
-                `Removed ${selected.length} sales invoice${selected.length === 1 ? "" : "s"} (demo).`
+                t("toasts.removedSalesCount", { count: selected.length })
               )
             },
           },
         ]}
-        tabs={invoiceTabs}
+        tabs={[
+          { value: "all", label: tc("tabs.all") },
+          { value: "pending", label: tc("status.pending") },
+          { value: "completed", label: tc("status.completed") },
+          { value: "cancelled", label: tc("status.cancelled") },
+        ]}
         defaultTab="all"
         tabFilter={invoiceTabFilter}
       />

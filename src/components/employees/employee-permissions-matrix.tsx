@@ -1,6 +1,7 @@
 "use client"
 
 import { IconInfoCircle } from "@tabler/icons-react"
+import { useTranslation } from "react-i18next"
 
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -33,18 +34,6 @@ import {
 } from "@/lib/employee-permissions"
 import { cn } from "@/lib/utils"
 
-const ACTION_LABELS: Record<keyof ModulePermission, string> = {
-  add: "Add",
-  edit: "Edit",
-  delete: "Delete",
-}
-
-const ACTION_HINTS: Record<keyof ModulePermission, string> = {
-  add: "Create new records in this module",
-  edit: "View and modify existing records",
-  delete: "Remove records permanently",
-}
-
 type EmployeePermissionsMatrixProps = {
   value: EmployeePermissions
   onChange: (next: EmployeePermissions) => void
@@ -58,6 +47,8 @@ export function EmployeePermissionsMatrix({
   disabled,
   className,
 }: EmployeePermissionsMatrixProps) {
+  const { t } = useTranslation("employees")
+  const { t: tc } = useTranslation("common")
   const effective = effectivePermissions(value)
   const isAdmin = effective.admin
   const locked = disabled || isAdmin
@@ -94,7 +85,7 @@ export function EmployeePermissionsMatrix({
             }
           />
           <label htmlFor="perm-admin" className="text-sm font-medium leading-none">
-            Admin (full access)
+            {t("matrix.adminFull")}
           </label>
         </div>
         <div className="flex items-center gap-2">
@@ -110,7 +101,7 @@ export function EmployeePermissionsMatrix({
             htmlFor="perm-select-all"
             className="text-muted-foreground text-sm leading-none"
           >
-            Select all
+            {tc("actions.selectAll")}
           </label>
         </div>
       </div>
@@ -119,7 +110,7 @@ export function EmployeePermissionsMatrix({
         <div className="bg-muted/50 flex items-start gap-2 rounded-md px-3 py-2 text-sm">
           <IconInfoCircle className="text-muted-foreground mt-0.5 size-4 shrink-0" />
           <p className="text-muted-foreground leading-relaxed">
-            Admin unlocked everything. Uncheck admin to edit modules.
+            {t("matrix.adminHint")}
           </p>
         </div>
       ) : null}
@@ -128,23 +119,23 @@ export function EmployeePermissionsMatrix({
         <Table>
           <TableHeader className="bg-muted/50">
             <TableRow className="hover:bg-transparent">
-              <TableHead className="min-w-[8rem] px-3">Module</TableHead>
+              <TableHead className="min-w-[8rem] px-3">{t("matrix.module")}</TableHead>
               {(["add", "edit", "delete"] as const).map((action) => (
                 <TableHead key={action} className="w-20 px-2 text-center">
                   <div className="flex flex-col items-center gap-1.5 py-1">
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <span className="inline-flex cursor-help items-center gap-1 text-xs capitalize">
-                          {ACTION_LABELS[action]}
+                          {t(`matrix.${action}`)}
                           <IconInfoCircle className="text-muted-foreground size-3" />
                         </span>
                       </TooltipTrigger>
                       <TooltipContent side="top">
-                        {ACTION_HINTS[action]}
+                        {t(`matrix.${action}Hint`)}
                       </TooltipContent>
                     </Tooltip>
                     <Checkbox
-                      aria-label={`Select all ${action}`}
+                      aria-label={t("matrix.selectAllAction", { action: t(`matrix.${action}`) })}
                       checked={isActionFullySelected(value, action)}
                       disabled={locked}
                       onCheckedChange={(checked) =>
@@ -154,7 +145,7 @@ export function EmployeePermissionsMatrix({
                   </div>
                 </TableHead>
               ))}
-              <TableHead className="w-14 px-2 text-center text-xs">All</TableHead>
+              <TableHead className="w-14 px-2 text-center text-xs">{t("matrix.all")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -173,7 +164,10 @@ export function EmployeePermissionsMatrix({
                     <TableCell key={action} className="px-2 py-2 text-center">
                       <div className="flex justify-center">
                         <Checkbox
-                          aria-label={`${MODULE_LABELS[moduleId]} ${action}`}
+                          aria-label={t("matrix.moduleAction", {
+                            module: MODULE_LABELS[moduleId],
+                            action: t(`matrix.${action}`),
+                          })}
                           checked={row[action]}
                           disabled={locked}
                           onCheckedChange={(checked) =>
@@ -186,7 +180,9 @@ export function EmployeePermissionsMatrix({
                   <TableCell className="px-2 py-2 text-center">
                     <div className="flex justify-center">
                       <Checkbox
-                        aria-label={`${MODULE_LABELS[moduleId]} all`}
+                        aria-label={t("matrix.moduleAll", {
+                          module: MODULE_LABELS[moduleId],
+                        })}
                         checked={isModuleFullySelected(value, moduleId)}
                         disabled={locked}
                         onCheckedChange={(checked) =>

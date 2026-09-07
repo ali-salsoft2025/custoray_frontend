@@ -3,6 +3,7 @@
 import { Mail } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 import {
   AUTH_BUTTON,
@@ -19,6 +20,7 @@ import { PasswordInput } from "@/components/ui/password-input"
 import { apiFetch } from "@/lib/api/client"
 
 export default function AdminLoginPage() {
+  const { t } = useTranslation("auth")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
@@ -31,10 +33,10 @@ export default function AdminLoginPage() {
         method: "POST",
         body: JSON.stringify({ email, password }),
       })
-      toast.success("Logged in as Super Admin")
+      toast.success(t("admin.toastSuccess"))
       window.location.href = "/admin"
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Login failed")
+      toast.error(err instanceof Error ? err.message : t("admin.toastFailed"))
     } finally {
       setLoading(false)
     }
@@ -43,13 +45,13 @@ export default function AdminLoginPage() {
   return (
     <AuthShell>
       <AuthHeading
-        title="Admin sign in"
-        accent="sign in"
-        subtitle="Sign in to the Custoray super admin console."
+        title={t("admin.title")}
+        accent={t("admin.accent")}
+        subtitle={t("admin.subtitle")}
       />
       <form className="space-y-3.5" onSubmit={onSubmit}>
         <div className="grid gap-1.5">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{t("admin.email")}</Label>
           <div className="relative">
             <Input
               id="email"
@@ -68,7 +70,7 @@ export default function AdminLoginPage() {
           </div>
         </div>
         <div className="grid gap-1.5">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password">{t("admin.password")}</Label>
           <PasswordInput
             id="password"
             value={password}
@@ -83,13 +85,13 @@ export default function AdminLoginPage() {
           {loading ? (
             <span className="flex items-center justify-center gap-2">
               <LoadingSpinner size="sm" />
-              Signing in…
+              {t("admin.signingIn")}
             </span>
           ) : (
-            "Log in"
+            t("admin.submit")
           )}
         </Button>
-        <AuthSwitch prompt="Not an admin?" href="/" label="Back to sign in" />
+        <AuthSwitch prompt={t("admin.notAdmin")} href="/" label={t("admin.backToSignIn")} />
       </form>
     </AuthShell>
   )

@@ -1,0 +1,101 @@
+{
+  "title": "Returns",
+  "search": {
+    "bills": "Search returns…",
+    "items": "Search returned items…"
+  },
+  "viewMode": {
+    "aria": "Returns view mode",
+    "billDescription": "Return wise — one row per return document",
+    "itemDescription": "Item wise — one row per returned line"
+  },
+  "tabs": {
+    "all": "All",
+    "sales": "Sales",
+    "purchase": "Purchase",
+    "pending": "Pending",
+    "completed": "Completed"
+  },
+  "type": {
+    "sales": "Sales",
+    "purchase": "Purchase"
+  },
+  "columns": {
+    "srNo": "Sr No",
+    "returnNumber": "Return #",
+    "type": "Type",
+    "reference": "Reference",
+    "party": "Party",
+    "date": "Date",
+    "returnAmt": "Return amt",
+    "refundDue": "Refund due",
+    "balanceDue": "Balance due",
+    "status": "Status",
+    "item": "Item",
+    "qty": "Qty",
+    "lineTotal": "Line total"
+  },
+  "actions": {
+    "view": "View",
+    "delete": "Delete",
+    "deleteReturn": "Delete return",
+    "openMenu": "Open menu"
+  },
+  "toasts": {
+    "removedNamed": "Removed {{name}} (demo).",
+    "addItem": "Add at least one item to return.",
+    "onlyCompleted": "Only completed paid items can be returned. Cancel pending items instead.",
+    "recorded": "Return recorded and source updated (demo).",
+    "saved": "Return saved (demo)."
+  },
+  "detail": {
+    "salesReturn": "Sales return",
+    "purchaseReturn": "Purchase return",
+    "customer": "Customer",
+    "vendor": "Vendor",
+    "type": "Type",
+    "reference": "Reference",
+    "returnDate": "Return date",
+    "status": "Status",
+    "returnAmount": "Return amount",
+    "paymentImpact": "Payment impact",
+    "originalTotal": "Original total",
+    "paid": "Paid",
+    "newTotal": "New total",
+    "refundDue": "Refund due",
+    "balanceDue": "Balance due",
+    "returnedItems": "Returned items",
+    "qtyTimes": "Qty {{qty}} × {{price}}",
+    "notes": "Notes",
+    "item": "Item",
+    "returnNumber": "Return #",
+    "date": "Date",
+    "quantity": "Quantity",
+    "lineTotal": "Line total",
+    "refundDueOnReturn": "Refund due (on return)",
+    "balanceDueOnReturn": "Balance due (on return)"
+  },
+  "form": {
+    "sale": "Sale",
+    "purchase": "Purchase",
+    "returnOf": "{{type}} return",
+    "reasonPlaceholder": "Reason for return…",
+    "returnNumber": "Return #",
+    "returnDate": "Return date",
+    "notes": "Notes",
+    "itemsToReturn": "Items to return",
+    "returnQty": "Return qty",
+    "maxQty": "Max {{count}}",
+    "unitPrice": "Unit price",
+    "paidAmount": "Paid amount",
+    "recordReturn": "Record return"
+  },
+  "create": {
+    "returnSale": "Return sale",
+    "returnPurchase": "Return purchase",
+    "createReturn": "Create return"
+  },
+  "entity": {
+    "return": "return"
+  }
+}

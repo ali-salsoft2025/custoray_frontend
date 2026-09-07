@@ -8,6 +8,7 @@ import {
   IconTrendingUp,
 } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 import {
   SalesPerformanceLineChart,
@@ -131,25 +132,26 @@ function orderIconTone(order: OrderRow): string {
 }
 
 function TransactionList({ orders }: { orders: OrderRow[] }) {
+  const { t } = useTranslation("reports")
   return (
     <div className={cn(panelClass, "overflow-hidden")}>
       <div className="flex items-start justify-between gap-3 px-5 pt-5 pb-3">
         <div>
-          <p className="text-sm font-semibold tracking-tight">Recent sales</p>
+          <p className="text-sm font-semibold tracking-tight">{t("salesPage.recentSales")}</p>
           <p className="text-muted-foreground mt-0.5 text-xs">
-            Latest invoices in the selected period
+            {t("salesPage.latestInvoices")}
           </p>
         </div>
         {orders.length > 0 ? (
           <span className="text-muted-foreground rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium tabular-nums">
-            {orders.length} shown
+            {t("shared.shownCount", { count: orders.length })}
           </span>
         ) : null}
       </div>
 
       {orders.length === 0 ? (
         <p className="text-muted-foreground flex items-center justify-center px-5 py-12 text-center text-sm">
-          No invoices in this period.
+          {t("salesPage.noInvoices")}
         </p>
       ) : (
         <div className="border-border/50 border-t">
@@ -157,28 +159,28 @@ function TransactionList({ orders }: { orders: OrderRow[] }) {
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 <TableHead className="text-muted-foreground h-10 px-4 text-[11px] font-semibold tracking-wide uppercase">
-                  Invoice
+                  {t("salesPage.invoice")}
                 </TableHead>
                 <TableHead className="text-muted-foreground h-10 px-4 text-[11px] font-semibold tracking-wide uppercase">
-                  Customer
+                  {t("salesPage.customer")}
                 </TableHead>
                 <TableHead className="text-muted-foreground h-10 px-4 text-[11px] font-semibold tracking-wide uppercase">
-                  Channel
+                  {t("salesPage.channel")}
                 </TableHead>
                 <TableHead className="text-muted-foreground h-10 px-4 text-[11px] font-semibold tracking-wide uppercase">
-                  Date
+                  {t("salesPage.date")}
                 </TableHead>
                 <TableHead className="text-muted-foreground h-10 px-4 text-[11px] font-semibold tracking-wide uppercase">
-                  Payment
+                  {t("salesPage.payment")}
                 </TableHead>
                 <TableHead className="text-muted-foreground h-10 px-4 text-[11px] font-semibold tracking-wide uppercase">
-                  Status
+                  {t("salesPage.status")}
                 </TableHead>
                 <TableHead className="text-muted-foreground h-10 px-4 text-right text-[11px] font-semibold tracking-wide uppercase">
-                  Total
+                  {t("salesPage.total")}
                 </TableHead>
                 <TableHead className="text-muted-foreground h-10 px-4 text-right text-[11px] font-semibold tracking-wide uppercase">
-                  Balance
+                  {t("salesPage.balance")}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -225,7 +227,7 @@ function TransactionList({ orders }: { orders: OrderRow[] }) {
                             : "border-border text-muted-foreground"
                         )}
                       >
-                        {pos ? "POS" : "Back office"}
+                        {pos ? t("shared.channelPos") : t("shared.channelBackOffice")}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground px-4 py-3 whitespace-nowrap tabular-nums">
@@ -282,6 +284,8 @@ function withPresetDates(
 }
 
 export function SalesReports() {
+  const { t } = useTranslation("reports")
+  // Relative-date demo seed so month / custom filters show full weekday patterns.
   // Relative-date demo seed so month / custom filters show full weekday patterns.
   const orders = React.useMemo(() => buildSalesReportDemoOrders(), [])
   const returns = React.useMemo(
@@ -339,22 +343,22 @@ export function SalesReports() {
 
   const handleExport = () => {
     if (dailyTotals.length === 0) {
-      toast.error("No data to export for this period.")
+      toast.error(t("shared.toastNoData"))
       return
     }
 
     downloadRowsAsXls(
       dailyTotals.map((row) => ({
-        Date: row.label,
-        Sales: row.sales,
-        Returns: row.returns,
-        Net: row.net,
-        "Sale count": row.saleCount,
-        "Return count": row.returnCount,
+        [t("salesPage.exportDate")]: row.label,
+        [t("salesPage.exportSales")]: row.sales,
+        [t("salesPage.exportReturns")]: row.returns,
+        [t("salesPage.exportNet")]: row.net,
+        [t("salesPage.exportSaleCount")]: row.saleCount,
+        [t("salesPage.exportReturnCount")]: row.returnCount,
       })),
       `sales-report-${filter.preset}.xls`
     )
-    toast.success("Report exported.")
+    toast.success(t("shared.toastExported"))
   }
 
   if (!ready) {
@@ -384,7 +388,7 @@ export function SalesReports() {
                     "text-muted-foreground hover:bg-muted/50 hover:text-foreground relative size-9 rounded-full border-0 shadow-none",
                     activeFilterCount > 0 && "bg-primary/5 text-foreground"
                   )}
-                  aria-label="Open filters"
+                  aria-label={t("shared.openFilters")}
                 >
                   <IconAdjustmentsHorizontal className="size-4 opacity-90" />
                   {activeFilterCount > 0 ? (
@@ -405,10 +409,10 @@ export function SalesReports() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 space-y-1">
                     <h3 className="text-foreground text-sm font-semibold tracking-tight">
-                      Report filters
+                      {t("shared.reportFilters")}
                     </h3>
                     <p className="text-muted-foreground text-[11px] leading-relaxed">
-                      This month, last month, or a custom date range.
+                      {t("shared.filtersHint")}
                     </p>
                   </div>
                   <Button
@@ -419,7 +423,7 @@ export function SalesReports() {
                     disabled={activeFilterCount === 0}
                     onClick={resetFilters}
                   >
-                    Reset filters
+                    {t("shared.resetFilters")}
                   </Button>
                 </div>
               </div>
@@ -427,10 +431,10 @@ export function SalesReports() {
               <div className="max-h-[min(70vh,28rem)] space-y-4 overflow-y-auto px-4 py-3">
                 <div className="space-y-2">
                   <Label className="text-muted-foreground block text-[11px] font-semibold tracking-wide uppercase">
-                    Period
+                    {t("shared.period")}
                   </Label>
                   <div className="flex flex-wrap gap-1.5">
-                    {SALES_REPORT_PRESETS.map(({ value, label }) => {
+                    {SALES_REPORT_PRESETS.map(({ value }) => {
                       const selected = filter.preset === value
                       return (
                         <Button
@@ -441,7 +445,7 @@ export function SalesReports() {
                           className="h-7 rounded-full px-2.5 text-xs"
                           onClick={() => setPreset(value)}
                         >
-                          {label}
+                          {t(`presets.${value}`)}
                         </Button>
                       )
                     })}
@@ -450,12 +454,12 @@ export function SalesReports() {
 
                 <div className="border-border/80 space-y-3 border-t pt-3">
                   <Label className="text-muted-foreground block text-[11px] font-semibold tracking-wide uppercase">
-                    Date range
+                    {t("shared.dateRange")}
                   </Label>
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div className="space-y-1.5">
                       <Label htmlFor="sales-report-from" className="text-xs">
-                        From date
+                        {t("shared.fromDate")}
                       </Label>
                       <Input
                         id="sales-report-from"
@@ -475,7 +479,7 @@ export function SalesReports() {
                     </div>
                     <div className="space-y-1.5">
                       <Label htmlFor="sales-report-to" className="text-xs">
-                        To date
+                        {t("shared.toDate")}
                       </Label>
                       <Input
                         id="sales-report-to"
@@ -497,7 +501,7 @@ export function SalesReports() {
                   <p className="text-muted-foreground text-[11px]">
                     {customDatesEnabled
                       ? `${formatDate(range.start)} – ${formatDate(range.end)}`
-                      : "Switch to Custom to edit dates."}
+                      : t("shared.switchToCustom")}
                   </p>
                 </div>
               </div>
@@ -511,54 +515,63 @@ export function SalesReports() {
             onClick={handleExport}
           >
             <IconCloudDownload />
-            <span className="hidden sm:inline">Export</span>
+            <span className="hidden sm:inline">{t("shared.export")}</span>
           </Button>
         </div>
       </div>
 
       <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs sm:grid-cols-2 xl:grid-cols-4">
         <SalesStatCard
-          label="Net sales"
+          label={t("salesPage.netSales")}
           value={formatSalesReportMoney(summary.netSales)}
           trend={trends.netChangePct}
           footerTitle={
             (trends.netChangePct ?? 0) >= 0
-              ? "Trending up this period"
-              : "Trending down this period"
+              ? t("salesPage.trendingUp")
+              : t("salesPage.trendingDown")
           }
-          footerHint={`Gross ${formatSalesReportMoney(summary.grossSales)} · after returns`}
+          footerHint={t("salesPage.grossAfterReturns", {
+            amount: formatSalesReportMoney(summary.grossSales),
+          })}
         />
         <SalesStatCard
-          label="Collection rate"
+          label={t("salesPage.collectionRate")}
           value={`${summary.collectionRate.toFixed(0)}%`}
           trend={trends.collectionRateChangePct}
           footerTitle={
             summary.collectionRate >= 80
-              ? "Strong collections"
-              : "Collections need attention"
+              ? t("salesPage.strongCollections")
+              : t("salesPage.collectionsNeedAttention")
           }
-          footerHint={`${formatSalesReportMoney(summary.outstanding)} outstanding`}
+          footerHint={t("salesPage.outstanding", {
+            amount: formatSalesReportMoney(summary.outstanding),
+          })}
         />
         <SalesStatCard
-          label="Avg. ticket"
+          label={t("salesPage.avgTicket")}
           value={formatSalesReportMoney(summary.avgTicket)}
           trend={trends.avgTicketChangePct}
           footerTitle={
             (trends.avgTicketChangePct ?? 0) >= 0
-              ? "Ticket size improving"
-              : "Ticket size softening"
+              ? t("salesPage.ticketImproving")
+              : t("salesPage.ticketSoftening")
           }
-          footerHint={`Across ${summary.completedCount} completed sales`}
+          footerHint={t("salesPage.acrossCompleted", {
+            count: summary.completedCount,
+          })}
         />
         <SalesStatCard
-          label="Completed invoices"
+          label={t("salesPage.completedInvoices")}
           value={String(summary.completedCount)}
           trend={trends.invoiceChangePct}
-          footerTitle={`${summary.itemsSold} items sold`}
+          footerTitle={t("salesPage.itemsSold", { count: summary.itemsSold })}
           footerHint={
             summary.returnRate > 0
-              ? `${summary.returnRate.toFixed(0)}% return rate · ${formatSalesReportMoney(summary.totalReturns)}`
-              : `${summary.saleCount} invoices in period`
+              ? t("salesPage.returnRate", {
+                  rate: summary.returnRate.toFixed(0),
+                  amount: formatSalesReportMoney(summary.totalReturns),
+                })
+              : t("salesPage.invoicesInPeriod", { count: summary.saleCount })
           }
         />
       </div>

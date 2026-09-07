@@ -1,14 +1,17 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { ColumnDef } from "@tanstack/react-table"
 import { IconArchive, IconTrash } from "@tabler/icons-react"
 import { z } from "zod"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
+import type { TFunction } from "i18next"
 
 import { DataTableColumnHeader } from "@/components/data-table-column-header"
 import { DataTable, type DataTableTab } from "@/components/data-table"
 import { LookupFormSheet } from "@/components/inventory/lookup-form-sheet"
+import i18n from "@/i18n"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 
@@ -32,11 +35,7 @@ const brandsData: BrandRow[] = [
   { srNo: 6, name: "PixelView", description: "Monitors and visual display equipment", products: 5, status: "inactive", lifecycle: "archived" },
 ]
 
-const brandTabs: DataTableTab[] = [
-  { value: "all", label: "All" },
-  { value: "active", label: "Active" },
-  { value: "archived", label: "Archived" },
-]
+const brandTabsValues = ["all", "active", "archived"] as const
 
 function brandTabFilter(row: BrandRow, tab: string) {
   if (tab === "all") return true
@@ -64,14 +63,14 @@ function mapImportedBrand(
   return {
     srNo: finalSr,
     name,
-    description: (row.description ?? "").trim() || "No description",
+    description: (row.description ?? "").trim() || i18n.t("noDescription", { ns: "inventory" }),
     products: Number(row.products) || 0,
     status,
     lifecycle,
   }
 }
 
-const brandColumns: ColumnDef<BrandRow>[] = [
+const brandColumnsBase = (t: TFunction<"inventory">): ColumnDef<BrandRow>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -82,7 +81,7 @@ const brandColumns: ColumnDef<BrandRow>[] = [
             (table.getIsSomePageRowsSelected() && "indeterminate")
           }
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
+          aria-label={t("table.selectAll", { ns: "common" })}
         />
       </div>
     ),
@@ -91,7 +90,7 @@ const brandColumns: ColumnDef<BrandRow>[] = [
         <Checkbox
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
+          aria-label={t("table.selectRow", { ns: "common" })}
         />
       </div>
     ),
@@ -100,7 +99,7 @@ const brandColumns: ColumnDef<BrandRow>[] = [
   },
   {
     accessorKey: "srNo",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="ID" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title={t("columns.id")} />,
     cell: ({ row }) => (
       <div className="flex h-9 min-w-14 items-center text-left tabular-nums">
         {row.original.srNo}
@@ -110,7 +109,7 @@ const brandColumns: ColumnDef<BrandRow>[] = [
   },
   {
     accessorKey: "name",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Brand" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title={t("columns.brand")} />,
     cell: ({ row }) => (
       <div className="flex h-9 min-w-32 items-center">
         <span className="text-foreground font-medium">{row.original.name}</span>
@@ -121,7 +120,7 @@ const brandColumns: ColumnDef<BrandRow>[] = [
   {
     accessorKey: "description",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Description" />
+      <DataTableColumnHeader column={column} title={t("columns.description")} />
     ),
     cell: ({ row }) => (
       <div className="flex h-9 min-w-52 items-center">
@@ -135,7 +134,7 @@ const brandColumns: ColumnDef<BrandRow>[] = [
   {
     accessorKey: "products",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Products" />
+      <DataTableColumnHeader column={column} title={t("columns.products")} />
     ),
     cell: ({ row }) => (
       <div className="flex h-9 min-w-20 items-center">
@@ -145,7 +144,7 @@ const brandColumns: ColumnDef<BrandRow>[] = [
   },
   {
     accessorKey: "status",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title={t("columns.status")} />,
     cell: ({ row }) => (
       <div className="flex h-9 min-w-24 items-center">
         <Badge
@@ -156,7 +155,9 @@ const brandColumns: ColumnDef<BrandRow>[] = [
               : "border-amber-500/30 px-1.5 text-amber-700 dark:text-amber-400"
           }
         >
-          {row.original.status === "active" ? "Active" : "Inactive"}
+          {row.original.status === "active"
+            ? t("tabs.active")
+            : t("tabs.inactive")}
         </Badge>
       </div>
     ),
@@ -165,15 +166,25 @@ const brandColumns: ColumnDef<BrandRow>[] = [
 ]
 
 export default function BrandsPage() {
+  const { t } = useTranslation("inventory")
   const [lookupOpen, setLookupOpen] = useState(false)
+  const brandColumns = useMemo(() => brandColumnsBase(t), [t])
+  const brandTabs: DataTableTab[] = useMemo(
+    () =>
+      brandTabsValues.map((value) => ({
+        value,
+        label: t(`tabs.${value}`),
+      })),
+    [t]
+  )
 
   return (
     <>
       <DataTable
         data={brandsData}
         columns={brandColumns}
-        addButtonLabel="New Brand"
-        searchPlaceholder="Search brands..."
+        addButtonLabel={t("brandPage.addButton")}
+        searchPlaceholder={t("brandPage.search")}
         importRowMapper={mapImportedBrand}
         importSampleFilename="brands-sample.csv"
         exportFilename="brands-export.csv"
@@ -181,19 +192,19 @@ export default function BrandsPage() {
         bulkActions={[
           {
             id: "archive",
-            label: "Move to archive",
+            label: t("actions.moveToArchive"),
             icon: <IconArchive className="size-4" />,
             onClick: (selected) => {
-              toast.message(`Moved ${selected.length} brand(s) to archive (demo).`)
+              toast.message(t("toasts.archivedBrands", { count: selected.length }))
             },
           },
           {
             id: "delete",
-            label: "Delete selected",
+            label: t("actions.deleteSelected"),
             icon: <IconTrash className="size-4" />,
             variant: "destructive",
             onClick: (selected) => {
-              toast.message(`Would delete ${selected.length} brand(s).`)
+              toast.message(t("toasts.wouldDeleteBrands", { count: selected.length }))
             },
           },
         ]}

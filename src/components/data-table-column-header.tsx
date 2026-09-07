@@ -52,9 +52,9 @@ export function DataTableColumnHeader<TData, TValue>({
         size="sm"
         className={cn(
           "h-8 gap-1 px-2 hover:bg-transparent dark:hover:bg-transparent lg:px-3",
-          align === "start" && "-ml-3",
-          align === "center" && "-ml-0",
-          align === "end" && "-mr-3 ml-auto"
+          align === "start" && "-ms-3",
+          align === "center" && "-ms-0",
+          align === "end" && "-me-3 ms-auto"
         )}
         onClick={column.getToggleSortingHandler()}
       >

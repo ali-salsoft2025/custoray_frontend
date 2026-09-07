@@ -8,6 +8,7 @@ import {
   IconTrendingUp,
 } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 import {
   PurchasePerformanceLineChart,
@@ -130,27 +131,28 @@ function purchaseIconTone(purchase: PurchaseRow): string {
 }
 
 function PurchaseList({ purchases }: { purchases: PurchaseRow[] }) {
+  const { t } = useTranslation("reports")
   return (
     <div className={cn(panelClass, "overflow-hidden")}>
       <div className="flex items-start justify-between gap-3 px-5 pt-5 pb-3">
         <div>
           <p className="text-sm font-semibold tracking-tight">
-            Recent purchases
+            {t("purchasesPage.recentPurchases")}
           </p>
           <p className="text-muted-foreground mt-0.5 text-xs">
-            Latest purchase orders in the selected period
+            {t("purchasesPage.latestOrders")}
           </p>
         </div>
         {purchases.length > 0 ? (
           <span className="text-muted-foreground rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium tabular-nums">
-            {purchases.length} shown
+            {t("shared.shownCount", { count: purchases.length })}
           </span>
         ) : null}
       </div>
 
       {purchases.length === 0 ? (
         <p className="text-muted-foreground flex items-center justify-center px-5 py-12 text-center text-sm">
-          No purchase orders in this period.
+          {t("purchasesPage.noOrders")}
         </p>
       ) : (
         <div className="border-border/50 border-t">
@@ -158,25 +160,25 @@ function PurchaseList({ purchases }: { purchases: PurchaseRow[] }) {
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 <TableHead className="text-muted-foreground h-10 px-4 text-[11px] font-semibold tracking-wide uppercase">
-                  PO number
+                  {t("purchasesPage.poNumber")}
                 </TableHead>
                 <TableHead className="text-muted-foreground h-10 px-4 text-[11px] font-semibold tracking-wide uppercase">
-                  Vendor
+                  {t("purchasesPage.vendor")}
                 </TableHead>
                 <TableHead className="text-muted-foreground h-10 px-4 text-[11px] font-semibold tracking-wide uppercase">
-                  Date
+                  {t("purchasesPage.date")}
                 </TableHead>
                 <TableHead className="text-muted-foreground h-10 px-4 text-right text-[11px] font-semibold tracking-wide uppercase">
-                  Items
+                  {t("purchasesPage.items")}
                 </TableHead>
                 <TableHead className="text-muted-foreground h-10 px-4 text-[11px] font-semibold tracking-wide uppercase">
-                  Status
+                  {t("purchasesPage.status")}
                 </TableHead>
                 <TableHead className="text-muted-foreground h-10 px-4 text-right text-[11px] font-semibold tracking-wide uppercase">
-                  Total
+                  {t("purchasesPage.total")}
                 </TableHead>
                 <TableHead className="text-muted-foreground h-10 px-4 text-right text-[11px] font-semibold tracking-wide uppercase">
-                  Payable
+                  {t("purchasesPage.payable")}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -269,6 +271,7 @@ function withPresetDates(
 }
 
 export function PurchaseReports() {
+  const { t } = useTranslation("reports")
   // Relative-date demo seed so month / custom filters show full timeline patterns.
   const purchases = React.useMemo(() => buildPurchaseReportDemoPurchases(), [])
   const returns = React.useMemo(
@@ -326,22 +329,22 @@ export function PurchaseReports() {
 
   const handleExport = () => {
     if (dailyTotals.length === 0) {
-      toast.error("No data to export for this period.")
+      toast.error(t("shared.toastNoData"))
       return
     }
 
     downloadRowsAsXls(
       dailyTotals.map((row) => ({
-        Date: row.label,
-        Purchases: row.purchases,
-        Returns: row.returns,
-        Net: row.net,
-        "Order count": row.purchaseCount,
-        "Return count": row.returnCount,
+        [t("purchasesPage.exportDate")]: row.label,
+        [t("purchasesPage.exportPurchases")]: row.purchases,
+        [t("purchasesPage.exportReturns")]: row.returns,
+        [t("purchasesPage.exportNet")]: row.net,
+        [t("purchasesPage.exportOrderCount")]: row.purchaseCount,
+        [t("purchasesPage.exportReturnCount")]: row.returnCount,
       })),
       `purchase-report-${filter.preset}.xls`
     )
-    toast.success("Report exported.")
+    toast.success(t("shared.toastExported"))
   }
 
   if (!ready) {
@@ -371,7 +374,7 @@ export function PurchaseReports() {
                     "text-muted-foreground hover:bg-muted/50 hover:text-foreground relative size-9 rounded-full border-0 shadow-none",
                     activeFilterCount > 0 && "bg-primary/5 text-foreground"
                   )}
-                  aria-label="Open filters"
+                  aria-label={t("shared.openFilters")}
                 >
                   <IconAdjustmentsHorizontal className="size-4 opacity-90" />
                   {activeFilterCount > 0 ? (
@@ -392,10 +395,10 @@ export function PurchaseReports() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 space-y-1">
                     <h3 className="text-foreground text-sm font-semibold tracking-tight">
-                      Report filters
+                      {t("shared.reportFilters")}
                     </h3>
                     <p className="text-muted-foreground text-[11px] leading-relaxed">
-                      This month, last month, or a custom date range.
+                      {t("shared.filtersHint")}
                     </p>
                   </div>
                   <Button
@@ -406,7 +409,7 @@ export function PurchaseReports() {
                     disabled={activeFilterCount === 0}
                     onClick={resetFilters}
                   >
-                    Reset filters
+                    {t("shared.resetFilters")}
                   </Button>
                 </div>
               </div>
@@ -414,10 +417,10 @@ export function PurchaseReports() {
               <div className="max-h-[min(70vh,28rem)] space-y-4 overflow-y-auto px-4 py-3">
                 <div className="space-y-2">
                   <Label className="text-muted-foreground block text-[11px] font-semibold tracking-wide uppercase">
-                    Period
+                    {t("shared.period")}
                   </Label>
                   <div className="flex flex-wrap gap-1.5">
-                    {PURCHASE_REPORT_PRESETS.map(({ value, label }) => {
+                    {PURCHASE_REPORT_PRESETS.map(({ value }) => {
                       const selected = filter.preset === value
                       return (
                         <Button
@@ -428,7 +431,7 @@ export function PurchaseReports() {
                           className="h-7 rounded-full px-2.5 text-xs"
                           onClick={() => setPreset(value)}
                         >
-                          {label}
+                          {t(`presets.${value}`)}
                         </Button>
                       )
                     })}
@@ -437,12 +440,12 @@ export function PurchaseReports() {
 
                 <div className="border-border/80 space-y-3 border-t pt-3">
                   <Label className="text-muted-foreground block text-[11px] font-semibold tracking-wide uppercase">
-                    Date range
+                    {t("shared.dateRange")}
                   </Label>
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div className="space-y-1.5">
                       <Label htmlFor="purchase-report-from" className="text-xs">
-                        From date
+                        {t("shared.fromDate")}
                       </Label>
                       <Input
                         id="purchase-report-from"
@@ -462,7 +465,7 @@ export function PurchaseReports() {
                     </div>
                     <div className="space-y-1.5">
                       <Label htmlFor="purchase-report-to" className="text-xs">
-                        To date
+                        {t("shared.toDate")}
                       </Label>
                       <Input
                         id="purchase-report-to"
@@ -484,7 +487,7 @@ export function PurchaseReports() {
                   <p className="text-muted-foreground text-[11px]">
                     {customDatesEnabled
                       ? `${formatDate(range.start)} – ${formatDate(range.end)}`
-                      : "Switch to Custom to edit dates."}
+                      : t("shared.switchToCustom")}
                   </p>
                 </div>
               </div>
@@ -498,54 +501,65 @@ export function PurchaseReports() {
             onClick={handleExport}
           >
             <IconCloudDownload />
-            <span className="hidden sm:inline">Export</span>
+            <span className="hidden sm:inline">{t("shared.export")}</span>
           </Button>
         </div>
       </div>
 
       <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs sm:grid-cols-2 xl:grid-cols-4">
         <PurchaseStatCard
-          label="Net purchases"
+          label={t("purchasesPage.netPurchases")}
           value={formatPurchaseReportMoney(summary.netPurchases)}
           trend={trends.netChangePct}
           footerTitle={
             (trends.netChangePct ?? 0) >= 0
-              ? "Spend rising this period"
-              : "Spend easing this period"
+              ? t("purchasesPage.spendRising")
+              : t("purchasesPage.spendEasing")
           }
-          footerHint={`Gross ${formatPurchaseReportMoney(summary.grossPurchases)} · after returns`}
+          footerHint={t("purchasesPage.grossAfterReturns", {
+            amount: formatPurchaseReportMoney(summary.grossPurchases),
+          })}
         />
         <PurchaseStatCard
-          label="Payment rate"
+          label={t("purchasesPage.paymentRate")}
           value={`${summary.paymentRate.toFixed(0)}%`}
           trend={trends.paymentRateChangePct}
           footerTitle={
             summary.paymentRate >= 80
-              ? "Vendors mostly settled"
-              : "Payables need attention"
+              ? t("purchasesPage.vendorsSettled")
+              : t("purchasesPage.payablesNeedAttention")
           }
-          footerHint={`${formatPurchaseReportMoney(summary.outstanding)} payable`}
+          footerHint={t("purchasesPage.payableAmount", {
+            amount: formatPurchaseReportMoney(summary.outstanding),
+          })}
         />
         <PurchaseStatCard
-          label="Avg. order value"
+          label={t("purchasesPage.avgOrderValue")}
           value={formatPurchaseReportMoney(summary.avgOrderValue)}
           trend={trends.avgOrderValueChangePct}
           footerTitle={
             (trends.avgOrderValueChangePct ?? 0) >= 0
-              ? "Order size growing"
-              : "Order size shrinking"
+              ? t("purchasesPage.orderSizeGrowing")
+              : t("purchasesPage.orderSizeShrinking")
           }
-          footerHint={`Across ${summary.completedCount} received orders`}
+          footerHint={t("purchasesPage.acrossReceived", {
+            count: summary.completedCount,
+          })}
         />
         <PurchaseStatCard
-          label="Received orders"
+          label={t("purchasesPage.receivedOrders")}
           value={String(summary.completedCount)}
           trend={trends.orderChangePct}
-          footerTitle={`${summary.itemsPurchased} items received`}
+          footerTitle={t("purchasesPage.itemsReceived", {
+            count: summary.itemsPurchased,
+          })}
           footerHint={
             summary.returnRate > 0
-              ? `${summary.returnRate.toFixed(0)}% return rate · ${formatPurchaseReportMoney(summary.totalReturns)}`
-              : `${summary.purchaseCount} orders in period`
+              ? t("purchasesPage.returnRate", {
+                  rate: summary.returnRate.toFixed(0),
+                  amount: formatPurchaseReportMoney(summary.totalReturns),
+                })
+              : t("purchasesPage.ordersInPeriod", { count: summary.purchaseCount })
           }
         />
       </div>

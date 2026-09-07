@@ -5,14 +5,17 @@ import {
   type ProductRow,
   PRODUCTS_STORAGE_KEY,
   initialProducts,
+  loadStoredProducts,
   nextSku,
-  parsePersistedProducts,
 } from "@/lib/products"
+import { recordProductPriceChanges } from "@/lib/product-price-history"
 import { apiListProducts } from "@/lib/api/business"
 
 const USE_API = process.env.NEXT_PUBLIC_API_PRODUCTS === "true"
 
 function mapApiProduct(p: Awaited<ReturnType<typeof apiListProducts>>["items"][0], index: number): ProductRow {
+  const lifecycle =
+    p.lifecycle === "inactive" || p.lifecycle === "archived" ? p.lifecycle : "active"
   return {
     id: index + 1,
     srNo: p.srNo ?? index + 1,
@@ -22,13 +25,13 @@ function mapApiProduct(p: Awaited<ReturnType<typeof apiListProducts>>["items"][0
     category: p.category?.name ?? "General",
     variant: p.variant?.name ?? "Others",
     status: p.status,
-    productStatus: p.productStatus ?? "active",
-    lifecycle: (p.lifecycle as ProductRow["lifecycle"]) ?? "active",
-    stock: p.stock,
+    productStatus: p.productStatus === "active" ? "active" : "none",
+    lifecycle,
+    stock: Number(p.stock) || 0,
     orders: p.ordersCount ?? 0,
-    costPrice: Number(p.costPrice),
-    salePrice: Number(p.salePrice),
-    imageUrls: (p.imageUrls as string[]) ?? [],
+    costPrice: String(p.costPrice ?? "0"),
+    salePrice: String(p.salePrice ?? "0"),
+    imageUrls: Array.isArray(p.imageUrls) ? p.imageUrls.filter((url) => typeof url === "string") : [],
   }
 }
 
@@ -52,20 +55,20 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     if (USE_API) {
       apiListProducts({ limit: 500 })
-        .then((res) => setProducts(res.items.map(mapApiProduct)))
-        .catch(() => {})
+        .then((res) => {
+          const mapped = (res.items ?? []).map(mapApiProduct)
+          setProducts(mapped.length > 0 ? mapped : loadStoredProducts())
+        })
+        .catch(() => {
+          setProducts(loadStoredProducts())
+        })
         .finally(() => {
           setLoading(false)
           setHydrated(true)
         })
       return
     }
-    const saved = parsePersistedProducts(
-      typeof window !== "undefined"
-        ? window.localStorage.getItem(PRODUCTS_STORAGE_KEY)
-        : null
-    )
-    if (saved) setProducts(saved)
+    setProducts(loadStoredProducts())
     setHydrated(true)
   }, [])
 
@@ -73,6 +76,9 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
     if (!hydrated || typeof window === "undefined" || USE_API) return
     window.localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(products))
   }, [products, hydrated])
+
+  const productsRef = React.useRef(products)
+  productsRef.current = products
 
   const getProduct = React.useCallback(
     (id: number) => products.find((p) => p.id === id),
@@ -91,13 +97,22 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
       }
       return [...prev, created]
     })
+    recordProductPriceChanges(null, created)
     return created
   }, [])
 
   const updateProduct = React.useCallback((id: number, patch: Partial<ProductRow>) => {
-    setProducts((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, ...patch, id: p.id, srNo: p.srNo } : p))
-    )
+    const current = productsRef.current.find((p) => p.id === id)
+    if (!current) return
+    const next = { ...current, ...patch, id: current.id, srNo: current.srNo }
+    if (
+      patch.salePrice !== undefined ||
+      patch.costPrice !== undefined ||
+      (patch.sku !== undefined && patch.sku !== current.sku)
+    ) {
+      recordProductPriceChanges(current, next)
+    }
+    setProducts((prev) => prev.map((p) => (p.id === id ? next : p)))
   }, [])
 
   const removeProduct = React.useCallback((id: number) => {

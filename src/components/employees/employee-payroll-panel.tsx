@@ -14,6 +14,7 @@ import {
   IconTrash,
 } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 import { DataTableColumnHeader } from "@/components/data-table-column-header"
 import { DataTable, type DataTableTab } from "@/components/data-table"
@@ -52,13 +53,6 @@ import {
 } from "@/lib/employee-payroll"
 import type { EmployeeRow } from "@/lib/employees"
 
-const payrollTabs: DataTableTab[] = [
-  { value: "all", label: "All" },
-  { value: "draft", label: "Draft" },
-  { value: "pending", label: "Pending" },
-  { value: "paid", label: "Paid" },
-]
-
 type PayrollSidebarState =
   | { mode: "add" }
   | { mode: "view"; record: PayrollRecord }
@@ -86,6 +80,7 @@ function PayrollForm({
   employees: EmployeeRow[]
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
 }) {
+  const { t } = useTranslation("employees")
   const [employeeId, setEmployeeId] = useState(record.employeeId)
   const [baseSalary, setBaseSalary] = useState(record.baseSalary)
   const [bonuses, setBonuses] = useState(record.bonuses)
@@ -102,7 +97,7 @@ function PayrollForm({
   return (
     <form id={formId} className="space-y-5" onSubmit={onSubmit}>
       <div className="space-y-2">
-        <Label htmlFor={`${formId}-employee`}>Employee</Label>
+        <Label htmlFor={`${formId}-employee`}>{t("payrollPage.employee")}</Label>
         <select
           id={`${formId}-employee`}
           name="employeeId"
@@ -116,7 +111,7 @@ function PayrollForm({
           }}
           className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm shadow-xs"
         >
-          <option value="">Select employee</option>
+          <option value="">{t("payrollPage.selectEmployee")}</option>
           {employees.map((employee) => (
             <option key={employee.id} value={employee.id}>
               {employee.name}
@@ -126,7 +121,7 @@ function PayrollForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor={`${formId}-period`}>Payroll month</Label>
+        <Label htmlFor={`${formId}-period`}>{t("payrollPage.payrollMonth")}</Label>
         <Input
           id={`${formId}-period`}
           name="period"
@@ -138,7 +133,7 @@ function PayrollForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor={`${formId}-base`}>Base salary</Label>
+          <Label htmlFor={`${formId}-base`}>{t("payrollPage.baseSalary")}</Label>
           <Input
             id={`${formId}-base`}
             name="baseSalary"
@@ -148,7 +143,7 @@ function PayrollForm({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor={`${formId}-bonus`}>Bonuses</Label>
+          <Label htmlFor={`${formId}-bonus`}>{t("payrollPage.bonuses")}</Label>
           <Input
             id={`${formId}-bonus`}
             name="bonuses"
@@ -160,7 +155,7 @@ function PayrollForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor={`${formId}-commissions`}>Commissions</Label>
+        <Label htmlFor={`${formId}-commissions`}>{t("payrollPage.commissions")}</Label>
         <Input
           id={`${formId}-commissions`}
           name="commissions"
@@ -172,7 +167,7 @@ function PayrollForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor={`${formId}-deductions`}>Deductions</Label>
+        <Label htmlFor={`${formId}-deductions`}>{t("payrollPage.deductions")}</Label>
         <Input
           id={`${formId}-deductions`}
           name="deductions"
@@ -183,7 +178,7 @@ function PayrollForm({
       </div>
 
       <div className="bg-muted/40 rounded-lg px-4 py-3">
-        <p className="text-muted-foreground text-xs">Calculated net pay</p>
+        <p className="text-muted-foreground text-xs">{t("payrollPage.calculatedNetPay")}</p>
         <p className="mt-1 text-xl font-semibold tabular-nums">
           {formatMoney(netPay)}
         </p>
@@ -191,7 +186,7 @@ function PayrollForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor={`${formId}-status`}>Status</Label>
+          <Label htmlFor={`${formId}-status`}>{t("columns.status")}</Label>
           <select
             id={`${formId}-status`}
             name="status"
@@ -210,7 +205,7 @@ function PayrollForm({
         </div>
         {status === "paid" ? (
           <div className="space-y-2">
-            <Label htmlFor={`${formId}-paid-date`}>Paid date</Label>
+            <Label htmlFor={`${formId}-paid-date`}>{t("payrollPage.paidDate")}</Label>
             <Input
               id={`${formId}-paid-date`}
               name="paidDate"
@@ -225,12 +220,12 @@ function PayrollForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor={`${formId}-notes`}>Notes</Label>
+        <Label htmlFor={`${formId}-notes`}>{t("payrollPage.notes")}</Label>
         <Input
           id={`${formId}-notes`}
           name="notes"
           defaultValue={record.notes}
-          placeholder="Optional payroll note"
+          placeholder={t("payrollPage.notesPlaceholder")}
         />
       </div>
     </form>
@@ -244,16 +239,17 @@ function PayrollDetail({
   record: PayrollRecord
   employeeName: string
 }) {
+  const { t } = useTranslation("employees")
   const rows = [
-    ["Employee", employeeName],
-    ["Month", periodLabel(record.period)],
-    ["Base salary", formatMoney(record.baseSalary)],
-    ["Bonuses", formatMoney(record.bonuses)],
-    ["Commissions", formatMoney(record.commissions)],
-    ["Deductions", formatMoney(record.deductions)],
-    ["Net pay", formatMoney(record.netPay)],
-    ["Paid date", record.paidDate || "—"],
-    ["Notes", record.notes || "—"],
+    [t("payrollPage.employee"), employeeName],
+    [t("payrollPage.month"), periodLabel(record.period)],
+    [t("payrollPage.baseSalary"), formatMoney(record.baseSalary)],
+    [t("payrollPage.bonuses"), formatMoney(record.bonuses)],
+    [t("payrollPage.commissions"), formatMoney(record.commissions)],
+    [t("payrollPage.deductions"), formatMoney(record.deductions)],
+    [t("payrollPage.netPay"), formatMoney(record.netPay)],
+    [t("payrollPage.paidDate"), record.paidDate || "—"],
+    [t("payrollPage.notes"), record.notes || "—"],
   ]
 
   return (
@@ -274,11 +270,19 @@ function PayrollDetail({
 }
 
 export function EmployeePayrollPanel() {
+  const { t } = useTranslation("employees")
+  const { t: tc } = useTranslation("common")
   const { employees } = useEmployees()
   const { records, addRecord, updateRecord, removeRecord, setRecords } =
     usePayroll()
   const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7))
   const [sidebar, setSidebar] = useState<PayrollSidebarState>(null)
+  const payrollTabs: DataTableTab[] = [
+    { value: "all", label: tc("tabs.all") },
+    { value: "draft", label: t("payrollPage.status.draft") },
+    { value: "pending", label: t("payrollPage.status.pending") },
+    { value: "paid", label: t("payrollPage.status.paid") },
+  ]
 
   const activeEmployees = useMemo(
     () => employees.filter((employee) => employee.status === "active"),
@@ -292,7 +296,7 @@ export function EmployeePayrollPanel() {
   const employeeName = useCallback(
     (id: number) =>
       employees.find((employee) => employee.id === id)?.name ??
-      `Employee #${id}`,
+      t("payrollPage.employeeFallback", { id }),
     [employees]
   )
 
@@ -301,7 +305,7 @@ export function EmployeePayrollPanel() {
       if (
         !(await confirmDeleteAction({
           itemName: `${employeeName(record.employeeId)} · ${record.period}`,
-          entityLabel: "payroll record",
+          entityLabel: t("entity.payrollRecord"),
         }))
       ) {
         return
@@ -310,17 +314,17 @@ export function EmployeePayrollPanel() {
       if (sidebar?.mode !== "add" && sidebar?.record.id === record.id) {
         setSidebar(null)
       }
-      toast.message("Payroll record removed.")
+      toast.message(t("payrollPage.toastRemoved"))
     },
-    [employeeName, removeRecord, sidebar]
+    [employeeName, removeRecord, sidebar, t]
   )
 
   const markPending = useCallback(
     (record: PayrollRecord) => {
       updateRecord(record.id, { status: "pending", paidDate: "" })
-      toast.success("Payroll submitted for payment.")
+      toast.success(t("payrollPage.toastSubmitted"))
     },
-    [updateRecord]
+    [updateRecord, t]
   )
 
   const markPaid = useCallback(
@@ -329,9 +333,9 @@ export function EmployeePayrollPanel() {
         status: "paid",
         paidDate: new Date().toISOString().slice(0, 10),
       })
-      toast.success("Payroll marked as paid.")
+      toast.success(t("payrollPage.toastPaid"))
     },
-    [updateRecord]
+    [updateRecord, t]
   )
 
   const columns = useMemo<ColumnDef<PayrollRecord>[]>(
@@ -340,7 +344,7 @@ export function EmployeePayrollPanel() {
         id: "employee",
         accessorFn: (row) => employeeName(row.employeeId),
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Employee" align="center" />
+          <DataTableColumnHeader column={column} title={t("payrollPage.employee")} align="center" />
         ),
         cell: ({ row }) => (
           <button
@@ -356,7 +360,7 @@ export function EmployeePayrollPanel() {
       {
         accessorKey: "baseSalary",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Base" align="center" />
+          <DataTableColumnHeader column={column} title={t("payrollPage.base")} align="center" />
         ),
         cell: ({ row }) => (
           <span className="tabular-nums">{formatMoney(row.original.baseSalary)}</span>
@@ -366,7 +370,7 @@ export function EmployeePayrollPanel() {
       {
         accessorKey: "bonuses",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Bonus" align="center" />
+          <DataTableColumnHeader column={column} title={t("payrollPage.bonus")} align="center" />
         ),
         cell: ({ row }) => (
           <span className="tabular-nums">{formatMoney(row.original.bonuses)}</span>
@@ -378,7 +382,7 @@ export function EmployeePayrollPanel() {
         header: ({ column }) => (
           <DataTableColumnHeader
             column={column}
-            title="Commission"
+            title={t("payrollPage.commission")}
             align="center"
           />
         ),
@@ -394,7 +398,7 @@ export function EmployeePayrollPanel() {
         header: ({ column }) => (
           <DataTableColumnHeader
             column={column}
-            title="Deductions"
+            title={t("payrollPage.deductions")}
             align="center"
           />
         ),
@@ -408,7 +412,7 @@ export function EmployeePayrollPanel() {
       {
         accessorKey: "netPay",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Net pay" align="center" />
+          <DataTableColumnHeader column={column} title={t("payrollPage.netPay")} align="center" />
         ),
         cell: ({ row }) => (
           <span className="font-semibold tabular-nums">
@@ -420,7 +424,7 @@ export function EmployeePayrollPanel() {
       {
         accessorKey: "status",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Status" align="center" />
+          <DataTableColumnHeader column={column} title={t("columns.status")} align="center" />
         ),
         cell: ({ row }) => (
           <Badge
@@ -442,7 +446,7 @@ export function EmployeePayrollPanel() {
             <DropdownMenuTrigger asChild>
               <Button type="button" variant="ghost" size="icon" className="size-8">
                 <IconDotsVertical />
-                <span className="sr-only">Payroll actions</span>
+                <span className="sr-only">{t("payrollPage.actions")}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
@@ -450,7 +454,7 @@ export function EmployeePayrollPanel() {
                 onClick={() => setSidebar({ mode: "view", record: row.original })}
               >
                 <IconEye />
-                View
+                {tc("actions.view")}
               </DropdownMenuItem>
               {row.original.status !== "paid" ? (
                 <>
@@ -460,7 +464,7 @@ export function EmployeePayrollPanel() {
                     }
                   >
                     <IconGift />
-                    Add bonus
+                    {t("payrollPage.addBonus")}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() =>
@@ -468,7 +472,7 @@ export function EmployeePayrollPanel() {
                     }
                   >
                     <IconPercentage />
-                    Add commission
+                    {t("payrollPage.addCommission")}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() =>
@@ -476,20 +480,20 @@ export function EmployeePayrollPanel() {
                     }
                   >
                     <IconPencil />
-                    Edit payroll
+                    {t("payrollPage.editPayroll")}
                   </DropdownMenuItem>
                 </>
               ) : null}
               {row.original.status === "draft" ? (
                 <DropdownMenuItem onClick={() => markPending(row.original)}>
                   <IconPlayerPlay />
-                  Submit
+                  {tc("actions.submit")}
                 </DropdownMenuItem>
               ) : null}
               {row.original.status === "pending" ? (
                 <DropdownMenuItem onClick={() => markPaid(row.original)}>
                   <IconCheck />
-                  Mark paid
+                  {t("payrollPage.markPaid")}
                 </DropdownMenuItem>
               ) : null}
               <DropdownMenuSeparator />
@@ -498,14 +502,14 @@ export function EmployeePayrollPanel() {
                 onClick={() => handleDelete(row.original)}
               >
                 <IconTrash />
-                Delete
+                {tc("actions.delete")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         ),
       },
     ],
-    [employeeName, handleDelete, markPaid, markPending]
+    [employeeName, handleDelete, markPaid, markPending, t, tc]
   )
 
   const generateMonth = () => {
@@ -516,7 +520,7 @@ export function EmployeePayrollPanel() {
       (employee) => !existingEmployeeIds.has(employee.id)
     )
     if (missing.length === 0) {
-      toast.message(`Payroll already exists for all active employees in ${periodLabel(period)}.`)
+      toast.message(t("payrollPage.toastAlreadyExists", { period: periodLabel(period) }))
       return
     }
     for (const employee of missing) {
@@ -528,9 +532,7 @@ export function EmployeePayrollPanel() {
         netPay: computeNetPay(employee.baseSalary, "0", "0", "0"),
       })
     }
-    toast.success(
-      `Created ${missing.length} draft payroll record${missing.length === 1 ? "" : "s"}.`
-    )
+    toast.success(t("payrollPage.toastCreatedCount", { count: missing.length }))
   }
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -547,19 +549,19 @@ export function EmployeePayrollPanel() {
         record.id !== next.id
     )
     if (duplicate) {
-      toast.error("This employee already has payroll for the selected month.")
+      toast.error(t("payrollPage.toastDuplicate"))
       return
     }
     if (next.employeeId === 0 || !next.period) {
-      toast.error("Select an employee and payroll month.")
+      toast.error(t("payrollPage.toastSelectRequired"))
       return
     }
     if (sidebar?.mode === "edit") {
       updateRecord(sidebar.record.id, next)
-      toast.success("Payroll record updated.")
+      toast.success(t("payrollPage.toastUpdated"))
     } else {
       addRecord(next)
-      toast.success("Payroll record added.")
+      toast.success(t("payrollPage.toastAdded"))
     }
     setPeriod(next.period)
     setSidebar(null)
@@ -592,15 +594,15 @@ export function EmployeePayrollPanel() {
               <SheetHeader className="border-b px-6 py-5 text-left">
                 <SheetTitle>
                   {sidebar.mode === "add"
-                    ? "Add payroll record"
+                    ? t("payrollPage.addRecord")
                     : sidebar.mode === "edit"
-                      ? "Edit payroll record"
+                      ? t("payrollPage.editRecord")
                       : employeeName(sidebar.record.employeeId)}
                 </SheetTitle>
                 <SheetDescription>
                   {sidebar.mode === "view"
                     ? periodLabel(sidebar.record.period)
-                    : "Set monthly earnings, deductions, and payment status."}
+                    : t("payrollPage.formHint")}
                 </SheetDescription>
               </SheetHeader>
               <div
@@ -636,22 +638,22 @@ export function EmployeePayrollPanel() {
                           setSidebar({ mode: "edit", record: sidebar.record })
                         }
                       >
-                        Edit
+                        {tc("actions.edit")}
                       </Button>
                     ) : null}
                     <SheetClose asChild>
-                      <Button type="button">Close</Button>
+                      <Button type="button">{tc("actions.close")}</Button>
                     </SheetClose>
                   </>
                 ) : (
                   <>
                     <SheetClose asChild>
                       <Button type="button" variant="outline">
-                        Cancel
+                        {tc("actions.cancel")}
                       </Button>
                     </SheetClose>
                     <Button type="submit" form={formId}>
-                      {sidebar.mode === "add" ? "Add payroll" : "Save changes"}
+                      {sidebar.mode === "add" ? t("payrollPage.addPayroll") : t("payrollPage.saveChanges")}
                     </Button>
                   </>
                 )}
@@ -664,8 +666,8 @@ export function EmployeePayrollPanel() {
       <DataTable
         data={periodRecords}
         columns={columns}
-        addButtonLabel="New Payroll"
-        searchPlaceholder={`Search ${periodLabel(period)} payroll...`}
+        addButtonLabel={t("payrollPage.newPayroll")}
+        searchPlaceholder={t("payrollPage.searchPlaceholder", { period: periodLabel(period) })}
         showImportButton={false}
         onAddClick={() => setSidebar({ mode: "add" })}
         toolbarExtra={
@@ -681,13 +683,13 @@ export function EmployeePayrollPanel() {
             onClick={generateMonth}
           >
             <IconCalendarMonth className="size-4" />
-            <span className="hidden sm:inline">Generate</span>
+            <span className="hidden sm:inline">{t("payrollPage.generate")}</span>
           </Button>
         }
         tableOptionsExtra={
           <div className="space-y-2">
             <Label htmlFor="payroll-month-filter" className="text-xs">
-              Payroll month
+              {t("payrollPage.payrollMonth")}
             </Label>
             <Input
               id="payroll-month-filter"
@@ -697,7 +699,7 @@ export function EmployeePayrollPanel() {
               className="h-9 w-full"
             />
             <p className="text-muted-foreground text-xs">
-              Showing {periodLabel(period)}
+              {t("payrollPage.showingPeriod", { period: periodLabel(period) })}
             </p>
           </div>
         }
@@ -715,14 +717,14 @@ export function EmployeePayrollPanel() {
         bulkActions={[
           {
             id: "delete",
-            label: "Delete selected",
+            label: tc("actions.deleteSelected"),
             icon: <IconTrash className="size-4" />,
             variant: "destructive",
             onClick: async (selected) => {
               if (
                 !(await confirmDeleteAction({
                   count: selected.length,
-                  entityLabel: "payroll record",
+                  entityLabel: t("entity.payrollRecord"),
                 }))
               ) {
                 return
@@ -731,7 +733,7 @@ export function EmployeePayrollPanel() {
               setRecords((previous) =>
                 previous.filter((record) => !ids.has(record.id))
               )
-              toast.message(`Removed ${selected.length} payroll record(s).`)
+              toast.message(t("payrollPage.toastRemovedCount", { count: selected.length }))
             },
           },
         ]}

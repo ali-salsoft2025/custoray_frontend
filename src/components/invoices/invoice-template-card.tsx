@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { confirmSelectInvoiceTemplateAction } from "@/lib/confirm-action"
 import type { InvoiceBuilderConfig, InvoiceTemplateDefinition } from "@/lib/invoice-templates"
 import { cn } from "@/lib/utils"
+import { useTranslation } from "react-i18next"
 
 type InvoiceTemplateCardProps = {
   name: string
@@ -39,6 +40,8 @@ export function InvoiceTemplateCard({
   onCustomize,
   onDelete,
 }: InvoiceTemplateCardProps) {
+  const { t } = useTranslation("documents")
+  const { t: tc } = useTranslation("common")
   const handleCardClick = async () => {
     if (isActive) return
     const confirmed = await confirmSelectInvoiceTemplateAction({ templateName: name })
@@ -56,7 +59,11 @@ export function InvoiceTemplateCard({
     <article
       role="button"
       tabIndex={isActive ? -1 : 0}
-      aria-label={isActive ? `${name} — active template` : `Select ${name} as invoice template`}
+      aria-label={
+        isActive
+          ? t("templatesPage.activeAria", { name })
+          : t("templatesPage.selectAria", { name })
+      }
       onClick={() => void handleCardClick()}
       onKeyDown={handleKeyDown}
       className={cn(
@@ -84,7 +91,7 @@ export function InvoiceTemplateCard({
             </h3>
             {isCustom ? (
               <Badge variant="outline" className="bg-white px-1.5 text-[10px]" style={{ color: "#374151" }}>
-                Custom
+                {t("templatesPage.custom")}
               </Badge>
             ) : null}
             {isActive ? (
@@ -94,17 +101,19 @@ export function InvoiceTemplateCard({
                 style={{ color: "#3f6212" }}
               >
                 <IconCheck className="size-2.5" />
-                Active
+                {t("templatesPage.active")}
               </Badge>
             ) : null}
           </div>
           <p className="line-clamp-2 text-xs leading-relaxed" style={{ color: "#6b7280" }}>
-            {isCustom && baseLayoutName ? `Based on ${baseLayoutName}. ` : ""}
+            {isCustom && baseLayoutName
+              ? `${t("templatesPage.basedOn", { name: baseLayoutName })} `
+              : ""}
             {description}
           </p>
           {!isActive ? (
             <p className="text-[11px]" style={{ color: "#9ca3af" }}>
-              Click card to select
+              {t("templatesPage.clickCard")}
             </p>
           ) : null}
         </div>
@@ -113,12 +122,12 @@ export function InvoiceTemplateCard({
           <Button type="button" variant="outline" size="sm" className="bg-white" asChild>
             <Link href={`/documents/invoice-templates/preview/${previewSlug}`}>
               <IconEye className="size-3.5" />
-              Preview
+              {t("templatesPage.preview")}
             </Link>
           </Button>
           <Button type="button" variant="outline" size="sm" className="bg-white" onClick={onCustomize}>
             <IconPencil className="size-3.5" />
-            {isCustom ? "Edit" : "Customize"}
+            {isCustom ? tc("actions.edit") : t("templatesPage.customize")}
           </Button>
           {isCustom && onDelete ? (
             <Button
@@ -129,7 +138,7 @@ export function InvoiceTemplateCard({
               onClick={onDelete}
             >
               <IconTrash className="size-3.5" />
-              Delete
+              {tc("actions.delete")}
             </Button>
           ) : null}
         </div>

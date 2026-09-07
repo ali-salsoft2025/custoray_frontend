@@ -1,0 +1,162 @@
+{
+  "title": "المنتجات",
+  "add": "إضافة منتج",
+  "addButton": "منتج جديد",
+  "search": "البحث في المنتجات…",
+  "brands": "العلامات التجارية",
+  "addBrand": "إضافة علامة تجارية",
+  "categories": "الفئات",
+  "addCategory": "إضافة فئة",
+  "variants": "المتغيرات",
+  "addVariant": "إضافة متغير",
+  "yearClosing": "إقفال السنة",
+  "termDetails": "تفاصيل الفترة",
+  "tabs": {
+    "all": "الكل",
+    "active": "نشط",
+    "inactive": "غير نشط",
+    "archived": "مؤرشف"
+  },
+  "columns": {
+    "id": "المعرّف",
+    "name": "الاسم",
+    "productName": "اسم المنتج",
+    "sku": "SKU",
+    "brand": "العلامة التجارية",
+    "category": "الفئة",
+    "variant": "المتغير",
+    "price": "السعر",
+    "costPrice": "سعر التكلفة",
+    "salePrice": "سعر البيع",
+    "stock": "المخزون",
+    "status": "الحالة",
+    "description": "الوصف",
+    "products": "المنتجات"
+  },
+  "actions": {
+    "edit": "تعديل",
+    "delete": "حذف",
+    "duplicate": "تكرار",
+    "view": "عرض",
+    "openMenu": "فتح القائمة",
+    "deleteSelected": "حذف المحدد",
+    "moveToArchive": "نقل إلى الأرشيف",
+    "setActive": "تعيين كنشط",
+    "setInactive": "تعيين كغير نشط"
+  },
+  "empty": "لم يُعثر على منتجات.",
+  "stockLevel": {
+    "inStock": "متوفر",
+    "lowStock": "مخزون منخفض",
+    "outOfStock": "غير متوفر"
+  },
+  "listing": {
+    "active": "نشط",
+    "none": "بدون حالة"
+  },
+  "fields": {
+    "images": "الصور",
+    "sku": "SKU",
+    "name": "الاسم",
+    "brand": "العلامة التجارية",
+    "category": "الفئة",
+    "variant": "المتغير",
+    "lifecycle": "دورة الحياة",
+    "stock": "المخزون",
+    "listing": "الإدراج",
+    "qty": "الكمية",
+    "orders": "الطلبات",
+    "ordersPeriod": "الطلبات (الفترة)",
+    "costPrice": "سعر التكلفة",
+    "salePrice": "سعر البيع",
+    "status": "الحالة",
+    "id": "المعرّف",
+    "description": "الوصف",
+    "products": "المنتجات"
+  },
+  "form": {
+    "addNewBrand": "+ إضافة علامة تجارية جديدة",
+    "addNewCategory": "+ إضافة فئة جديدة",
+    "addNewVariant": "+ إضافة متغير جديد"
+  },
+  "productSheet": {
+    "add": "إضافة منتج",
+    "edit": "تعديل المنتج",
+    "addDescription": "أدخل التفاصيل والصور.",
+    "skuLabel": "SKU {{sku}}",
+    "create": "إنشاء منتج",
+    "save": "حفظ المنتج"
+  },
+  "brandPage": {
+    "addButton": "علامة تجارية جديدة",
+    "search": "البحث في العلامات التجارية…"
+  },
+  "categoryPage": {
+    "addButton": "فئة جديدة",
+    "search": "البحث في الفئات…",
+    "add": "إضافة فئة",
+    "edit": "تعديل الفئة",
+    "details": "تفاصيل الفئة",
+    "addDescription": "أنشئ فئة جديدة. يُحتسب عدد المنتجات تلقائياً من المخزون.",
+    "create": "إنشاء فئة",
+    "save": "حفظ الفئة",
+    "namePlaceholder": "اسم الفئة",
+    "descriptionPlaceholder": "وصف مختصر",
+    "productCountHint": "عدد المنتجات ({{count}}) يُحدَّث تلقائياً من المخزون.",
+    "idLine": "المعرّف {{id}}"
+  },
+  "variantPage": {
+    "addButton": "متغير جديد",
+    "search": "البحث في المتغيرات…",
+    "edit": "تعديل المتغير",
+    "details": "تفاصيل المتغير",
+    "productsCount": "{{name}} · {{count}} منتجات",
+    "save": "حفظ المتغير"
+  },
+  "toasts": {
+    "nameRequired": "اسم المنتج مطلوب.",
+    "categoryNameRequired": "الاسم مطلوب.",
+    "created": "تم إنشاء المنتج.",
+    "saved": "تم حفظ المنتج.",
+    "categoryCreated": "تم إنشاء الفئة (تجريبي).",
+    "categorySaved": "تم حفظ الفئة (تجريبي).",
+    "variantSaved": "تم حفظ {{name}} (تجريبي).",
+    "deletedNamed": "تم حذف {{name}} (تجريبي).",
+    "duplicatedNamed": "تم تكرار {{name}} (تجريبي).",
+    "archivedCount": "تم نقل {{count}} منتج إلى الأرشيف (تجريبي).",
+    "wouldDeleteProducts": "سيتم حذف {{count}} منتج.",
+    "archivedBrands": "تم نقل {{count}} علامة تجارية إلى الأرشيف (تجريبي).",
+    "wouldDeleteBrands": "سيتم حذف {{count}} علامة تجارية.",
+    "setActiveCount": "تم تعيين {{count}} فئة كنشطة (تجريبي).",
+    "setInactiveCount": "تم تعيين {{count}} فئة كغير نشطة (تجريبي).",
+    "deletedCategories": "تم حذف {{count}} فئة (تجريبي).",
+    "maxImages": "يمكنك رفع حتى {{count}} صور.",
+    "onlyImagesAllowed": "يُسمح بـ {{count}} صور فقط."
+  },
+  "noDescription": "لا يوجد وصف",
+  "images": {
+    "remove": "إزالة الصورة",
+    "upload": "رفع",
+    "maxReached": "تم بلوغ الحد",
+    "uploadImages": "رفع صور",
+    "clickToAdd": "انقر لإضافة صورة واحدة أو أكثر للمنتج",
+    "hint": "PNG أو JPG أو WebP — حتى {{count}} صور. انقر على X في أي صورة مصغّرة لإزالتها."
+  },
+  "lookup": {
+    "add": "إضافة {{label}}",
+    "addDescription": "أنشئ {{label}} جديداً واستخدمه فوراً.",
+    "nameRequired": "اسم {{label}} مطلوب.",
+    "alreadyExists": "{{label}} موجود مسبقاً.",
+    "added": "تمت إضافة {{label}}",
+    "nameLabel": "اسم {{label}}",
+    "namePlaceholder": "أدخل اسم {{label}}",
+    "descriptionPlaceholder": "وصف مختصر لـ {{label}}",
+    "save": "حفظ {{label}}"
+  },
+  "entity": {
+    "product": "منتج",
+    "brand": "علامة تجارية",
+    "category": "فئة",
+    "variant": "متغير"
+  }
+}

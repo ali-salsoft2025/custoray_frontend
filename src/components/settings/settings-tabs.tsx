@@ -2,25 +2,28 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useTranslation } from "react-i18next"
 
 import { cn } from "@/lib/utils"
 
 const TABS = [
-  { href: "/settings", label: "Company" },
-  { href: "/settings/account", label: "Account" },
-  { href: "/settings/team", label: "Team" },
-  { href: "/settings/preferences", label: "Preferences" },
-  { href: "/settings/billing", label: "Billing" },
+  { href: "/settings", labelKey: "settingsNav.company" as const },
+  { href: "/settings/documents", labelKey: "settingsNav.documents" as const },
+  { href: "/settings/account", labelKey: "settingsNav.account" as const },
+  { href: "/settings/team", labelKey: "settingsNav.team" as const },
+  { href: "/settings/appearance", labelKey: "settingsNav.appearance" as const },
+  { href: "/settings/language", labelKey: "settingsNav.languageRegion" as const },
+  { href: "/settings/notifications", labelKey: "settingsNav.notifications" as const },
+  { href: "/settings/billing", labelKey: "settingsNav.plansBilling" as const },
 ] as const
 
 function isActive(pathname: string, href: string) {
   if (href === "/settings") return pathname === "/settings"
-  if (href === "/settings/preferences") {
+  if (href === "/settings/appearance") {
     return (
       pathname === href ||
-      pathname.startsWith("/settings/preferences/") ||
       pathname.startsWith("/settings/appearance") ||
-      pathname.startsWith("/settings/notifications")
+      pathname.startsWith("/settings/preferences")
     )
   }
   return pathname === href || pathname.startsWith(`${href}/`)
@@ -28,6 +31,7 @@ function isActive(pathname: string, href: string) {
 
 export function SettingsTabs() {
   const pathname = usePathname() ?? ""
+  const { t } = useTranslation("nav")
 
   return (
     <nav className="border-border w-full overflow-x-auto border-b">
@@ -45,7 +49,7 @@ export function SettingsTabs() {
                   : "text-muted-foreground hover:text-foreground border-transparent"
               )}
             >
-              {tab.label}
+              {t(tab.labelKey)}
             </Link>
           )
         })}

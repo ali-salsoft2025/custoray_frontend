@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 
 import { SettingsSection } from "@/components/settings/settings-section"
@@ -15,7 +16,6 @@ import {
 } from "@/components/ui/select"
 import {
   DEFAULT_APP_PREFERENCES,
-  billItemViewModeLabel,
   loadAppPreferences,
   saveAppPreferences,
   type AppPreferences,
@@ -23,6 +23,8 @@ import {
 } from "@/lib/app-preferences"
 
 export function AppPreferencesForm() {
+  const { t } = useTranslation("settings")
+  const { t: tCommon } = useTranslation()
   const [preferences, setPreferences] = useState<AppPreferences>(DEFAULT_APP_PREFERENCES)
 
   useEffect(() => {
@@ -31,22 +33,22 @@ export function AppPreferencesForm() {
 
   const handleSave = () => {
     saveAppPreferences(preferences)
-    toast.success("App preferences saved.")
+    toast.success(t("preferences.toastSaved"))
   }
 
   return (
     <SettingsSection
-      title="App preferences"
-      description="Default views and behavior across the app."
+      title={t("preferences.title")}
+      description={t("preferences.description")}
       footer={
         <Button type="button" onClick={handleSave}>
-          Save preferences
+          {t("preferences.save")}
         </Button>
       }
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <Label htmlFor="default-purchase-view">Default purchase view</Label>
+          <Label htmlFor="default-purchase-view">{t("preferences.defaultPurchaseView")}</Label>
           <Select
             value={preferences.defaultPurchaseView}
             onValueChange={(value) =>
@@ -60,17 +62,17 @@ export function AppPreferencesForm() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="bill">{billItemViewModeLabel("bill")}</SelectItem>
-              <SelectItem value="item">{billItemViewModeLabel("item")}</SelectItem>
+              <SelectItem value="bill">{tCommon("viewMode.billWise")}</SelectItem>
+              <SelectItem value="item">{tCommon("viewMode.itemWise")}</SelectItem>
             </SelectContent>
           </Select>
           <p className="text-muted-foreground text-xs">
-            Used when you open Purchases. You can still switch from the table menu.
+            {t("preferences.defaultPurchaseViewHint")}
           </p>
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="default-sales-view">Default sales view</Label>
+          <Label htmlFor="default-sales-view">{t("preferences.defaultSalesView")}</Label>
           <Select
             value={preferences.defaultSalesView}
             onValueChange={(value) =>
@@ -84,12 +86,12 @@ export function AppPreferencesForm() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="bill">{billItemViewModeLabel("bill")}</SelectItem>
-              <SelectItem value="item">{billItemViewModeLabel("item")}</SelectItem>
+              <SelectItem value="bill">{tCommon("viewMode.billWise")}</SelectItem>
+              <SelectItem value="item">{tCommon("viewMode.itemWise")}</SelectItem>
             </SelectContent>
           </Select>
           <p className="text-muted-foreground text-xs">
-            Used when you open Sales. You can still switch from the table menu.
+            {t("preferences.defaultSalesViewHint")}
           </p>
         </div>
       </div>

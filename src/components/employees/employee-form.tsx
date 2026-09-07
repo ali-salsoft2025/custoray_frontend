@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useTranslation } from "react-i18next"
 
 import { CustomerAvatar } from "@/components/customers/customer-avatar"
 import { EmployeePermissionsMatrix } from "@/components/employees/employee-permissions-matrix"
@@ -56,6 +57,8 @@ export const EmployeeForm = React.forwardRef<EmployeeFormHandle, EmployeeFormPro
     ref
   ) {
     const { departments } = useDepartments()
+    const { t } = useTranslation("employees")
+    const { t: tc } = useTranslation("common")
     const [step, setStep] = React.useState<1 | 2>(1)
     const [values, setValues] = React.useState<EmployeeFormValues>(() =>
       toValues(employee, mode)
@@ -83,16 +86,16 @@ export const EmployeeForm = React.forwardRef<EmployeeFormHandle, EmployeeFormPro
 
     const validateStep1 = (): boolean => {
       if (!values.name.trim()) {
-        setError("Employee name is required.")
+        setError(t("form.errors.nameRequired"))
         return false
       }
       if (mode === "edit" && values.portalEnabled) {
         if (!values.portalEmail.trim()) {
-          setError("Login email is required for portal access.")
+          setError(t("form.errors.loginEmailRequired"))
           return false
         }
         if (!values.portalPassword.trim()) {
-          setError("Password is required for portal login.")
+          setError(t("form.errors.passwordRequired"))
           return false
         }
       }
@@ -101,15 +104,15 @@ export const EmployeeForm = React.forwardRef<EmployeeFormHandle, EmployeeFormPro
 
     const validateStep2 = (): boolean => {
       if (!values.portalEmail.trim()) {
-        setError("Login email is required for portal access.")
+        setError(t("form.errors.loginEmailRequired"))
         return false
       }
       if (!values.portalPassword.trim() && !employee.portalPassword) {
-        setError("Set a password for portal login.")
+        setError(t("form.errors.setPassword"))
         return false
       }
       if (mode === "add" && !values.portalPassword.trim()) {
-        setError("Set a password for portal login.")
+        setError(t("form.errors.setPassword"))
         return false
       }
       return true
@@ -177,7 +180,7 @@ export const EmployeeForm = React.forwardRef<EmployeeFormHandle, EmployeeFormPro
                 step === 1 ? "text-foreground font-semibold" : "font-medium"
               }
             >
-              1. Basic info
+              {t("form.stepBasic")}
             </span>
             <span aria-hidden>/</span>
             <span
@@ -185,7 +188,7 @@ export const EmployeeForm = React.forwardRef<EmployeeFormHandle, EmployeeFormPro
                 step === 2 ? "text-foreground font-semibold" : "font-medium"
               }
             >
-              2. Login & permissions
+              {t("form.stepLogin")}
             </span>
           </div>
         ) : null}
@@ -200,29 +203,29 @@ export const EmployeeForm = React.forwardRef<EmployeeFormHandle, EmployeeFormPro
           <>
             <section className="space-y-4">
               <div>
-                <p className="text-sm font-semibold">Basic info</p>
+                <p className="text-sm font-semibold">{t("form.basicInfo")}</p>
                 <p className="text-muted-foreground text-xs">
-                  Who this person is and how to reach them.
+                  {t("form.basicInfoHint")}
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                <CustomerAvatar name={values.name || "Employee"} size="lg" />
+                <CustomerAvatar name={values.name || t("form.employeeFallback")} size="lg" />
                 <p className="text-muted-foreground text-xs leading-relaxed">
-                  Profile photo can be added later.
+                  {t("form.photoLater")}
                 </p>
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor={`${formId}-name`}>Full name</Label>
+                <Label htmlFor={`${formId}-name`}>{t("form.fullName")}</Label>
                 <Input
                   id={`${formId}-name`}
                   value={values.name}
                   onChange={(e) => patch({ name: e.target.value })}
-                  placeholder="e.g. Sara Ahmed"
+                  placeholder={t("form.fullNamePlaceholder")}
                 />
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="flex flex-col gap-2">
-                  <Label htmlFor={`${formId}-email`}>Work email</Label>
+                  <Label htmlFor={`${formId}-email`}>{t("form.workEmail")}</Label>
                   <Input
                     id={`${formId}-email`}
                     type="email"
@@ -232,7 +235,7 @@ export const EmployeeForm = React.forwardRef<EmployeeFormHandle, EmployeeFormPro
                   />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <Label htmlFor={`${formId}-phone`}>Phone</Label>
+                  <Label htmlFor={`${formId}-phone`}>{t("form.phone")}</Label>
                   <Input
                     id={`${formId}-phone`}
                     value={values.phone}
@@ -243,14 +246,14 @@ export const EmployeeForm = React.forwardRef<EmployeeFormHandle, EmployeeFormPro
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="flex flex-col gap-2">
-                  <Label htmlFor={`${formId}-department`}>Department</Label>
+                  <Label htmlFor={`${formId}-department`}>{t("columns.department")}</Label>
                   <select
                     id={`${formId}-department`}
                     value={values.department}
                     onChange={(e) => patch({ department: e.target.value })}
                     className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm shadow-xs outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px]"
                   >
-                    <option value="">Select department</option>
+                    <option value="">{t("form.selectDepartment")}</option>
                     {departments.map((dept) => (
                       <option key={dept.id} value={dept.name}>
                         {dept.name}
@@ -259,18 +262,18 @@ export const EmployeeForm = React.forwardRef<EmployeeFormHandle, EmployeeFormPro
                   </select>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <Label htmlFor={`${formId}-designation`}>Job title</Label>
+                  <Label htmlFor={`${formId}-designation`}>{t("form.jobTitle")}</Label>
                   <Input
                     id={`${formId}-designation`}
                     value={values.designation}
                     onChange={(e) => patch({ designation: e.target.value })}
-                    placeholder="Manager, Clerk…"
+                    placeholder={t("form.jobTitlePlaceholder")}
                   />
                 </div>
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="flex flex-col gap-2">
-                  <Label htmlFor={`${formId}-hireDate`}>Start date</Label>
+                  <Label htmlFor={`${formId}-hireDate`}>{t("form.startDate")}</Label>
                   <Input
                     id={`${formId}-hireDate`}
                     type="date"
@@ -282,7 +285,7 @@ export const EmployeeForm = React.forwardRef<EmployeeFormHandle, EmployeeFormPro
                   />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <Label htmlFor={`${formId}-baseSalary`}>Monthly salary</Label>
+                  <Label htmlFor={`${formId}-baseSalary`}>{t("form.monthlySalary")}</Label>
                   <Input
                     id={`${formId}-baseSalary`}
                     value={values.baseSalary}
@@ -293,7 +296,7 @@ export const EmployeeForm = React.forwardRef<EmployeeFormHandle, EmployeeFormPro
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="flex flex-col gap-2">
-                  <Label htmlFor={`${formId}-status`}>Status</Label>
+                  <Label htmlFor={`${formId}-status`}>{t("columns.status")}</Label>
                   <select
                     id={`${formId}-status`}
                     value={values.status}
@@ -302,8 +305,8 @@ export const EmployeeForm = React.forwardRef<EmployeeFormHandle, EmployeeFormPro
                     }
                     className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm shadow-xs outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px]"
                   >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
+                    <option value="active">{tc("status.active")}</option>
+                    <option value="inactive">{tc("status.inactive")}</option>
                   </select>
                 </div>
               </div>
@@ -313,11 +316,11 @@ export const EmployeeForm = React.forwardRef<EmployeeFormHandle, EmployeeFormPro
 
             <section className="space-y-3">
               <div>
-                <p className="text-sm font-semibold">Portal access</p>
+                <p className="text-sm font-semibold">{t("form.portalAccess")}</p>
                 <p className="text-muted-foreground text-xs leading-relaxed">
                   {mode === "add"
-                    ? "If enabled, step 2 covers login credentials and module permissions."
-                    : "Admins can view and update login credentials when portal access is enabled."}
+                    ? t("form.portalHintAdd")
+                    : t("form.portalHintEdit")}
                 </p>
               </div>
               <div className="flex items-start gap-3 rounded-lg border border-border/60 p-3">
@@ -334,10 +337,10 @@ export const EmployeeForm = React.forwardRef<EmployeeFormHandle, EmployeeFormPro
                     htmlFor={`${formId}-portalEnabled`}
                     className="text-sm font-medium"
                   >
-                    Allow portal login
+                    {t("form.allowPortal")}
                   </Label>
                   <p className="text-muted-foreground text-xs leading-relaxed">
-                    They can sign in with the credentials below.
+                    {t("form.allowPortalHint")}
                   </p>
                 </div>
               </div>
@@ -346,13 +349,13 @@ export const EmployeeForm = React.forwardRef<EmployeeFormHandle, EmployeeFormPro
                 <>
                   <div className="space-y-4 rounded-lg border border-border/60 p-4">
                     <div>
-                      <p className="text-sm font-medium">Login credentials</p>
+                      <p className="text-sm font-medium">{t("form.loginCredentials")}</p>
                       <p className="text-muted-foreground text-xs leading-relaxed">
-                        View or change the email and password used to sign in.
+                        {t("form.loginCredentialsHint")}
                       </p>
                     </div>
                     <div className="flex flex-col gap-2">
-                      <Label htmlFor={`${formId}-portalEmail`}>Login email</Label>
+                      <Label htmlFor={`${formId}-portalEmail`}>{t("form.loginEmail")}</Label>
                       <Input
                         id={`${formId}-portalEmail`}
                         type="email"
@@ -364,7 +367,7 @@ export const EmployeeForm = React.forwardRef<EmployeeFormHandle, EmployeeFormPro
                     </div>
                     <div className="flex flex-col gap-2">
                       <Label htmlFor={`${formId}-portalPassword`}>
-                        Password
+                        {t("form.password")}
                       </Label>
                       <PasswordInput
                         id={`${formId}-portalPassword`}
@@ -373,15 +376,15 @@ export const EmployeeForm = React.forwardRef<EmployeeFormHandle, EmployeeFormPro
                         onChange={(e) =>
                           patch({ portalPassword: e.target.value })
                         }
-                        placeholder="Enter portal password"
+                        placeholder={t("form.portalPasswordPlaceholder")}
                       />
                     </div>
                   </div>
                   <div className="space-y-3">
                     <div>
-                      <p className="text-sm font-semibold">Module permissions</p>
+                      <p className="text-sm font-semibold">{t("form.modulePermissions")}</p>
                       <p className="text-muted-foreground text-xs leading-relaxed">
-                        Choose Add, Edit, and Delete per module.
+                        {t("form.modulePermissionsHint")}
                       </p>
                     </div>
                     <EmployeePermissionsMatrix
@@ -397,14 +400,13 @@ export const EmployeeForm = React.forwardRef<EmployeeFormHandle, EmployeeFormPro
           <>
             <section className="space-y-4">
               <div>
-                <p className="text-sm font-semibold">Create login credentials</p>
+                <p className="text-sm font-semibold">{t("form.createCredentials")}</p>
                 <p className="text-muted-foreground text-xs leading-relaxed">
-                  These credentials can be viewed and updated later from the
-                  employee profile.
+                  {t("form.createCredentialsHint")}
                 </p>
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor={`${formId}-portalEmail-step2`}>Login email</Label>
+                <Label htmlFor={`${formId}-portalEmail-step2`}>{t("form.loginEmail")}</Label>
                 <Input
                   id={`${formId}-portalEmail-step2`}
                   type="email"
@@ -414,13 +416,13 @@ export const EmployeeForm = React.forwardRef<EmployeeFormHandle, EmployeeFormPro
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor={`${formId}-portalPassword-step2`}>Password</Label>
+                <Label htmlFor={`${formId}-portalPassword-step2`}>{t("form.password")}</Label>
                 <PasswordInput
                   id={`${formId}-portalPassword-step2`}
                   autoComplete="new-password"
                   value={values.portalPassword}
                   onChange={(e) => patch({ portalPassword: e.target.value })}
-                  placeholder="Choose a password"
+                  placeholder={t("form.choosePassword")}
                 />
               </div>
             </section>
@@ -429,10 +431,9 @@ export const EmployeeForm = React.forwardRef<EmployeeFormHandle, EmployeeFormPro
 
             <section className="space-y-3">
               <div>
-                <p className="text-sm font-semibold">Module permissions</p>
+                <p className="text-sm font-semibold">{t("form.modulePermissions")}</p>
                 <p className="text-muted-foreground text-xs leading-relaxed">
-                  Choose Add, Edit, and Delete per module. Only applies when they
-                  can sign in.
+                  {t("form.modulePermissionsHintStep2")}
                 </p>
               </div>
               <EmployeePermissionsMatrix

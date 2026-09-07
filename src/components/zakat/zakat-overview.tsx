@@ -11,6 +11,7 @@ import {
   IconRefresh,
 } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 import { StatCard, StatCardsGrid } from "@/components/stat-card"
 import { ZakatFinalizeDialog } from "@/components/zakat/zakat-finalize-dialog"
@@ -25,6 +26,7 @@ import {
 } from "@/lib/zakat"
 
 export function ZakatOverview() {
+  const { t } = useTranslation("zakat")
   const { calculation, settings, history, refreshCalculation } = useZakat()
   const [finalizeOpen, setFinalizeOpen] = React.useState(false)
   const latest = history[0]
@@ -51,8 +53,8 @@ export function ZakatOverview() {
             <IconBell className="text-primary mt-0.5 size-4 shrink-0" />
             <p className="text-sm">
               {daysUntilDue! > 0
-                ? `Your estimated Zakat due date is in ${daysUntilDue} days.`
-                : "Your estimated Zakat due date has arrived or passed."}
+                ? t("overviewPage.dueInDays", { count: daysUntilDue })
+                : t("overviewPage.dueArrived")}
             </p>
           </div>
         ) : null}
@@ -61,7 +63,7 @@ export function ZakatOverview() {
           <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <p className="text-muted-foreground text-xs font-medium">
-                Estimated business Zakat
+                {t("overviewPage.estimatedTitle")}
               </p>
               <p className="mt-1 text-3xl font-semibold tabular-nums tracking-tight sm:text-4xl">
                 {formatZakatMoney(calculation.estimatedZakat)}
@@ -69,27 +71,27 @@ export function ZakatOverview() {
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <Badge variant={elapsed !== null ? "default" : "outline"}>
                   {elapsed !== null
-                    ? `${elapsed} days since last payment`
-                    : "No payment recorded"}
+                    ? t("overviewPage.daysSincePayment", { count: elapsed })
+                    : t("overviewPage.noPayment")}
                 </Badge>
                 {settings.nisab > 0 ? (
                   <Badge variant="outline">
                     {calculation.reachesNisab
-                      ? "Above Nisab reference"
-                      : "Below Nisab reference"}
+                      ? t("overviewPage.aboveNisab")
+                      : t("overviewPage.belowNisab")}
                   </Badge>
                 ) : null}
               </div>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <p className="text-muted-foreground text-xs">Last Zakat paid</p>
+                <p className="text-muted-foreground text-xs">{t("overviewPage.lastPaid")}</p>
                 <p className="mt-1 text-sm font-semibold">
                   {formatZakatDate(lastPaidDate)}
                 </p>
               </div>
               <div>
-                <p className="text-muted-foreground text-xs">Next due</p>
+                <p className="text-muted-foreground text-xs">{t("overviewPage.nextDue")}</p>
                 <p className="mt-1 text-sm font-semibold">
                   {formatZakatDate(nextDue)}
                 </p>
@@ -99,19 +101,19 @@ export function ZakatOverview() {
 
           <div className="mt-6 grid gap-3 border-t pt-5 sm:grid-cols-3">
             <div>
-              <p className="text-muted-foreground text-xs">Business assets</p>
+              <p className="text-muted-foreground text-xs">{t("overviewPage.businessAssets")}</p>
               <p className="mt-1 text-lg font-semibold tabular-nums">
                 {formatZakatMoney(calculation.assets.total)}
               </p>
             </div>
             <div>
-              <p className="text-muted-foreground text-xs">Business liabilities</p>
+              <p className="text-muted-foreground text-xs">{t("overviewPage.businessLiabilities")}</p>
               <p className="mt-1 text-lg font-semibold tabular-nums">
                 {formatZakatMoney(calculation.liabilities.total)}
               </p>
             </div>
             <div>
-              <p className="text-muted-foreground text-xs">Net Zakat assets</p>
+              <p className="text-muted-foreground text-xs">{t("overviewPage.netAssets")}</p>
               <p className="mt-1 text-lg font-semibold tabular-nums">
                 {formatZakatMoney(calculation.netAssets)}
               </p>
@@ -125,42 +127,44 @@ export function ZakatOverview() {
               className="rounded-full"
               onClick={() => {
                 refreshCalculation()
-                toast.success("Calculation refreshed from current ERP data.")
+                toast.success(t("overviewPage.toastRefreshed"))
               }}
             >
               <IconRefresh className="size-4" />
-              Calculate again
+              {t("overviewPage.calculateAgain")}
             </Button>
             <Button
               type="button"
               className="rounded-full px-5"
               onClick={() => setFinalizeOpen(true)}
             >
-              Finalize Zakat
+              {t("overviewPage.finalizeZakat")}
             </Button>
           </div>
         </section>
 
         <StatCardsGrid>
           <StatCard
-            label="Cash"
+            label={t("overviewPage.cash")}
             value={formatZakatMoney(calculation.assets.cash)}
-            hint="Temporary settings balance"
+            hint={t("overviewPage.tempBalanceHint")}
           />
           <StatCard
-            label="Bank"
+            label={t("overviewPage.bank")}
             value={formatZakatMoney(calculation.assets.bank)}
-            hint="Temporary settings balance"
+            hint={t("overviewPage.tempBalanceHint")}
           />
           <StatCard
-            label="Inventory"
+            label={t("overviewPage.inventory")}
             value={formatZakatMoney(calculation.assets.inventory)}
-            hint={`${calculation.inventoryLines.length} included products`}
+            hint={t("overviewPage.includedProducts", {
+              count: calculation.inventoryLines.length,
+            })}
           />
           <StatCard
-            label="Receivables"
+            label={t("overviewPage.receivables")}
             value={formatZakatMoney(calculation.assets.receivables)}
-            hint="Positive customer balances"
+            hint={t("overviewPage.positiveCustomerBalances")}
           />
         </StatCardsGrid>
 
@@ -169,7 +173,7 @@ export function ZakatOverview() {
             <Link href="/zakat/assets">
               <span className="flex items-center gap-2">
                 <IconCash className="size-4" />
-                Review assets
+                {t("overviewPage.reviewAssets")}
               </span>
               <span>{formatZakatMoney(calculation.assets.total)}</span>
             </Link>
@@ -178,7 +182,7 @@ export function ZakatOverview() {
             <Link href="/zakat/liabilities">
               <span className="flex items-center gap-2">
                 <IconReceipt className="size-4" />
-                Review liabilities
+                {t("overviewPage.reviewLiabilities")}
               </span>
               <span>{formatZakatMoney(calculation.liabilities.total)}</span>
             </Link>
@@ -186,13 +190,13 @@ export function ZakatOverview() {
           <Button asChild variant="outline" className="h-auto justify-start rounded-xl p-4">
             <Link href="/inventory/products">
               <IconPackage className="size-4" />
-              Inventory source
+              {t("overviewPage.inventorySource")}
             </Link>
           </Button>
           <Button asChild variant="outline" className="h-auto justify-start rounded-xl p-4">
             <Link href="/zakat/settings">
               <IconBuildingBank className="size-4" />
-              Cash & bank settings
+              {t("overviewPage.cashBankSettings")}
             </Link>
           </Button>
         </div>

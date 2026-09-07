@@ -4,7 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -30,7 +30,7 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
   const [prefs, setPrefs] = useState<AppearancePrefs>(DEFAULT_APPEARANCE)
   const [ready, setReady] = useState(false)
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const loaded = loadAppearance()
     setPrefs(loaded)
     applyAppearance(loaded)

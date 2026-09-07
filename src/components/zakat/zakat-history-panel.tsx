@@ -29,6 +29,7 @@ import {
   formatZakatMoney,
   type ZakatHistoryRecord,
 } from "@/lib/zakat"
+import { useTranslation } from "react-i18next"
 
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
@@ -40,6 +41,8 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 }
 
 export function ZakatHistoryPanel() {
+  const { t } = useTranslation("zakat")
+  const { t: tc } = useTranslation("common")
   const { history } = useZakat()
   const [search, setSearch] = React.useState("")
   const [selected, setSelected] = React.useState<ZakatHistoryRecord | null>(null)
@@ -62,66 +65,67 @@ export function ZakatHistoryPanel() {
           {selected ? (
             <>
               <SheetHeader className="border-b px-6 py-5 text-left">
-                <SheetTitle>Zakat record</SheetTitle>
+                <SheetTitle>{t("historyPage.recordTitle")}</SheetTitle>
                 <SheetDescription>
-                  Finalized {formatZakatDate(selected.paymentDate)} · Immutable
-                  snapshot
+                  {t("historyPage.finalizedSnapshot", {
+                    date: formatZakatDate(selected.paymentDate),
+                  })}
                 </SheetDescription>
               </SheetHeader>
               <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
-                <Badge>Paid</Badge>
+                <Badge>{t("paid")}</Badge>
                 <dl className="mt-4 rounded-lg border px-4">
                   <DetailRow
-                    label="Calculation date"
+                    label={t("historyPage.calculationDate")}
                     value={new Intl.DateTimeFormat("en-PK", {
                       dateStyle: "medium",
                       timeStyle: "short",
                     }).format(new Date(selected.calculationDate))}
                   />
                   <DetailRow
-                    label="Payment date"
+                    label={t("historyPage.paymentDate")}
                     value={formatZakatDate(selected.paymentDate)}
                   />
                   <DetailRow
-                    label="Business assets"
+                    label={t("historyPage.businessAssets")}
                     value={formatZakatMoney(selected.snapshot.assets.total)}
                   />
                   <DetailRow
-                    label="Business liabilities"
+                    label={t("historyPage.businessLiabilities")}
                     value={formatZakatMoney(selected.snapshot.liabilities.total)}
                   />
                   <DetailRow
-                    label="Net Zakat assets"
+                    label={t("historyPage.netAssets")}
                     value={formatZakatMoney(selected.snapshot.netAssets)}
                   />
                   <DetailRow
-                    label="Rate"
+                    label={t("historyPage.rate")}
                     value={`${selected.snapshot.rate.toFixed(2)}%`}
                   />
                   <DetailRow
-                    label="Nisab reference"
+                    label={t("historyPage.nisabReference")}
                     value={
                       selected.snapshot.nisab > 0
                         ? formatZakatMoney(selected.snapshot.nisab)
-                        : "Not set"
+                        : t("historyPage.notSet")
                     }
                   />
                   <DetailRow
-                    label="Estimated Zakat"
+                    label={t("historyPage.estimatedZakat")}
                     value={formatZakatMoney(selected.snapshot.estimatedZakat)}
                   />
                   <DetailRow
-                    label="Amount paid"
+                    label={t("historyPage.amountPaid")}
                     value={formatZakatMoney(selected.amountPaid)}
                   />
                   <DetailRow
-                    label="Reference"
+                    label={t("reference")}
                     value={selected.reference || "—"}
                   />
                 </dl>
                 {selected.notes ? (
                   <div className="mt-5">
-                    <p className="text-sm font-medium">Notes</p>
+                    <p className="text-sm font-medium">{t("notes")}</p>
                     <p className="text-muted-foreground mt-1 whitespace-pre-wrap text-sm">
                       {selected.notes}
                     </p>
@@ -130,7 +134,7 @@ export function ZakatHistoryPanel() {
               </div>
               <SheetFooter className="border-t px-6 py-4">
                 <SheetClose asChild>
-                  <Button type="button">Close</Button>
+                  <Button type="button">{tc("actions.close")}</Button>
                 </SheetClose>
               </SheetFooter>
             </>
@@ -140,9 +144,9 @@ export function ZakatHistoryPanel() {
 
       <div className="flex flex-col gap-6">
         <div>
-          <h2 className="text-xl font-semibold tracking-tight">Zakat history</h2>
+          <h2 className="text-xl font-semibold tracking-tight">{t("historyPage.title")}</h2>
           <p className="text-muted-foreground mt-1 text-sm">
-            Finalized calculations are saved as immutable audit snapshots.
+            {t("historyPage.hint")}
           </p>
         </div>
 
@@ -151,16 +155,16 @@ export function ZakatHistoryPanel() {
             <div className="flex items-center gap-2">
               <IconHistory className="text-primary size-4" />
               <div>
-                <h3 className="text-sm font-semibold">Payment records</h3>
+                <h3 className="text-sm font-semibold">{t("historyPage.paymentRecords")}</h3>
                 <p className="text-muted-foreground text-xs">
-                  {history.length} finalized record{history.length === 1 ? "" : "s"}
+                  {t("historyPage.finalizedCount", { count: history.length })}
                 </p>
               </div>
             </div>
             <SearchInput
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search history..."
+              placeholder={t("historyPage.searchPlaceholder")}
               icon={<IconSearch className="size-4" />}
               className="rounded-full sm:max-w-sm"
             />
@@ -169,12 +173,12 @@ export function ZakatHistoryPanel() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Year</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Payment date</TableHead>
-                  <TableHead>Reference</TableHead>
-                  <TableHead className="text-right">Amount paid</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
+                  <TableHead>{t("year")}</TableHead>
+                  <TableHead>{t("status")}</TableHead>
+                  <TableHead>{t("historyPage.paymentDate")}</TableHead>
+                  <TableHead>{t("reference")}</TableHead>
+                  <TableHead className="text-right">{t("historyPage.amountPaid")}</TableHead>
+                  <TableHead className="text-right">{t("action")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -185,8 +189,8 @@ export function ZakatHistoryPanel() {
                       className="text-muted-foreground h-28 text-center"
                     >
                       {history.length === 0
-                        ? "No finalized Zakat records yet."
-                        : "No history matches your search."}
+                        ? t("historyPage.noRecords")
+                        : t("historyPage.noMatches")}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -196,7 +200,7 @@ export function ZakatHistoryPanel() {
                         {new Date(`${record.paymentDate}T00:00:00`).getFullYear()}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline">Paid</Badge>
+                        <Badge variant="outline">{t("paid")}</Badge>
                       </TableCell>
                       <TableCell>{formatZakatDate(record.paymentDate)}</TableCell>
                       <TableCell className="text-muted-foreground">
@@ -213,7 +217,7 @@ export function ZakatHistoryPanel() {
                           onClick={() => setSelected(record)}
                         >
                           <IconEye className="size-4" />
-                          View
+                          {t("view")}
                         </Button>
                       </TableCell>
                     </TableRow>

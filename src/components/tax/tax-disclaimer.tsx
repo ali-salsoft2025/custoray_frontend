@@ -1,10 +1,12 @@
 "use client"
 
 import { IconInfoCircle } from "@tabler/icons-react"
+import { useTranslation } from "react-i18next"
 
 import { cn } from "@/lib/utils"
 
 export function TaxDisclaimer({ className }: { className?: string }) {
+  const { t } = useTranslation("tax")
   return (
     <div
       className={cn(
@@ -17,12 +19,8 @@ export function TaxDisclaimer({ className }: { className?: string }) {
         stroke={1.75}
       />
       <div className="min-w-0 space-y-1 text-xs leading-relaxed">
-        <p className="text-foreground font-medium">Friendly reminder</p>
-        <p className="text-muted-foreground">
-          This tool organizes your business numbers to make tax time easier. It does
-          not file taxes for you — share these summaries with your accountant or tax
-          preparer when you are ready.
-        </p>
+        <p className="text-foreground font-medium">{t("disclaimer.title")}</p>
+        <p className="text-muted-foreground">{t("disclaimer.body")}</p>
       </div>
     </div>
   )

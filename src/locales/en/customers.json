@@ -1,0 +1,66 @@
+{
+  "title": "Customers",
+  "add": "Add customer",
+  "addButton": "New Customer",
+  "search": "Search customers…",
+  "empty": "No customers found.",
+  "tabs": {
+    "all": "All",
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "columns": {
+    "id": "ID",
+    "name": "Name",
+    "description": "Description",
+    "openingBalance": "Opening balance",
+    "totalSales": "Total sales",
+    "totalPayments": "Total payments",
+    "balance": "Balance",
+    "phone": "Phone number",
+    "email": "Email",
+    "status": "Status"
+  },
+  "actions": {
+    "view": "View",
+    "edit": "Edit",
+    "duplicate": "Duplicate",
+    "delete": "Delete",
+    "openMenu": "Open menu",
+    "deleteSelected": "Delete selected",
+    "viewRecord": "View record",
+    "viewTimeline": "View timeline"
+  },
+  "record": "Customer record",
+  "timeline": {
+    "title": "Timeline",
+    "back": "Back to customers",
+    "notFound": "Customer not found.",
+    "empty": "No invoices or returns yet.",
+    "createInvoice": "Create invoice",
+    "total": "Total",
+    "paid": "Paid",
+    "balance": "Balance",
+    "return": "Return",
+    "returnAmount": "Return amount",
+    "itemCount": "{{count}} items"
+  },
+  "sheet": {
+    "add": "Add customer",
+    "edit": "Edit customer",
+    "addDescription": "Fill in customer details and photo. Saving is demo only.",
+    "create": "Create customer",
+    "save": "Save customer"
+  },
+  "toasts": {
+    "removedNamed": "Removed {{name}} (demo).",
+    "duplicatedNamed": "Duplicated {{name}} (demo).",
+    "nameRequired": "Customer name is required.",
+    "created": "Customer created (demo).",
+    "saved": "Customer saved (demo).",
+    "removedCount": "Removed {{count}} customer(s) (demo)."
+  },
+  "entity": {
+    "customer": "customer"
+  }
+}

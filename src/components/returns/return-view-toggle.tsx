@@ -1,5 +1,7 @@
 "use client"
 
+import { useTranslation } from "react-i18next"
+
 import { BillItemViewTableOption } from "@/components/shared/bill-item-view-toggle"
 import type { BillItemViewMode } from "@/lib/app-preferences"
 
@@ -10,13 +12,14 @@ export function ReturnViewTableOption({
   value: BillItemViewMode
   onValueChange: (value: BillItemViewMode) => void
 }) {
+  const { t } = useTranslation("returns")
   return (
     <BillItemViewTableOption
       value={value}
       onValueChange={onValueChange}
-      ariaLabel="Returns view mode"
-      billDescription="Return wise — one row per return document"
-      itemDescription="Item wise — one row per returned line"
+      ariaLabel={t("viewMode.aria")}
+      billDescription={t("viewMode.billDescription")}
+      itemDescription={t("viewMode.itemDescription")}
     />
   )
 }

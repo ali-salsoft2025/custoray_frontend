@@ -13,6 +13,7 @@ import {
   IconShoppingCart,
 } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 import { InvoicePdfButton } from "@/components/invoices/invoice-pdf-button"
 import { Badge } from "@/components/ui/badge"
@@ -100,11 +101,12 @@ function ViewLayoutToggle({
   value: ViewLayout
   onChange: (value: ViewLayout) => void
 }) {
+  const { t } = useTranslation("pos")
   return (
     <div
       className="border-border/70 bg-background inline-flex h-9 shrink-0 items-center overflow-hidden rounded-full border shadow-sm"
       role="group"
-      aria-label="View layout"
+      aria-label={t("salesHistory.viewLayout")}
     >
       <Button
         type="button"
@@ -116,7 +118,7 @@ function ViewLayoutToggle({
             ? "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
             : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
         )}
-        aria-label="Table view"
+        aria-label={t("salesHistory.tableView")}
         aria-pressed={value === "list"}
         onClick={() => onChange("list")}
       >
@@ -133,7 +135,7 @@ function ViewLayoutToggle({
             ? "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
             : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
         )}
-        aria-label="Grid view"
+        aria-label={t("salesHistory.gridView")}
         aria-pressed={value === "grid"}
         onClick={() => onChange("grid")}
       >
@@ -169,6 +171,7 @@ type SaleOrderActionsProps = {
 }
 
 function SaleOrderActions({ order, onReturn, returning, compact }: SaleOrderActionsProps) {
+  const { t } = useTranslation("pos")
   const returnable = canReturnDocument(order)
 
   return (
@@ -177,7 +180,7 @@ function SaleOrderActions({ order, onReturn, returning, compact }: SaleOrderActi
         order={order}
         size="sm"
         variant="outline"
-        label={compact ? "PDF" : "Download PDF"}
+        label={compact ? t("salesHistory.pdf") : t("salesHistory.downloadPdf")}
       />
       <Button
         type="button"
@@ -190,13 +193,14 @@ function SaleOrderActions({ order, onReturn, returning, compact }: SaleOrderActi
         }}
       >
         <IconRotateClockwise className="size-3.5" />
-        Return
+        {t("return")}
       </Button>
     </div>
   )
 }
 
 function SaleOrderLines({ order }: { order: OrderRow }) {
+  const { t } = useTranslation("pos")
   const productLines = productLinesForOrder(order)
   const returnable = canReturnDocument(order)
 
@@ -222,7 +226,10 @@ function SaleOrderLines({ order }: { order: OrderRow }) {
       </div>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
         <p className="text-muted-foreground text-xs tabular-nums">
-          Paid {formatPosMoney(order.paidAmount)} of {formatPosMoney(order.totalAmount)}
+          {t("salesHistory.paidOf", {
+            paid: formatPosMoney(order.paidAmount),
+            total: formatPosMoney(order.totalAmount),
+          })}
         </p>
       </div>
     </>
@@ -238,6 +245,7 @@ type SaleCardProps = {
 }
 
 function SaleCard({ order, expanded, onToggle, onReturn, returning }: SaleCardProps) {
+  const { t } = useTranslation("pos")
   const items = orderItemCount(order)
   const returnable = canReturnDocument(order)
 
@@ -278,7 +286,7 @@ function SaleCard({ order, expanded, onToggle, onReturn, returning }: SaleCardPr
           </div>
           <p className="text-muted-foreground mt-0.5 truncate text-xs">{order.customerName}</p>
           <p className="text-muted-foreground mt-1 text-[11px]">
-            {formatDate(order.orderDate)} · {items} item{items === 1 ? "" : "s"}
+            {formatDate(order.orderDate)} · {t("salesHistory.itemCount", { count: items })}
           </p>
         </div>
 
@@ -304,7 +312,7 @@ function SaleCard({ order, expanded, onToggle, onReturn, returning }: SaleCardPr
           </div>
           {!returnable ? (
             <p className="text-muted-foreground mt-2 text-[11px]">
-              Returns available for completed, fully paid receipts only.
+              {t("salesHistory.returnsAvailable")}
             </p>
           ) : null}
         </div>
@@ -328,21 +336,22 @@ function SalesHistoryTable({
   onReturn,
   returningId,
 }: SalesHistoryTableProps) {
+  const { t } = useTranslation("pos")
   return (
     <div className="overflow-hidden rounded-lg border">
       <Table>
         <TableHeader className="bg-muted sticky top-0 z-10">
           <TableRow>
             <TableHead className="w-8" />
-            <TableHead>Receipt</TableHead>
-            <TableHead>Customer</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead>Payment</TableHead>
-            <TableHead className="text-center">Items</TableHead>
-            <TableHead className="text-right">Total</TableHead>
-            <TableHead className="text-right">Paid</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead>{t("salesHistory.exportReceipt")}</TableHead>
+            <TableHead>{t("salesHistory.exportCustomer")}</TableHead>
+            <TableHead>{t("salesHistory.exportDate")}</TableHead>
+            <TableHead>{t("salesHistory.exportPayment")}</TableHead>
+            <TableHead className="text-center">{t("salesHistory.exportItems")}</TableHead>
+            <TableHead className="text-right">{t("salesHistory.exportTotal")}</TableHead>
+            <TableHead className="text-right">{t("salesHistory.exportPaid")}</TableHead>
+            <TableHead>{t("salesHistory.exportStatus")}</TableHead>
+            <TableHead className="text-right">{t("salesHistory.actions")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -425,6 +434,7 @@ function SalesHistoryTable({
 }
 
 export function PosSalesHistory() {
+  const { t } = useTranslation("pos")
   const { orders, getOrder, updateOrder } = useOrders()
   const { products, updateProduct } = useProducts()
   const { addReturn } = useReturns()
@@ -513,7 +523,7 @@ export function PosSalesHistory() {
   const handleReturnOrder = React.useCallback(
     async (order: OrderRow) => {
       if (!canReturnDocument(order)) {
-        toast.error("This sale cannot be returned.")
+        toast.error(t("salesHistory.cannotReturn"))
         return
       }
 
@@ -538,7 +548,7 @@ export function PosSalesHistory() {
         })
 
         restoreStockForReturn(order)
-        toast.success(`Return ${created.returnNumber} recorded.`)
+        toast.success(t("salesHistory.returnRecorded", { returnNumber: created.returnNumber }))
       } finally {
         setReturningId(null)
       }
@@ -548,44 +558,44 @@ export function PosSalesHistory() {
 
   const handleExport = () => {
     if (posOrders.length === 0) {
-      toast.error("No sales to export.")
+      toast.error(t("salesHistory.noSalesExport"))
       return
     }
 
     downloadRowsAsXls(
       posOrders.map((order) => ({
-        Receipt: order.invoiceNumber,
-        Date: formatDate(order.orderDate),
-        Customer: order.customerName,
-        Payment: order.paymentMethod,
-        Status: statusLabel(order.status),
-        Total: order.totalAmount,
-        Paid: order.paidAmount,
-        Items: orderItemCount(order),
+        [t("salesHistory.exportReceipt")]: order.invoiceNumber,
+        [t("salesHistory.exportDate")]: formatDate(order.orderDate),
+        [t("salesHistory.exportCustomer")]: order.customerName,
+        [t("salesHistory.exportPayment")]: order.paymentMethod,
+        [t("salesHistory.exportStatus")]: statusLabel(order.status),
+        [t("salesHistory.exportTotal")]: order.totalAmount,
+        [t("salesHistory.exportPaid")]: order.paidAmount,
+        [t("salesHistory.exportItems")]: orderItemCount(order),
       })),
       "pos-sales-history.xls"
     )
-    toast.success("Sales history exported.")
+    toast.success(t("salesHistory.exported"))
   }
 
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-xl font-semibold tracking-tight">Sales history</h2>
+          <h2 className="text-xl font-semibold tracking-tight">{t("salesHistory.title")}</h2>
           <p className="text-muted-foreground mt-1 text-sm">
-            Register receipts with line details, PDF downloads, and returns.
+            {t("salesHistory.hint")}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button type="button" variant="outline" size="sm" onClick={handleExport}>
             <IconDownload className="size-4" />
-            Export
+            {t("salesHistory.export")}
           </Button>
           <Button type="button" size="sm" asChild>
             <Link href="/pos">
               <IconShoppingCart className="size-4" />
-              Open register
+              {t("salesHistory.openRegister")}
             </Link>
           </Button>
         </div>
@@ -593,24 +603,24 @@ export function PosSalesHistory() {
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          label="Receipts"
+          label={t("salesHistory.receipts")}
           value={String(summary.count)}
-          hint={`${allPosOrders.length} total in register`}
+          hint={t("salesHistory.totalInRegister", { count: allPosOrders.length })}
         />
         <StatCard
-          label="Filtered total"
+          label={t("salesHistory.filteredTotal")}
           value={formatPosMoney(summary.total.toFixed(2))}
-          hint="All statuses in view"
+          hint={t("salesHistory.allStatuses")}
         />
         <StatCard
-          label="Completed"
+          label={t("salesHistory.completed")}
           value={String(summary.completedCount)}
           hint={formatPosMoney(summary.completedTotal.toFixed(2))}
         />
         <StatCard
-          label="Pending"
+          label={t("salesHistory.pending")}
           value={String(summary.pendingCount)}
-          hint="Awaiting payment"
+          hint={t("salesHistory.awaitingPayment")}
         />
       </div>
 
@@ -618,7 +628,7 @@ export function PosSalesHistory() {
         <div className="border-border/40 border-b px-4 py-4">
           <div className="flex items-center gap-2 overflow-x-auto">
             <SearchInput
-              placeholder="Search receipt, customer, or payment…"
+              placeholder={t("salesHistory.searchPlaceholder")}
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               icon={<IconSearch className="size-5" />}
@@ -629,10 +639,10 @@ export function PosSalesHistory() {
               onValueChange={(value) => setPaymentFilter(value as PaymentFilter)}
             >
               <SelectTrigger className="h-11 w-[150px] shrink-0">
-                <SelectValue placeholder="Payment method" />
+                <SelectValue placeholder={t("salesHistory.paymentMethod")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All payments</SelectItem>
+                <SelectItem value="all">{t("salesHistory.allPayments")}</SelectItem>
                 {PAYMENT_METHODS.map((method) => (
                   <SelectItem key={method} value={method}>
                     {method}
@@ -651,7 +661,7 @@ export function PosSalesHistory() {
                     : "bg-muted/30 text-muted-foreground ring-border/40 hover:text-foreground"
                 )}
               >
-                All
+                {t("salesHistory.all")}
               </button>
               {ORDER_STATUSES.map((status) => (
                 <button
@@ -679,15 +689,15 @@ export function PosSalesHistory() {
               <div className="bg-muted/60 text-muted-foreground flex size-12 items-center justify-center rounded-2xl">
                 <IconReceipt className="size-5" stroke={1.5} />
               </div>
-              <p className="text-sm font-medium">No sales match</p>
+              <p className="text-sm font-medium">{t("salesHistory.noSalesMatch")}</p>
               <p className="text-muted-foreground max-w-sm text-xs">
                 {allPosOrders.length === 0
-                  ? "Complete a sale from the register to see receipts here."
-                  : "Try a different search or filter."}
+                  ? t("salesHistory.emptyComplete")
+                  : t("salesHistory.emptyFilter")}
               </p>
               {allPosOrders.length === 0 ? (
                 <Button type="button" size="sm" className="mt-2" asChild>
-                  <Link href="/pos">Go to register</Link>
+                  <Link href="/pos">{t("salesHistory.goToRegister")}</Link>
                 </Button>
               ) : null}
             </div>

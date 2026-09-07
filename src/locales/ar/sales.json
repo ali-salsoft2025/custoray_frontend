@@ -1,0 +1,90 @@
+{
+  "tabs": {
+    "all": "الكل",
+    "pending": "معلّق",
+    "completed": "مكتمل",
+    "cancelled": "ملغى",
+    "active": "نشط",
+    "archived": "مؤرشف"
+  },
+  "status": {
+    "pending": "معلّق",
+    "completed": "مكتمل",
+    "cancelled": "ملغى"
+  },
+  "viewMode": {
+    "aria": "وضع عرض المبيعات",
+    "billDescription": "حسب الفاتورة — صف واحد لكل فاتورة",
+    "itemDescription": "حسب الصنف — صف واحد لكل بند مباع"
+  },
+  "search": {
+    "bills": "البحث في المبيعات بالفاتورة أو العميل…",
+    "items": "البحث في المبيعات بالصنف أو العميل أو الفاتورة…"
+  },
+  "addButton": "عملية بيع جديدة",
+  "columns": {
+    "srNo": "م",
+    "invoiceNumber": "رقم الفاتورة",
+    "customer": "العميل",
+    "items": "الأصناف",
+    "date": "التاريخ",
+    "totalAmount": "المبلغ الإجمالي",
+    "paidAmount": "المبلغ المدفوع",
+    "balance": "الرصيد",
+    "status": "الحالة",
+    "item": "الصنف",
+    "qty": "الكمية",
+    "unitPrice": "سعر الوحدة",
+    "lineTotal": "إجمالي البند"
+  },
+  "actions": {
+    "viewInvoice": "عرض الفاتورة",
+    "edit": "تعديل",
+    "duplicate": "تكرار",
+    "return": "إرجاع",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "view": "عرض",
+    "deleteSelected": "حذف المحدد",
+    "openMenu": "فتح القائمة"
+  },
+  "sheet": {
+    "addSale": "إضافة عملية بيع",
+    "newInvoice": "فاتورة جديدة",
+    "addToInvoice": "إضافة إلى الفاتورة",
+    "chooseDescription": "سجّل عملية بيع في فاتورة جديدة أو أضف بنوداً إلى فاتورة قائمة.",
+    "newInvoiceDescription": "أنشئ فاتورة جديدة وسجّل البنود.",
+    "existingInvoice": "فاتورة قائمة",
+    "selectInvoice": "اختر الفاتورة",
+    "searchInvoices": "البحث في الفواتير…",
+    "noInvoices": "لم يُعثر على فواتير.",
+    "addToSelected": "إضافة إلى الفاتورة المحددة",
+    "createInvoice": "إنشاء فاتورة",
+    "saveInvoice": "حفظ الفاتورة",
+    "editInvoice": "تعديل الفاتورة",
+    "close": "إغلاق",
+    "cancel": "إلغاء",
+    "back": "رجوع"
+  },
+  "toasts": {
+    "removedNamed": "تم حذف {{name}} (تجريبي).",
+    "duplicatedNamed": "تم تكرار {{name}} (تجريبي).",
+    "removedLines": "تم حذف {{count}} بند (تجريبي).",
+    "removedSales": "تم حذف {{count}} عملية بيع (تجريبي).",
+    "onlyCompletedPaid": "يمكن إرجاع المبيعات المكتملة والمدفوعة فقط.",
+    "sourceNotFound": "لم يُعثر على فاتورة المصدر.",
+    "returnRecorded": "تم تسجيل المرتجع {{returnNumber}} لـ {{name}}.",
+    "cancelled": "تم إلغاء {{name}}.",
+    "onlyPendingUnpaid": "يمكن إلغاء المبيعات المعلّقة وغير المدفوعة فقط.",
+    "selectInvoiceFirst": "اختر فاتورة أولاً.",
+    "customerRequired": "اسم العميل مطلوب.",
+    "lineRequired": "أضف بنداً واحداً على الأقل باسم منتج.",
+    "saleOnNewInvoice": "تم تسجيل البيع في فاتورة جديدة (تجريبي).",
+    "saleAdded": "تمت إضافة البيع إلى الفاتورة (تجريبي).",
+    "lineNotFound": "لم يُعثر على البند."
+  },
+  "entity": {
+    "sale": "عملية بيع",
+    "saleLineItem": "بند بيع"
+  }
+}

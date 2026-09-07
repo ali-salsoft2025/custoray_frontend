@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { CloudDownload, FileJson, FileSpreadsheet, FileText } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -28,34 +29,26 @@ import type { LucideIcon } from "lucide-react"
 
 export type ExportFormatId = "csv" | "xls" | "json"
 
-const FORMATS: {
+const FORMAT_META: {
   id: ExportFormatId
-  title: string
-  description: string
   extension: string
   mime: string
   Icon: LucideIcon
 }[] = [
   {
     id: "csv",
-    title: "CSV",
-    description: "Comma-separated text — universal, lightweight",
     extension: "csv",
     mime: "text/csv;charset=utf-8",
     Icon: FileText,
   },
   {
     id: "xls",
-    title: "Excel (XLS)",
-    description: "Microsoft Excel 97–2004 workbook (.xls)",
     extension: "xls",
     mime: "application/vnd.ms-excel",
     Icon: FileSpreadsheet,
   },
   {
     id: "json",
-    title: "JSON",
-    description: "Structured data for APIs and developers",
     extension: "json",
     mime: "application/json;charset=utf-8",
     Icon: FileJson,
@@ -77,8 +70,15 @@ export function DataTableExportDialog({
   getRows,
   filename = "export.csv",
 }: Props) {
+  const { t } = useTranslation()
   const [format, setFormat] = React.useState<ExportFormatId>("csv")
   const [busy, setBusy] = React.useState(false)
+
+  const formats = FORMAT_META.map((meta) => ({
+    ...meta,
+    title: t(`exportDialog.${meta.id}`),
+    description: t(`exportDialog.${meta.id}Desc`),
+  }))
 
   React.useEffect(() => {
     if (open) setFormat("csv")
@@ -87,10 +87,11 @@ export function DataTableExportDialog({
   const handleDownload = async () => {
     const rows = getRows()
     if (rows.length === 0) {
-      toast.error("Nothing to export.")
+      toast.error(t("exportDialog.toastNothing"))
       return
     }
-    const meta = FORMATS.find((f) => f.id === format)!
+    const meta = FORMAT_META.find((f) => f.id === format)!
+    const formatTitle = t(`exportDialog.${format}`)
     const base = exportFilenameBase(filename)
     const outName = `${base}.${meta.extension}`
 
@@ -104,31 +105,33 @@ export function DataTableExportDialog({
         const { downloadRowsAsXls } = await import("@/lib/excel-export")
         downloadRowsAsXls(rows, outName)
       }
-      toast.success(`Downloaded ${rows.length} row(s) as ${meta.title}`)
+      toast.success(
+        t("exportDialog.toastDownloaded", { count: rows.length, format: formatTitle })
+      )
       onOpenChange(false)
     } catch {
-      toast.error("Could not build the file. Try another format.")
+      toast.error(t("exportDialog.toastFailed"))
     } finally {
       setBusy(false)
     }
   }
+
+  const selectedTitle = t(`exportDialog.${format}`)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={cn(dataTableDialogContentClassName, "gap-0")}>
         <DataTableDialogHeaderSection>
           <DialogTitle className="text-xl font-semibold tracking-tight sm:text-2xl">
-            Export data
+            {t("exportDialog.title")}
           </DialogTitle>
           <DialogDescription className="text-muted-foreground text-base leading-relaxed">
-            Choose a file type, then download. Only rows that match your current
-            search and filters are included.
+            {t("exportDialog.description")}
           </DialogDescription>
           <div className="bg-primary/10 text-primary mt-4 inline-flex w-fit items-center gap-2 rounded-full border border-primary/20 px-4 py-2 text-sm font-medium">
             <CloudDownload className="size-4 shrink-0" aria-hidden />
-            <span className="tabular-nums">{rowCount}</span>
-            <span className="text-primary/90 font-normal">
-              row{rowCount === 1 ? "" : "s"} ready to export
+            <span className="tabular-nums font-medium">
+              {t("exportDialog.rowsReady", { count: rowCount })}
             </span>
           </div>
         </DataTableDialogHeaderSection>
@@ -136,10 +139,10 @@ export function DataTableExportDialog({
         <DataTableDialogBody>
           <div className="space-y-3">
             <h3 className="text-foreground text-sm font-medium">
-              Download format
+              {t("exportDialog.downloadFormat")}
             </h3>
             <div className="grid gap-3 sm:grid-cols-3">
-              {FORMATS.map((f) => {
+              {formats.map((f) => {
                 const selected = format === f.id
                 return (
                   <button
@@ -147,7 +150,7 @@ export function DataTableExportDialog({
                     type="button"
                     onClick={() => setFormat(f.id)}
                     className={cn(
-                      "flex flex-col items-start gap-3 rounded-xl border-2 p-5 text-left transition-all outline-none",
+                      "flex flex-col items-start gap-3 rounded-xl border-2 p-5 text-start transition-all outline-none",
                       "hover:border-primary/40 hover:bg-muted/40",
                       "focus-visible:ring-ring focus-visible:ring-[3px]",
                       selected
@@ -185,7 +188,7 @@ export function DataTableExportDialog({
               onClick={() => onOpenChange(false)}
               disabled={busy}
             >
-              Cancel
+              {t("actions.cancel")}
             </Button>
             <Button
               type="button"
@@ -193,8 +196,9 @@ export function DataTableExportDialog({
               onClick={() => void handleDownload()}
               disabled={rowCount === 0 || busy}
             >
-              {busy ? "Preparing…" : "Download "}
-              {!busy && (FORMATS.find((x) => x.id === format)?.title ?? "file")}
+              {busy
+                ? t("exportDialog.preparing")
+                : t("exportDialog.download", { format: selectedTitle })}
             </Button>
           </div>
         </DataTableDialogFooterSection>

@@ -1,6 +1,7 @@
 "use client"
 
 import { IconPlus, IconUser, IconX } from "@tabler/icons-react"
+import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import { InfiniteScrollSelect } from "@/components/ui/infinite-scroll-select"
@@ -31,6 +32,7 @@ export function PosCustomerSelect({
   walkInCustomerId,
   className,
 }: PosCustomerSelectProps) {
+  const { t } = useTranslation("pos")
   const hasSelectedCustomer = customerId !== walkInCustomerId
 
   return (
@@ -40,12 +42,12 @@ export function PosCustomerSelect({
         value={customerId}
         onValueChange={onCustomerChange}
         options={customerOptions}
-        placeholder="Customer"
-        searchPlaceholder="Search customers…"
-        emptyMessage="No customers found."
+        placeholder={t("customer")}
+        searchPlaceholder={t("searchCustomers")}
+        emptyMessage={t("noCustomersFound")}
         pageSize={10}
         onAddNew={onAddCustomer}
-        addNewLabel="Add customer"
+        addNewLabel={t("addCustomer")}
         leadingIcon={<IconUser className="size-4" stroke={1.75} />}
         className="h-10 min-w-0 flex-1 rounded-full text-sm shadow-sm"
       />
@@ -57,7 +59,7 @@ export function PosCustomerSelect({
           size="icon"
           className="size-10 shrink-0 rounded-full"
           onClick={onClearCustomer}
-          aria-label={`Clear ${customerName}`}
+          aria-label={t("clearCustomer", { name: customerName })}
         >
           <IconX className="size-4" />
         </Button>
@@ -68,7 +70,7 @@ export function PosCustomerSelect({
           size="icon"
           className="size-10 shrink-0 rounded-full"
           onClick={onAddCustomer}
-          aria-label="Add customer"
+          aria-label={t("addCustomer")}
         >
           <IconPlus className="size-4" />
         </Button>

@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { Sparkles } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 import { useSidebar } from "@/components/ui/sidebar"
 import { useAuth } from "@/context/auth-context"
@@ -16,16 +17,18 @@ function daysLeft(iso: string) {
   )
 }
 
-function statusLabel(status: string) {
-  if (status === "TRIAL") return "Trial"
-  if (status === "ACTIVE") return "Active"
-  if (status === "PAST_DUE") return "Past due"
-  if (status === "CANCELLED") return "Cancelled"
-  if (status === "EXPIRED") return "Expired"
-  return status
+function statusI18nKey(status: string) {
+  if (status === "TRIAL") return "trial"
+  if (status === "ACTIVE") return "active"
+  if (status === "PAST_DUE") return "pastDue"
+  if (status === "CANCELLED") return "cancelled"
+  if (status === "EXPIRED") return "expired"
+  return null
 }
 
 export function PlanStatusCard() {
+  const { t } = useTranslation("plans")
+  const { t: tSettings } = useTranslation("settings")
   const { access } = useAuth()
   const { state } = useSidebar()
   const collapsed = state === "collapsed"
@@ -39,10 +42,14 @@ export function PlanStatusCard() {
     ? Math.min(100, Math.max(8, (left / TRIAL_DAYS) * 100))
     : 100
   const usedDays = onTrial ? Math.min(TRIAL_DAYS, TRIAL_DAYS - left) : 0
+  const statusKey = statusI18nKey(access.status)
+  const statusText = statusKey
+    ? tSettings(`billing.statuses.${statusKey}`)
+    : access.status
   const title =
     onTrial && access.trialEndsAt
-      ? `Trial ends ${formatTrialEndDate(access.trialEndsAt)}`
-      : `${access.planName} · ${statusLabel(access.status)}`
+      ? t("trialEnds", { date: formatTrialEndDate(access.trialEndsAt) })
+      : t("planStatus", { plan: access.planName, status: statusText })
 
   if (collapsed) {
     return (
@@ -80,9 +87,9 @@ export function PlanStatusCard() {
           <p className="text-muted-foreground mt-1 text-xs leading-snug">
             {onTrial
               ? left === 0
-                ? "Trial ends today"
-                : `${left} day${left === 1 ? "" : "s"} left of ${TRIAL_DAYS}`
-              : statusLabel(access.status)}
+                ? t("trialEndsToday")
+                : t("daysLeftOf", { count: left, total: TRIAL_DAYS })
+              : statusText}
           </p>
         </div>
         <span
@@ -93,7 +100,7 @@ export function PlanStatusCard() {
               : "bg-primary/20 text-primary"
           )}
         >
-          {statusLabel(access.status)}
+          {statusText}
         </span>
       </div>
       <div className="mt-auto pt-4">
@@ -106,16 +113,16 @@ export function PlanStatusCard() {
               />
             </div>
             <p className="text-muted-foreground mt-1.5 text-[11px]">
-              Day {Math.max(1, usedDays)} of {TRIAL_DAYS}
+              {t("dayOf", { day: Math.max(1, usedDays), total: TRIAL_DAYS })}
               {access.trialEndsAt
-                ? ` · ends ${formatTrialEndDate(access.trialEndsAt)}`
+                ? ` · ${t("endsDate", { date: formatTrialEndDate(access.trialEndsAt) })}`
                 : null}
             </p>
           </div>
         ) : null}
         {access.trialRequestPending ? (
           <p className="text-primary mt-1.5 text-[11px] font-medium">
-            Extension request pending
+            {t("extensionPending")}
           </p>
         ) : null}
       </div>

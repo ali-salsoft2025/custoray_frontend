@@ -1,14 +1,13 @@
 "use client"
 
 import type { ReactNode } from "react"
+import { useTranslation } from "react-i18next"
 
 import { Badge } from "@/components/ui/badge"
 import {
   formatDate,
   formatMoney,
   statusBadgeClass,
-  statusLabel,
-  typeLabel,
   typeBadgeClass,
   type PaymentRow,
 } from "@/lib/payments"
@@ -23,36 +22,39 @@ function detailRow(label: string, value: ReactNode) {
 }
 
 export function PaymentDetail({ payment }: { payment: PaymentRow }) {
+  const { t } = useTranslation("payments")
   return (
     <div className="flex flex-col gap-4">
       <div className="min-w-0">
         <p className="text-foreground text-base font-semibold">{payment.paymentNumber}</p>
         <p className="text-muted-foreground text-xs">
-          ID {payment.id} · {formatDate(payment.paymentDate)}
+          {t("detail.idDate", { id: payment.id, date: formatDate(payment.paymentDate) })}
         </p>
       </div>
       <dl className="space-y-3">
         {detailRow(
-          "Type",
+          t("detail.type"),
           <Badge variant="outline" className={typeBadgeClass(payment.type)}>
-            {typeLabel(payment.type)}
+            {payment.type === "customer"
+              ? t("columns.customer")
+              : t("columns.vendor")}
           </Badge>
         )}
         {detailRow(
-          payment.type === "customer" ? "Customer" : "Vendor",
+          payment.type === "customer" ? t("columns.customer") : t("columns.vendor"),
           payment.partyName
         )}
-        {detailRow("Reference", payment.referenceNumber)}
-        {detailRow("Payment date", formatDate(payment.paymentDate))}
-        {detailRow("Amount", formatMoney(payment.amount))}
-        {detailRow("Payment method", payment.paymentMethod)}
+        {detailRow(t("detail.reference"), payment.referenceNumber)}
+        {detailRow(t("detail.paymentDate"), formatDate(payment.paymentDate))}
+        {detailRow(t("detail.amount"), formatMoney(payment.amount))}
+        {detailRow(t("detail.paymentMethod"), payment.paymentMethod)}
         {detailRow(
-          "Status",
+          t("detail.status"),
           <Badge variant="outline" className={statusBadgeClass(payment.status)}>
-            {statusLabel(payment.status)}
+            {t(`status.${payment.status}`, { ns: "common" })}
           </Badge>
         )}
-        {detailRow("Notes", payment.notes)}
+        {detailRow(t("detail.notes"), payment.notes)}
       </dl>
     </div>
   )

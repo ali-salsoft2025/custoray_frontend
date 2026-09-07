@@ -1,7 +1,6 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react"
-import { useRouter } from "next/navigation"
 import { ColumnDef } from "@tanstack/react-table"
 import {
   IconCopy,
@@ -14,6 +13,8 @@ import {
   IconX,
 } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
+import type { TFunction } from "i18next"
 
 import { OrderDetail } from "@/components/orders/order-detail"
 import { OrderForm } from "@/components/orders/order-form"
@@ -44,6 +45,7 @@ import {
 } from "@/components/ui/sheet"
 import { useOrders } from "@/context/orders-context"
 import { useReturns } from "@/context/returns-context"
+import { useInvoiceLineReturn } from "@/hooks/use-invoice-line-return"
 import {
   confirmCancelAction,
   confirmDeleteAction,
@@ -66,7 +68,6 @@ import {
   nextInvoiceNumber,
   orderFromFormData,
   statusBadgeClass,
-  statusLabel,
   type OrderRow,
 } from "@/lib/orders"
 import { buildReturnFromOrder } from "@/lib/returns"
@@ -75,13 +76,6 @@ import {
   flattenOrdersToSaleLines,
   type SaleLineRow,
 } from "@/lib/sales-report"
-
-const salesTabs: DataTableTab[] = [
-  { value: "all", label: "All" },
-  { value: "pending", label: "Pending" },
-  { value: "completed", label: "Completed" },
-  { value: "cancelled", label: "Cancelled" },
-]
 
 function salesBillTabFilter(row: OrderRow, tab: string) {
   if (tab === "all") return true
@@ -117,7 +111,7 @@ function orderWithNewLine(order: OrderRow): OrderRow {
   }
 }
 
-function selectColumn<T>(): ColumnDef<T> {
+function selectColumn<T>(t: TFunction): ColumnDef<T> {
   return {
     id: "select",
     header: ({ table }) => (
@@ -128,7 +122,7 @@ function selectColumn<T>(): ColumnDef<T> {
             (table.getIsSomePageRowsSelected() && "indeterminate")
           }
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
+          aria-label={t("table.selectAll", { ns: "common" })}
         />
       </div>
     ),
@@ -137,7 +131,7 @@ function selectColumn<T>(): ColumnDef<T> {
         <Checkbox
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
+          aria-label={t("table.selectRow", { ns: "common" })}
         />
       </div>
     ),
@@ -146,10 +140,12 @@ function selectColumn<T>(): ColumnDef<T> {
   }
 }
 
-function srNoColumn<T>(): ColumnDef<T> {
+function srNoColumn<T>(t: TFunction<"sales">): ColumnDef<T> {
   return {
     id: "srNo",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Sr No" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title={t("columns.srNo")} />
+    ),
     cell: ({ row, table }) => {
       const { pageIndex, pageSize } = table.getState().pagination
       const srNo = pageIndex * pageSize + row.index + 1
@@ -163,6 +159,7 @@ function srNoColumn<T>(): ColumnDef<T> {
 }
 
 function getSalesBillColumns(
+  t: TFunction<"sales">,
   openBillSidebar: (row: OrderRow) => void,
   onEditBill: (row: OrderRow) => void,
   onOpenInvoice: (orderId: number) => void,
@@ -172,12 +169,12 @@ function getSalesBillColumns(
   onCancel: (row: OrderRow) => void
 ): ColumnDef<OrderRow>[] {
   return [
-    selectColumn<OrderRow>(),
-    srNoColumn<OrderRow>(),
+    selectColumn<OrderRow>(t),
+    srNoColumn<OrderRow>(t),
     {
       accessorKey: "invoiceNumber",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Invoice #" />
+        <DataTableColumnHeader column={column} title={t("columns.invoiceNumber")} />
       ),
       cell: ({ row }) => (
         <button
@@ -194,7 +191,7 @@ function getSalesBillColumns(
     {
       accessorKey: "customerName",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Customer" />
+        <DataTableColumnHeader column={column} title={t("columns.customer")} />
       ),
       cell: ({ row }) => (
         <span className="text-foreground max-w-[10rem] truncate">
@@ -207,7 +204,7 @@ function getSalesBillColumns(
       id: "items",
       accessorFn: (row) => (row.lines ?? []).length,
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Items" align="center" />
+        <DataTableColumnHeader column={column} title={t("columns.items")} align="center" />
       ),
       cell: ({ row }) => (
         <div className="flex justify-center">
@@ -221,7 +218,7 @@ function getSalesBillColumns(
     {
       accessorKey: "orderDate",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Date" />
+        <DataTableColumnHeader column={column} title={t("columns.date")} />
       ),
       cell: ({ row }) => (
         <span className="text-muted-foreground tabular-nums text-xs">
@@ -233,7 +230,7 @@ function getSalesBillColumns(
     {
       accessorKey: "totalAmount",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Total amount" align="center" />
+        <DataTableColumnHeader column={column} title={t("columns.totalAmount")} align="center" />
       ),
       cell: ({ row }) => (
         <div className="flex justify-center">
@@ -247,7 +244,7 @@ function getSalesBillColumns(
     {
       accessorKey: "paidAmount",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Paid amount" align="center" />
+        <DataTableColumnHeader column={column} title={t("columns.paidAmount")} align="center" />
       ),
       cell: ({ row }) => (
         <div className="flex justify-center">
@@ -262,7 +259,7 @@ function getSalesBillColumns(
       id: "balance",
       accessorFn: (row) => Number(computeBalance(row)),
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Balance" align="center" />
+        <DataTableColumnHeader column={column} title={t("columns.balance")} align="center" />
       ),
       cell: ({ row }) => {
         const balance = computeBalance(row.original)
@@ -284,10 +281,12 @@ function getSalesBillColumns(
     },
     {
       accessorKey: "status",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t("columns.status")} />
+      ),
       cell: ({ row }) => (
         <Badge variant="outline" className={statusBadgeClass(row.original.status)}>
-          {statusLabel(row.original.status)}
+          {t(`status.${row.original.status}`)}
         </Badge>
       ),
       meta: { dataTableFilter: false },
@@ -304,42 +303,38 @@ function getSalesBillColumns(
               size="icon"
             >
               <IconDotsVertical />
-              <span className="sr-only">Open menu</span>
+              <span className="sr-only">{t("actions.openMenu")}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40">
-            <DropdownMenuItem onClick={() => openBillSidebar(row.original)}>
-              <IconEye />
-              View
+            <DropdownMenuItem onClick={() => onOpenInvoice(row.original.id)}>
+              <IconReceipt />
+              {t("actions.viewInvoice")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onEditBill(row.original)}>
               <IconPencil />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onOpenInvoice(row.original.id)}>
-              <IconReceipt />
-              Open invoice
+              {t("actions.edit")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onDuplicate(row.original)}>
               <IconCopy />
-              Duplicate
+              {t("actions.duplicate")}
             </DropdownMenuItem>
             {canReturnDocument(row.original) ? (
               <DropdownMenuItem onClick={() => onReturn(row.original)}>
                 <IconRotateClockwise />
-                Return
+                {t("actions.return")}
               </DropdownMenuItem>
             ) : null}
             {canCancelDocument(row.original) ? (
               <DropdownMenuItem onClick={() => onCancel(row.original)}>
                 <IconX />
-                Cancel
+                {t("actions.cancel")}
               </DropdownMenuItem>
             ) : null}
             <DropdownMenuSeparator />
             <DropdownMenuItem variant="destructive" onClick={() => onDelete(row.original)}>
               <IconTrash />
-              Delete
+              {t("actions.delete")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -349,6 +344,7 @@ function getSalesBillColumns(
 }
 
 function getSalesLineColumns(
+  t: TFunction<"sales">,
   openLineSidebar: (row: SaleLineRow) => void,
   onEditLine: (row: SaleLineRow) => void,
   onOpenInvoice: (orderId: number) => void,
@@ -358,12 +354,12 @@ function getSalesLineColumns(
   resolveOrder: (line: SaleLineRow) => OrderRow | undefined
 ): ColumnDef<SaleLineRow>[] {
   return [
-    selectColumn<SaleLineRow>(),
-    srNoColumn<SaleLineRow>(),
+    selectColumn<SaleLineRow>(t),
+    srNoColumn<SaleLineRow>(t),
     {
       accessorKey: "invoiceNumber",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Invoice #" />
+        <DataTableColumnHeader column={column} title={t("columns.invoiceNumber")} />
       ),
       cell: ({ row }) => (
         <button
@@ -380,7 +376,7 @@ function getSalesLineColumns(
     {
       accessorKey: "customerName",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Customer" />
+        <DataTableColumnHeader column={column} title={t("columns.customer")} />
       ),
       cell: ({ row }) => (
         <span className="text-foreground max-w-[10rem] truncate">
@@ -392,7 +388,7 @@ function getSalesLineColumns(
     {
       accessorKey: "orderDate",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Date" />
+        <DataTableColumnHeader column={column} title={t("columns.date")} />
       ),
       cell: ({ row }) => (
         <span className="text-muted-foreground tabular-nums text-xs">
@@ -404,7 +400,7 @@ function getSalesLineColumns(
     {
       accessorKey: "productName",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Item" />
+        <DataTableColumnHeader column={column} title={t("columns.item")} />
       ),
       cell: ({ row }) => (
         <button
@@ -421,7 +417,7 @@ function getSalesLineColumns(
     {
       accessorKey: "quantity",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Qty" align="center" />
+        <DataTableColumnHeader column={column} title={t("columns.qty")} align="center" />
       ),
       cell: ({ row }) => (
         <div className="flex justify-center">
@@ -433,7 +429,7 @@ function getSalesLineColumns(
     {
       accessorKey: "unitPrice",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Unit price" align="center" />
+        <DataTableColumnHeader column={column} title={t("columns.unitPrice")} align="center" />
       ),
       cell: ({ row }) => (
         <div className="flex justify-center">
@@ -447,7 +443,7 @@ function getSalesLineColumns(
     {
       accessorKey: "lineTotal",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Line total" align="center" />
+        <DataTableColumnHeader column={column} title={t("columns.lineTotal")} align="center" />
       ),
       cell: ({ row }) => (
         <div className="flex justify-center">
@@ -460,10 +456,12 @@ function getSalesLineColumns(
     },
     {
       accessorKey: "orderStatus",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t("columns.status")} />
+      ),
       cell: ({ row }) => (
         <Badge variant="outline" className={statusBadgeClass(row.original.orderStatus)}>
-          {statusLabel(row.original.orderStatus)}
+          {t(`status.${row.original.orderStatus}`)}
         </Badge>
       ),
       meta: { dataTableFilter: false },
@@ -482,32 +480,32 @@ function getSalesLineColumns(
               size="icon"
             >
               <IconDotsVertical />
-              <span className="sr-only">Open menu</span>
+              <span className="sr-only">{t("actions.openMenu")}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40">
             <DropdownMenuItem onClick={() => openLineSidebar(row.original)}>
               <IconEye />
-              View
+              {t("actions.view")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onEditLine(row.original)}>
               <IconPencil />
-              Edit
+              {t("actions.edit")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onOpenInvoice(row.original.orderId)}>
               <IconReceipt />
-              Open invoice
+              {t("actions.viewInvoice")}
             </DropdownMenuItem>
             {parent && canReturnDocument(parent) ? (
               <DropdownMenuItem onClick={() => onReturnLine(row.original)}>
                 <IconRotateClockwise />
-                Return
+                {t("actions.return")}
               </DropdownMenuItem>
             ) : null}
             {parent && canCancelDocument(parent) ? (
               <DropdownMenuItem onClick={() => onCancelLine(row.original)}>
                 <IconX />
-                Cancel
+                {t("actions.cancel")}
               </DropdownMenuItem>
             ) : null}
             <DropdownMenuSeparator />
@@ -516,7 +514,7 @@ function getSalesLineColumns(
               onClick={() => onDeleteLine(row.original)}
             >
               <IconTrash />
-              Delete
+              {t("actions.delete")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -527,13 +525,16 @@ function getSalesLineColumns(
 }
 
 export default function SalesReportPage() {
-  const router = useRouter()
+  const { t } = useTranslation("sales")
   const { orders, setOrders, getOrder, addOrder, updateOrder, removeOrder, duplicateOrder } =
     useOrders()
   const { addReturn } = useReturns()
+  const { returnInvoiceLine, returningLineId, applyCompletedReturnEffects } =
+    useInvoiceLineReturn()
   const [viewMode, setViewMode] = useState<BillItemViewMode>("item")
   const [viewSaleLine, setViewSaleLine] = useState<SaleLineRow | null>(null)
   const [viewOrder, setViewOrder] = useState<OrderRow | null>(null)
+  const [invoiceSheetMode, setInvoiceSheetMode] = useState<"view" | "edit">("view")
   const [selectedOrderId, setSelectedOrderId] = useState("")
   const [saleFormSidebar, setSaleFormSidebar] = useState<SaleFormSidebarState>(null)
 
@@ -560,30 +561,23 @@ export default function SalesReportPage() {
     [viewMode, handleViewModeChange]
   )
 
+  const liveViewOrder = viewOrder ? (getOrder(viewOrder.id) ?? viewOrder) : null
+
   const openLineSidebar = useCallback((row: SaleLineRow) => {
     setViewSaleLine(row)
   }, [])
 
   const openBillSidebar = useCallback((row: OrderRow) => {
+    setInvoiceSheetMode("view")
     setViewOrder(row)
   }, [])
 
   const onOpenInvoice = useCallback(
     (orderId: number) => {
-      if (getOrder(orderId)) {
-        router.push("/documents/sales-invoice")
-      }
-    },
-    [getOrder, router]
-  )
-
-  const openInvoiceFromLine = useCallback(
-    (orderId: number) => {
       const order = getOrder(orderId)
       if (!order) return
       setViewSaleLine(null)
-      setViewMode("bill")
-      saveSalesViewMode("bill")
+      setInvoiceSheetMode("view")
       setViewOrder(order)
     },
     [getOrder]
@@ -610,7 +604,7 @@ export default function SalesReportPage() {
       if (
         !(await confirmDeleteAction({
           itemName: order.invoiceNumber,
-          entityLabel: "sale",
+          entityLabel: t("entity.sale"),
         }))
       ) {
         return
@@ -624,7 +618,7 @@ export default function SalesReportPage() {
       ) {
         setSaleFormSidebar(null)
       }
-      toast.message(`Removed ${order.invoiceNumber} (demo).`)
+      toast.message(t("toasts.removedNamed", { name: order.invoiceNumber }))
     },
     [removeOrder, saleFormSidebar, viewOrder]
   )
@@ -634,13 +628,13 @@ export default function SalesReportPage() {
       if (
         !(await confirmDuplicateAction({
           itemName: order.invoiceNumber,
-          entityLabel: "sale",
+          entityLabel: t("entity.sale"),
         }))
       ) {
         return
       }
       const copy = duplicateOrder(order.id)
-      if (copy) toast.success(`Duplicated ${order.invoiceNumber} (demo).`)
+      if (copy) toast.success(t("toasts.duplicatedNamed", { name: order.invoiceNumber }))
     },
     [duplicateOrder]
   )
@@ -650,7 +644,7 @@ export default function SalesReportPage() {
       if (
         !(await confirmDeleteAction({
           count: selected.length,
-          entityLabel: "sale line item",
+          entityLabel: t("entity.saleLineItem"),
         }))
       ) {
         return
@@ -678,9 +672,7 @@ export default function SalesReportPage() {
         setViewSaleLine(null)
       }
 
-      toast.message(
-        `Removed ${selected.length} line item${selected.length === 1 ? "" : "s"} (demo).`
-      )
+      toast.message(t("toasts.removedLines", { count: selected.length }))
     },
     [setOrders, viewSaleLine]
   )
@@ -695,7 +687,7 @@ export default function SalesReportPage() {
   const handleReturnBill = useCallback(
     async (order: OrderRow) => {
       if (!canReturnDocument(order)) {
-        toast.error("Only completed paid sales can be returned.")
+        toast.error(t("toasts.onlyCompletedPaid"))
         return
       }
       const draft = buildReturnFromOrder(order)
@@ -713,47 +705,38 @@ export default function SalesReportPage() {
         getOrder,
         onApplySales: updateOrder,
       })
-      toast.success(`Return ${created.returnNumber} recorded for ${order.invoiceNumber}.`)
+      applyCompletedReturnEffects(created, order)
+      toast.success(
+        t("toasts.returnRecorded", {
+          returnNumber: created.returnNumber,
+          name: order.invoiceNumber,
+        })
+      )
       if (viewOrder?.id === order.id) {
         setViewOrder(getOrder(order.id) ?? null)
       }
     },
-    [addReturn, getOrder, updateOrder, viewOrder]
+    [addReturn, applyCompletedReturnEffects, getOrder, updateOrder, viewOrder]
   )
 
   const handleReturnLine = useCallback(
     async (line: SaleLineRow) => {
       const order = getOrder(line.orderId)
       if (!order) {
-        toast.error("Source invoice not found.")
+        toast.error(t("toasts.sourceNotFound"))
         return
       }
-      if (!canReturnDocument(order)) {
-        toast.error("Only completed paid sales can be returned.")
+      const orderLine = order.lines.find((item) => item.id === line.lineId)
+      if (!orderLine) {
+        toast.error(t("toasts.lineNotFound"))
         return
       }
-      const draft = buildReturnFromOrder(order, { lineIds: [line.lineId] })
-      if (
-        !(await confirmReturnAction({
-          scope: "item",
-          itemName: line.productName,
-          referenceNumber: order.invoiceNumber,
-          totalAmount: draft.totalAmount,
-          refundDue: draft.refundDue,
-        }))
-      ) {
-        return
-      }
-      const created = addReturn({ ...draft, status: "completed" }, {
-        getOrder,
-        onApplySales: updateOrder,
-      })
-      toast.success(`Return ${created.returnNumber} recorded for ${line.productName}.`)
-      if (viewSaleLine?.lineId === line.lineId) {
+      const recorded = await returnInvoiceLine(order, orderLine)
+      if (recorded && viewSaleLine?.lineId === line.lineId) {
         setViewSaleLine(null)
       }
     },
-    [addReturn, getOrder, updateOrder, viewSaleLine]
+    [getOrder, returnInvoiceLine, viewSaleLine]
   )
 
   const handleCancelBill = useCallback(
@@ -762,14 +745,14 @@ export default function SalesReportPage() {
       if (
         !(await confirmCancelAction({
           itemName: order.invoiceNumber,
-          entityLabel: "sale",
+          entityLabel: t("entity.sale"),
         }))
       ) {
         return
       }
       updateOrder(order.id, { status: "cancelled" })
       if (viewOrder?.id === order.id) setViewOrder(null)
-      toast.success(`${order.invoiceNumber} cancelled.`)
+      toast.success(t("toasts.cancelled", { name: order.invoiceNumber }))
     },
     [updateOrder, viewOrder]
   )
@@ -778,20 +761,20 @@ export default function SalesReportPage() {
     async (line: SaleLineRow) => {
       const order = getOrder(line.orderId)
       if (!order || !canCancelDocument(order)) {
-        toast.error("Only pending unpaid sales can be cancelled.")
+        toast.error(t("toasts.onlyPendingUnpaid"))
         return
       }
       if (
         !(await confirmCancelAction({
           itemName: order.invoiceNumber,
-          entityLabel: "sale",
+          entityLabel: t("entity.sale"),
         }))
       ) {
         return
       }
       updateOrder(order.id, { status: "cancelled" })
       if (viewSaleLine?.orderId === order.id) setViewSaleLine(null)
-      toast.success(`${order.invoiceNumber} cancelled.`)
+      toast.success(t("toasts.cancelled", { name: order.invoiceNumber }))
     },
     [getOrder, updateOrder, viewSaleLine]
   )
@@ -806,7 +789,7 @@ export default function SalesReportPage() {
       if (
         !(await confirmDeleteAction({
           count: selected.length,
-          entityLabel: "sale",
+          entityLabel: t("entity.sale"),
         }))
       ) {
         return
@@ -814,9 +797,7 @@ export default function SalesReportPage() {
       const ids = new Set(selected.map((row) => row.id))
       setOrders((prev) => prev.filter((row) => !ids.has(row.id)))
       if (viewOrder && ids.has(viewOrder.id)) setViewOrder(null)
-      toast.message(
-        `Removed ${selected.length} sale${selected.length === 1 ? "" : "s"} (demo).`
-      )
+      toast.message(t("toasts.removedSales", { count: selected.length }))
     },
     [setOrders, viewOrder]
   )
@@ -824,6 +805,7 @@ export default function SalesReportPage() {
   const billColumns = useMemo(
     () =>
       getSalesBillColumns(
+        t,
         openBillSidebar,
         openEditBill,
         onOpenInvoice,
@@ -833,6 +815,7 @@ export default function SalesReportPage() {
         handleCancelBill
       ),
     [
+      t,
       openBillSidebar,
       openEditBill,
       onOpenInvoice,
@@ -846,6 +829,7 @@ export default function SalesReportPage() {
   const lineColumns = useMemo(
     () =>
       getSalesLineColumns(
+        t,
         openLineSidebar,
         openEditLine,
         onOpenInvoice,
@@ -855,6 +839,7 @@ export default function SalesReportPage() {
         resolveOrderForLine
       ),
     [
+      t,
       openLineSidebar,
       openEditLine,
       onOpenInvoice,
@@ -888,7 +873,7 @@ export default function SalesReportPage() {
   const openExistingInvoiceSale = useCallback(() => {
     const order = getOrder(Number(selectedOrderId))
     if (!order) {
-      toast.error("Select an invoice first.")
+      toast.error(t("toasts.selectInvoiceFirst"))
       return
     }
     setSaleFormSidebar({ step: "form", mode: "edit", order: orderWithNewLine(order) })
@@ -953,7 +938,7 @@ export default function SalesReportPage() {
       const fd = new FormData(e.currentTarget)
       const customerName = String(fd.get("customerName") ?? "").trim()
       if (!customerName) {
-        toast.error("Customer name is required.")
+        toast.error(t("toasts.customerRequired"))
         return
       }
 
@@ -964,13 +949,13 @@ export default function SalesReportPage() {
           : 0
       )
       if (parsed.lines.length === 0 || !parsed.lines.some((line) => line.productName.trim())) {
-        toast.error("Add at least one line item with a product name.")
+        toast.error(t("toasts.lineRequired"))
         return
       }
 
       if (saleFormSidebar?.step === "form" && saleFormSidebar.mode === "add") {
         addOrder(parsed)
-        toast.success("Sale recorded on new invoice (demo).")
+        toast.success(t("toasts.saleOnNewInvoice"))
         closeSaleFormSidebar()
         return
       }
@@ -980,7 +965,7 @@ export default function SalesReportPage() {
         saleFormSidebar.mode === "edit"
       ) {
         updateOrder(saleFormSidebar.order.id, parsed)
-        toast.success("Sale added to invoice (demo).")
+        toast.success(t("toasts.saleAdded"))
         closeSaleFormSidebar()
       }
     },
@@ -1000,6 +985,13 @@ export default function SalesReportPage() {
         ? `sale-edit-${saleFormSidebar.order.id}`
         : "sale-edit"
 
+  const salesTabs: DataTableTab[] = [
+    { value: "all", label: t("tabs.all") },
+    { value: "pending", label: t("tabs.pending") },
+    { value: "completed", label: t("tabs.completed") },
+    { value: "cancelled", label: t("tabs.cancelled") },
+  ]
+
   return (
     <>
       <Sheet
@@ -1017,16 +1009,16 @@ export default function SalesReportPage() {
               <SheetHeader className="border-border/60 space-y-1 border-b px-6 py-5 text-left">
                 <SheetTitle className="text-lg leading-tight">
                   {saleFormSidebar.step === "choose"
-                    ? "Add sale"
+                    ? t("sheet.addSale")
                     : saleFormSidebar.mode === "add"
-                      ? "New invoice"
-                      : "Add to invoice"}
+                      ? t("sheet.newInvoice")
+                      : t("sheet.addToInvoice")}
                 </SheetTitle>
                 <SheetDescription>
                   {saleFormSidebar.step === "choose" ? (
-                    "Record a sale on a new invoice or add line items to an existing one."
+                    t("sheet.chooseDescription")
                   ) : saleFormSidebar.mode === "add" ? (
-                    "Create a new invoice and record line items."
+                    t("sheet.newInvoiceDescription")
                   ) : (
                     `${saleFormSidebar.order.invoiceNumber} · ${saleFormSidebar.order.customerName}`
                   )}
@@ -1045,18 +1037,18 @@ export default function SalesReportPage() {
                 {saleFormSidebar.step === "choose" ? (
                   <div className="flex flex-col gap-4 text-sm">
                     <Button type="button" variant="outline" onClick={openNewInvoiceSale}>
-                      New invoice
+                      {t("sheet.newInvoice")}
                     </Button>
                     <div className="border-border/60 flex flex-col gap-2 border-t pt-4">
-                      <Label htmlFor="add-sale-invoice">Existing invoice</Label>
+                      <Label htmlFor="add-sale-invoice">{t("sheet.existingInvoice")}</Label>
                       <InfiniteScrollSelect
                         id="add-sale-invoice"
                         value={selectedOrderId}
                         onValueChange={setSelectedOrderId}
                         options={invoiceOptions}
-                        placeholder="Select invoice"
-                        searchPlaceholder="Search invoices…"
-                        emptyMessage="No invoices found."
+                        placeholder={t("sheet.selectInvoice")}
+                        searchPlaceholder={t("sheet.searchInvoices")}
+                        emptyMessage={t("sheet.noInvoices")}
                         pageSize={10}
                       />
                       <Button
@@ -1065,7 +1057,7 @@ export default function SalesReportPage() {
                         disabled={!selectedOrderId}
                         onClick={openExistingInvoiceSale}
                       >
-                        Add to selected invoice
+                        {t("sheet.addToSelected")}
                       </Button>
                     </div>
                   </div>
@@ -1081,7 +1073,7 @@ export default function SalesReportPage() {
                 {saleFormSidebar.step === "choose" ? (
                   <SheetClose asChild>
                     <Button variant="outline" type="button">
-                      Cancel
+                      {t("sheet.cancel")}
                     </Button>
                   </SheetClose>
                 ) : (
@@ -1094,15 +1086,17 @@ export default function SalesReportPage() {
                         setSaleFormSidebar({ step: "choose" })
                       }}
                     >
-                      Back
+                      {t("sheet.back")}
                     </Button>
                     <SheetClose asChild>
                       <Button variant="outline" type="button">
-                        Cancel
+                        {t("sheet.cancel")}
                       </Button>
                     </SheetClose>
                     <Button type="submit" form={saleFormId}>
-                      {saleFormSidebar.mode === "add" ? "Create invoice" : "Save invoice"}
+                      {saleFormSidebar.mode === "add"
+                        ? t("sheet.createInvoice")
+                        : t("sheet.saveInvoice")}
                     </Button>
                   </>
                 )}
@@ -1143,12 +1137,12 @@ export default function SalesReportPage() {
                 <Button
                   variant="outline"
                   className="w-full sm:w-auto"
-                  onClick={() => openInvoiceFromLine(viewSaleLine.orderId)}
+                  onClick={() => onOpenInvoice(viewSaleLine.orderId)}
                 >
-                  Open invoice
+                  {t("actions.viewInvoice")}
                 </Button>
                 <SheetClose asChild>
-                  <Button className="w-full sm:w-auto">Close</Button>
+                  <Button className="w-full sm:w-auto">{t("sheet.close")}</Button>
                 </SheetClose>
               </SheetFooter>
             </>
@@ -1159,41 +1153,75 @@ export default function SalesReportPage() {
       <Sheet
         open={viewOrder !== null}
         onOpenChange={(open) => {
-          if (!open) setViewOrder(null)
+          if (!open) {
+            setViewOrder(null)
+            setInvoiceSheetMode("view")
+          }
         }}
       >
         <SheetContent
           side="right"
           className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg"
         >
-          {viewOrder ? (
+          {liveViewOrder ? (
             <>
               <SheetHeader className="border-border/60 space-y-1 border-b px-6 py-5 text-left">
                 <SheetTitle className="text-lg leading-tight">
-                  {viewOrder.invoiceNumber}
+                  {invoiceSheetMode === "edit"
+                    ? t("sheet.editInvoice")
+                    : liveViewOrder.invoiceNumber}
                 </SheetTitle>
                 <SheetDescription>
-                  {viewOrder.customerName}
+                  {liveViewOrder.customerName}
                   <span className="text-muted-foreground">
                     {" "}
-                    · {formatDate(viewOrder.orderDate)}
+                    · {formatDate(liveViewOrder.orderDate)}
                   </span>
                 </SheetDescription>
               </SheetHeader>
               <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
-                <OrderDetail order={viewOrder} />
+                <OrderDetail
+                  order={liveViewOrder}
+                  mode={invoiceSheetMode}
+                  returningLineId={returningLineId}
+                  onReturnLine={
+                    invoiceSheetMode === "edit"
+                      ? (line) => {
+                          void returnInvoiceLine(liveViewOrder, line)
+                        }
+                      : undefined
+                  }
+                />
               </div>
               <SheetFooter className="border-border/60 gap-2 border-t px-6 py-4 sm:flex-row sm:justify-end">
-                <Button
-                  variant="outline"
-                  className="w-full sm:w-auto"
-                  onClick={() => onOpenInvoice(viewOrder.id)}
-                >
-                  Open invoice
-                </Button>
-                <SheetClose asChild>
-                  <Button className="w-full sm:w-auto">Close</Button>
-                </SheetClose>
+                {invoiceSheetMode === "view" ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      className="w-full sm:w-auto"
+                      onClick={() => setInvoiceSheetMode("edit")}
+                    >
+                      <IconPencil />
+                      {t("actions.edit")}
+                    </Button>
+                    <SheetClose asChild>
+                      <Button className="w-full sm:w-auto">{t("sheet.close")}</Button>
+                    </SheetClose>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      variant="outline"
+                      className="w-full sm:w-auto"
+                      onClick={() => setInvoiceSheetMode("view")}
+                    >
+                      {t("actions.done", { ns: "common" })}
+                    </Button>
+                    <SheetClose asChild>
+                      <Button className="w-full sm:w-auto">{t("sheet.close")}</Button>
+                    </SheetClose>
+                  </>
+                )}
               </SheetFooter>
             </>
           ) : null}
@@ -1204,9 +1232,9 @@ export default function SalesReportPage() {
         <DataTable
           data={orders}
           columns={billColumns}
-          searchPlaceholder="Search sales by invoice, customer…"
+          searchPlaceholder={t("search.bills")}
           exportFilename="sales-bills-export.csv"
-          addButtonLabel="New Sale"
+          addButtonLabel={t("addButton")}
           onAddClick={openAddSaleSidebar}
           importSampleFilename="sales-sample.csv"
           importSampleCsvContent={salesImportSampleCsv}
@@ -1215,7 +1243,7 @@ export default function SalesReportPage() {
           bulkActions={[
             {
               id: "delete",
-              label: "Delete selected",
+              label: t("actions.deleteSelected"),
               icon: <IconTrash className="size-4" />,
               variant: "destructive",
               onClick: handleBulkDeleteBills,
@@ -1229,9 +1257,9 @@ export default function SalesReportPage() {
         <DataTable
           data={saleLines}
           columns={lineColumns}
-          searchPlaceholder="Search sales by item, customer, invoice…"
+          searchPlaceholder={t("search.items")}
           exportFilename="sales-items-export.csv"
-          addButtonLabel="New Sale"
+          addButtonLabel={t("addButton")}
           onAddClick={openAddSaleSidebar}
           importSampleFilename="sales-sample.csv"
           importSampleCsvContent={salesImportSampleCsv}
@@ -1240,7 +1268,7 @@ export default function SalesReportPage() {
           bulkActions={[
             {
               id: "delete",
-              label: "Delete selected",
+              label: t("actions.deleteSelected"),
               icon: <IconTrash className="size-4" />,
               variant: "destructive",
               onClick: handleDeleteSaleLines,

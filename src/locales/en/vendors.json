@@ -1,0 +1,50 @@
+{
+  "title": "Vendors",
+  "add": "Add vendor",
+  "addButton": "New Vendor",
+  "search": "Search vendors…",
+  "empty": "No vendors found.",
+  "tabs": {
+    "all": "All",
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "columns": {
+    "id": "ID",
+    "name": "Name",
+    "description": "Description",
+    "openingBalance": "Opening balance",
+    "totalPurchases": "Total purchases",
+    "totalPayments": "Total payments",
+    "balance": "Balance",
+    "phone": "Phone number",
+    "email": "Email",
+    "status": "Status"
+  },
+  "actions": {
+    "view": "View",
+    "edit": "Edit",
+    "duplicate": "Duplicate",
+    "delete": "Delete",
+    "openMenu": "Open menu",
+    "deleteSelected": "Delete selected"
+  },
+  "sheet": {
+    "add": "Add vendor",
+    "edit": "Edit vendor",
+    "addDescription": "Fill in vendor details and photo. Saving is demo only.",
+    "create": "Create vendor",
+    "save": "Save vendor"
+  },
+  "toasts": {
+    "removedNamed": "Removed {{name}} (demo).",
+    "duplicatedNamed": "Duplicated {{name}} (demo).",
+    "nameRequired": "Vendor name is required.",
+    "created": "Vendor created (demo).",
+    "saved": "Vendor saved (demo).",
+    "removedCount": "Removed {{count}} vendor(s) (demo)."
+  },
+  "entity": {
+    "vendor": "vendor"
+  }
+}

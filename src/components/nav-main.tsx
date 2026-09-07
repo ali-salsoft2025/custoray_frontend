@@ -3,6 +3,7 @@
 import { ChevronRight, Mail, Plus, type LucideIcon } from "lucide-react"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -65,7 +66,7 @@ type NavItem = {
   }[]
 }
 
-const navRowClass = "h-10 gap-3 px-3 py-2"
+const navRowClass = "min-h-10 h-auto gap-3 px-3 py-2"
 const navSubLinkClass = "min-h-10 h-auto px-3 py-2.5"
 
 function NavSubLinkItem({
@@ -161,7 +162,7 @@ function NavCollapsibleItem({
             {item.icon && <item.icon data-theme-icon />}
             <span>{item.title}</span>
             <ChevronRight
-              className="ml-auto size-[1.125rem] transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90"
+              className="ms-auto size-[1.125rem] transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90 rtl:rotate-180 group-data-[state=open]/collapsible:rtl:rotate-90"
               strokeWidth={2}
               data-theme-icon
               aria-hidden
@@ -186,6 +187,7 @@ function NavCollapsibleItem({
 
 export function NavMain({ items }: { items: NavItem[] }) {
   const pathname = usePathname()
+  const { t } = useTranslation("nav")
   const [, setIconColorClass] = useState("")
 
   useEffect(() => {
@@ -210,11 +212,11 @@ export function NavMain({ items }: { items: NavItem[] }) {
         <SidebarMenu>
           <SidebarMenuItem className="flex items-center gap-2">
             <SidebarMenuButton
-              tooltip="Quick Create"
+              tooltip={t("quickCreate")}
               className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground min-w-8 text-xs duration-200 ease-linear"
             >
               <Plus className="size-[1.125rem]" strokeWidth={2.25} aria-hidden />
-              <span className="text-xs font-medium">Quick Create</span>
+              <span className="text-xs font-medium">{t("quickCreate")}</span>
             </SidebarMenuButton>
             <Button
               size="icon"
@@ -222,7 +224,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
               variant="outline"
             >
               <Mail className="size-[1.125rem]" strokeWidth={2} aria-hidden />
-              <span className="sr-only">Inbox</span>
+              <span className="sr-only">{t("inbox")}</span>
             </Button>
           </SidebarMenuItem>
         </SidebarMenu>

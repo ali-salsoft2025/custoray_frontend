@@ -1,14 +1,16 @@
+"use client"
+
 import type { ComponentType } from "react"
 import {
   IconCircleCheckFilled,
   IconCircleXFilled,
   IconClock,
 } from "@tabler/icons-react"
+import { useTranslation } from "react-i18next"
 
 import { Badge } from "@/components/ui/badge"
 import {
   statusBadgeClass,
-  statusLabel,
   type PurchaseRow,
 } from "@/lib/purchases"
 import { cn } from "@/lib/utils"
@@ -36,6 +38,7 @@ type PurchaseStatusBadgeProps = {
 }
 
 export function PurchaseStatusBadge({ status, className }: PurchaseStatusBadgeProps) {
+  const { t } = useTranslation("purchases")
   const normalized = status ?? "pending"
   const Icon = statusIcons[normalized]
 
@@ -45,7 +48,7 @@ export function PurchaseStatusBadge({ status, className }: PurchaseStatusBadgePr
       className={cn("gap-1 pr-2 pl-1.5", statusBadgeClass(normalized), className)}
     >
       <Icon className={cn("size-3.5 shrink-0", statusIconClass[normalized])} />
-      {statusLabel(normalized)}
+      {t(`status.${normalized}`)}
     </Badge>
   )
 }

@@ -11,6 +11,7 @@ import {
   IconX,
 } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 import { DataTableColumnHeader } from "@/components/data-table-column-header"
 import { DataTable, type DataTableTab } from "@/components/data-table"
@@ -48,13 +49,6 @@ import {
   type LeaveRecord,
 } from "@/lib/employee-leaves"
 
-const leaveTabs: DataTableTab[] = [
-  { value: "all", label: "All" },
-  { value: "pending", label: "Pending" },
-  { value: "approved", label: "Approved" },
-  { value: "rejected", label: "Rejected" },
-]
-
 type LeaveSidebarState =
   | { mode: "add" }
   | { mode: "view"; record: LeaveRecord }
@@ -72,10 +66,12 @@ function LeaveForm({
   employees: { id: number; name: string }[]
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
 }) {
+  const { t } = useTranslation("employees")
+
   return (
     <form id={formId} className="space-y-5" onSubmit={onSubmit}>
       <div className="space-y-2">
-        <Label htmlFor={`${formId}-employee`}>Employee</Label>
+        <Label htmlFor={`${formId}-employee`}>{t("leavesPage.employee")}</Label>
         <select
           id={`${formId}-employee`}
           name="employeeId"
@@ -83,7 +79,7 @@ function LeaveForm({
           required
           className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm shadow-xs"
         >
-          <option value="">Select employee</option>
+          <option value="">{t("leavesPage.selectEmployee")}</option>
           {employees.map((employee) => (
             <option key={employee.id} value={employee.id}>
               {employee.name}
@@ -92,7 +88,7 @@ function LeaveForm({
         </select>
       </div>
       <div className="space-y-2">
-        <Label htmlFor={`${formId}-type`}>Leave type</Label>
+        <Label htmlFor={`${formId}-type`}>{t("leavesPage.leaveType")}</Label>
         <select
           id={`${formId}-type`}
           name="type"
@@ -108,7 +104,7 @@ function LeaveForm({
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
-          <Label htmlFor={`${formId}-start`}>Start date</Label>
+          <Label htmlFor={`${formId}-start`}>{t("leavesPage.startDate")}</Label>
           <Input
             id={`${formId}-start`}
             name="startDate"
@@ -118,7 +114,7 @@ function LeaveForm({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor={`${formId}-end`}>End date</Label>
+          <Label htmlFor={`${formId}-end`}>{t("leavesPage.endDate")}</Label>
           <Input
             id={`${formId}-end`}
             name="endDate"
@@ -129,16 +125,16 @@ function LeaveForm({
         </div>
       </div>
       <div className="space-y-2">
-        <Label htmlFor={`${formId}-reason`}>Reason</Label>
+        <Label htmlFor={`${formId}-reason`}>{t("leavesPage.reason")}</Label>
         <Input
           id={`${formId}-reason`}
           name="reason"
           defaultValue={record.reason}
-          placeholder="Brief reason"
+          placeholder={t("leavesPage.reasonPlaceholder")}
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor={`${formId}-status`}>Status</Label>
+        <Label htmlFor={`${formId}-status`}>{t("columns.status")}</Label>
         <select
           id={`${formId}-status`}
           name="status"
@@ -163,13 +159,14 @@ function LeaveDetail({
   record: LeaveRecord
   employeeName: string
 }) {
+  const { t } = useTranslation("employees")
   const rows = [
-    ["Employee", employeeName],
-    ["Leave type", leaveTypeLabel(record.type)],
-    ["Start date", record.startDate],
-    ["End date", record.endDate],
-    ["Duration", `${record.days} day${record.days === 1 ? "" : "s"}`],
-    ["Reason", record.reason || "—"],
+    [t("leavesPage.employee"), employeeName],
+    [t("leavesPage.leaveType"), leaveTypeLabel(record.type)],
+    [t("leavesPage.startDate"), record.startDate],
+    [t("leavesPage.endDate"), record.endDate],
+    [t("leavesPage.duration"), t("leavesPage.daysCount", { count: record.days })],
+    [t("leavesPage.reason"), record.reason || "—"],
   ]
   return (
     <div className="space-y-4">
@@ -189,40 +186,51 @@ function LeaveDetail({
 }
 
 export function EmployeeLeavesPanel() {
+  const { t } = useTranslation("employees")
+  const { t: tc } = useTranslation("common")
   const { employees } = useEmployees()
   const { records, addRecord, updateRecord, removeRecord, setRecords } =
     useLeaves()
   const [sidebar, setSidebar] = useState<LeaveSidebarState>(null)
 
+  const leaveTabs: DataTableTab[] = [
+    { value: "all", label: tc("tabs.all") },
+    { value: "pending", label: t("leavesPage.status.pending") },
+    { value: "approved", label: t("leavesPage.status.approved") },
+    { value: "rejected", label: t("leavesPage.status.rejected") },
+  ]
+
   const employeeName = useCallback(
     (id: number) =>
       employees.find((employee) => employee.id === id)?.name ??
-      `Employee #${id}`,
-    [employees]
+      t("leavesPage.employeeFallback", { id }),
+    [employees, t]
   )
 
   const approve = useCallback(
     (record: LeaveRecord) => {
       updateRecord(record.id, { status: "approved" })
-      toast.success("Leave approved.")
+      toast.success(t("leavesPage.toastApproved"))
     },
-    [updateRecord]
+    [updateRecord, t]
   )
 
   const reject = useCallback(
     (record: LeaveRecord) => {
       updateRecord(record.id, { status: "rejected" })
-      toast.message("Leave rejected.")
+      toast.message(t("leavesPage.toastRejected"))
     },
-    [updateRecord]
+    [updateRecord, t]
   )
 
   const handleDelete = useCallback(
     async (record: LeaveRecord) => {
       if (
         !(await confirmDeleteAction({
-          itemName: `${employeeName(record.employeeId)} leave`,
-          entityLabel: "leave request",
+          itemName: t("leavesPage.leaveItemName", {
+            name: employeeName(record.employeeId),
+          }),
+          entityLabel: t("entity.leaveRequest"),
         }))
       ) {
         return
@@ -231,9 +239,9 @@ export function EmployeeLeavesPanel() {
       if (sidebar?.mode !== "add" && sidebar?.record.id === record.id) {
         setSidebar(null)
       }
-      toast.message("Leave request removed.")
+      toast.message(t("leavesPage.toastRemoved"))
     },
-    [employeeName, removeRecord, sidebar]
+    [employeeName, removeRecord, sidebar, t]
   )
 
   const columns = useMemo<ColumnDef<LeaveRecord>[]>(
@@ -242,7 +250,7 @@ export function EmployeeLeavesPanel() {
         id: "employee",
         accessorFn: (row) => employeeName(row.employeeId),
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Employee" />
+          <DataTableColumnHeader column={column} title={t("leavesPage.employee")} />
         ),
         cell: ({ row }) => (
           <button
@@ -258,14 +266,14 @@ export function EmployeeLeavesPanel() {
       {
         accessorKey: "type",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Type" />
+          <DataTableColumnHeader column={column} title={t("leavesPage.type")} />
         ),
         cell: ({ row }) => leaveTypeLabel(row.original.type),
         meta: { dataTableFilter: false },
       },
       {
         id: "dates",
-        header: "Dates",
+        header: t("leavesPage.dates"),
         cell: ({ row }) => (
           <span className="text-muted-foreground text-xs">
             {row.original.startDate} → {row.original.endDate}
@@ -276,14 +284,18 @@ export function EmployeeLeavesPanel() {
       {
         accessorKey: "days",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Days" align="center" />
+          <DataTableColumnHeader
+            column={column}
+            title={t("leavesPage.days")}
+            align="center"
+          />
         ),
         meta: { dataTableFilter: false, cellClassName: "text-center" },
       },
       {
         accessorKey: "status",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Status" />
+          <DataTableColumnHeader column={column} title={t("columns.status")} />
         ),
         cell: ({ row }) => (
           <Badge
@@ -304,7 +316,7 @@ export function EmployeeLeavesPanel() {
             <DropdownMenuTrigger asChild>
               <Button type="button" variant="ghost" size="icon" className="size-8">
                 <IconDotsVertical />
-                <span className="sr-only">Leave actions</span>
+                <span className="sr-only">{t("leavesPage.actions")}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
@@ -312,24 +324,24 @@ export function EmployeeLeavesPanel() {
                 onClick={() => setSidebar({ mode: "view", record: row.original })}
               >
                 <IconEye />
-                View
+                {tc("actions.view")}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => setSidebar({ mode: "edit", record: row.original })}
               >
                 <IconPencil />
-                Edit
+                {tc("actions.edit")}
               </DropdownMenuItem>
               {row.original.status === "pending" ? (
                 <>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => approve(row.original)}>
                     <IconCheck />
-                    Approve
+                    {tc("actions.approve")}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => reject(row.original)}>
                     <IconX />
-                    Reject
+                    {t("leavesPage.reject")}
                   </DropdownMenuItem>
                 </>
               ) : null}
@@ -339,14 +351,14 @@ export function EmployeeLeavesPanel() {
                 onClick={() => handleDelete(row.original)}
               >
                 <IconTrash />
-                Delete
+                {tc("actions.delete")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         ),
       },
     ],
-    [approve, employeeName, handleDelete, reject]
+    [approve, employeeName, handleDelete, reject, t, tc]
   )
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -357,19 +369,19 @@ export function EmployeeLeavesPanel() {
       sidebar?.mode === "edit" ? sidebar.record.id : 0
     )
     if (!next.employeeId || !next.startDate || !next.endDate) {
-      toast.error("Employee and leave dates are required.")
+      toast.error(t("leavesPage.toastRequired"))
       return
     }
     if (next.endDate < next.startDate) {
-      toast.error("End date cannot be before start date.")
+      toast.error(t("leavesPage.toastEndBeforeStart"))
       return
     }
     if (sidebar?.mode === "edit") {
       updateRecord(sidebar.record.id, next)
-      toast.success("Leave request updated.")
+      toast.success(t("leavesPage.toastUpdated"))
     } else {
       addRecord(next)
-      toast.success("Leave request added.")
+      toast.success(t("leavesPage.toastAdded"))
     }
     setSidebar(null)
   }
@@ -402,15 +414,18 @@ export function EmployeeLeavesPanel() {
               <SheetHeader className="border-b px-6 py-5 text-left">
                 <SheetTitle>
                   {sidebar.mode === "add"
-                    ? "New leave request"
+                    ? t("leavesPage.newRequest")
                     : sidebar.mode === "edit"
-                      ? "Edit leave request"
+                      ? t("leavesPage.editRequest")
                       : employeeName(sidebar.record.employeeId)}
                 </SheetTitle>
                 <SheetDescription>
                   {sidebar.mode === "view"
-                    ? `${leaveTypeLabel(sidebar.record.type)} · ${sidebar.record.days} day${sidebar.record.days === 1 ? "" : "s"}`
-                    : "Enter leave dates, reason, and approval status."}
+                    ? t("leavesPage.viewHint", {
+                        type: leaveTypeLabel(sidebar.record.type),
+                        count: sidebar.record.days,
+                      })
+                    : t("leavesPage.formHint")}
                 </SheetDescription>
               </SheetHeader>
               <div
@@ -445,10 +460,10 @@ export function EmployeeLeavesPanel() {
                           variant="outline"
                           onClick={() => reject(sidebar.record)}
                         >
-                          Reject
+                          {t("leavesPage.reject")}
                         </Button>
                         <Button type="button" onClick={() => approve(sidebar.record)}>
-                          Approve
+                          {tc("actions.approve")}
                         </Button>
                       </>
                     ) : (
@@ -459,22 +474,24 @@ export function EmployeeLeavesPanel() {
                           setSidebar({ mode: "edit", record: sidebar.record })
                         }
                       >
-                        Edit
+                        {tc("actions.edit")}
                       </Button>
                     )}
                     <SheetClose asChild>
-                      <Button type="button">Close</Button>
+                      <Button type="button">{tc("actions.close")}</Button>
                     </SheetClose>
                   </>
                 ) : (
                   <>
                     <SheetClose asChild>
                       <Button type="button" variant="outline">
-                        Cancel
+                        {tc("actions.cancel")}
                       </Button>
                     </SheetClose>
                     <Button type="submit" form={formId}>
-                      {sidebar.mode === "add" ? "Submit request" : "Save changes"}
+                      {sidebar.mode === "add"
+                        ? t("leavesPage.submitRequest")
+                        : t("leavesPage.saveChanges")}
                     </Button>
                   </>
                 )}
@@ -487,8 +504,8 @@ export function EmployeeLeavesPanel() {
       <DataTable
         data={records}
         columns={columns}
-        addButtonLabel="New Leave"
-        searchPlaceholder="Search leave..."
+        addButtonLabel={t("leavesPage.newLeave")}
+        searchPlaceholder={t("leavesPage.searchPlaceholder")}
         onAddClick={() => setSidebar({ mode: "add" })}
         onDataChange={setRecords}
         tabs={leaveTabs}
@@ -497,14 +514,14 @@ export function EmployeeLeavesPanel() {
         bulkActions={[
           {
             id: "delete",
-            label: "Delete selected",
+            label: tc("actions.deleteSelected"),
             icon: <IconTrash className="size-4" />,
             variant: "destructive",
             onClick: async (selected) => {
               if (
                 !(await confirmDeleteAction({
                   count: selected.length,
-                  entityLabel: "leave request",
+                  entityLabel: t("entity.leaveRequest"),
                 }))
               ) {
                 return
@@ -513,7 +530,9 @@ export function EmployeeLeavesPanel() {
               setRecords((previous) =>
                 previous.filter((record) => !ids.has(record.id))
               )
-              toast.message(`Removed ${selected.length} leave request(s).`)
+              toast.message(
+                t("leavesPage.toastRemovedCount", { count: selected.length })
+              )
             },
           },
         ]}

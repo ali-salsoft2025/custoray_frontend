@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { type FormEvent } from "react"
+import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 
 import {
@@ -16,6 +17,7 @@ import { Label } from "@/components/ui/label"
 import { PasswordInput } from "@/components/ui/password-input"
 
 export function ResetForm() {
+  const { t } = useTranslation("auth")
   const router = useRouter()
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -24,23 +26,23 @@ export function ResetForm() {
     const password = String(fd.get("password") ?? "")
     const confirm = String(fd.get("confirm") ?? "")
     if (password !== confirm) {
-      toast.error("Passwords do not match.")
+      toast.error(t("resetPassword.toastMismatch"))
       return
     }
-    toast.success("Password updated. You can sign in now.")
+    toast.success(t("resetPassword.toastSuccess"))
     router.push("/")
   }
 
   return (
     <AuthShell hero="reset_password">
       <AuthHeading
-        title="Reset password"
+        title={t("resetPassword.title")}
         accent="password"
-        subtitle="Choose a new password for your account."
+        subtitle={t("resetPassword.subtitle")}
       />
       <form className="space-y-3.5" onSubmit={handleSubmit}>
         <div className="grid gap-1.5">
-          <Label htmlFor="password">New password</Label>
+          <Label htmlFor="password">{t("resetPassword.newPassword")}</Label>
           <PasswordInput
             id="password"
             name="password"
@@ -52,7 +54,7 @@ export function ResetForm() {
           />
         </div>
         <div className="grid gap-1.5">
-          <Label htmlFor="confirm">Confirm password</Label>
+          <Label htmlFor="confirm">{t("resetPassword.confirmPassword")}</Label>
           <PasswordInput
             id="confirm"
             name="confirm"
@@ -64,9 +66,13 @@ export function ResetForm() {
           />
         </div>
         <Button type="submit" className={AUTH_BUTTON}>
-          Reset password
+          {t("resetPassword.submit")}
         </Button>
-        <AuthSwitch prompt="Back to" href="/" label="Sign in" />
+        <AuthSwitch
+          prompt={t("resetPassword.backTo")}
+          href="/"
+          label={t("resetPassword.signIn")}
+        />
       </form>
     </AuthShell>
   )

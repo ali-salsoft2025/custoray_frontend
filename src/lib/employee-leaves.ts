@@ -1,5 +1,6 @@
 import { z } from "zod"
 
+import i18n from "@/i18n"
 import { normalizeUniqueNumericIds } from "@/lib/utils"
 export const LEAVE_TYPES = ["annual", "sick", "unpaid", "other"] as const
 export type LeaveType = (typeof LEAVE_TYPES)[number]
@@ -67,19 +68,11 @@ export const EMPTY_LEAVE: LeaveRecord = {
 }
 
 export function leaveTypeLabel(type: LeaveType): string {
-  const labels: Record<LeaveType, string> = {
-    annual: "Annual leave",
-    sick: "Sick leave",
-    unpaid: "Unpaid leave",
-    other: "Other",
-  }
-  return labels[type]
+  return i18n.t(`leavesPage.types.${type}`, { ns: "employees" })
 }
 
 export function leaveStatusLabel(status: LeaveStatus): string {
-  if (status === "approved") return "Approved"
-  if (status === "rejected") return "Rejected"
-  return "Pending"
+  return i18n.t(`leavesPage.status.${status}`, { ns: "employees" })
 }
 
 export function leaveStatusClass(status: LeaveStatus): string {

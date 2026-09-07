@@ -4,6 +4,7 @@ import { Mail } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState, type FormEvent } from "react"
+import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 
 import { AuthSocialButtons } from "@/components/auth/auth-social"
@@ -30,6 +31,7 @@ export function LoginForm({
   expiredNotice?: boolean
   redirectTo?: string
 }) {
+  const { t } = useTranslation("auth")
   const router = useRouter()
   const { login, session, hydrated, access } = useAuth()
   const [submitting, setSubmitting] = useState(false)
@@ -75,7 +77,7 @@ export function LoginForm({
     }
 
     toast.success(
-      result.accessAllowed ? "Welcome back!" : "Your trial has ended."
+      result.accessAllowed ? t("login.toastWelcome") : t("login.toastTrialEnded")
     )
     router.replace(result.accessAllowed ? nextPath : "/trial-ended")
   }
@@ -83,23 +85,23 @@ export function LoginForm({
   return (
     <AuthShell>
       <AuthHeading
-        title="Welcome back"
+        title={t("login.title")}
         accent="back"
         subtitle={
           expiredNotice
-            ? "Your trial has ended. Sign in to request more time or buy a plan."
-            : "Sign in to your account to continue"
+            ? t("login.subtitleExpired")
+            : t("login.subtitle")
         }
       />
       <form className="space-y-3.5" onSubmit={handleSubmit}>
         <div className="grid gap-1.5">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{t("login.email")}</Label>
           <div className="relative">
             <Input
               id="email"
               name="email"
               type="email"
-              placeholder="you@company.com"
+              placeholder={t("login.emailPlaceholder")}
               required
               autoComplete="email"
               className={`${AUTH_INPUT} pr-10`}
@@ -112,7 +114,7 @@ export function LoginForm({
         </div>
         <div className="grid gap-1.5">
           <div className="flex items-center justify-between gap-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">{t("login.password")}</Label>
             <Link
               href="/forgetPassword"
               prefetch
@@ -121,7 +123,7 @@ export function LoginForm({
                 stayOnAuth.current = true
               }}
             >
-              Forgot password?
+              {t("login.forgotPassword")}
             </Link>
           </div>
           <PasswordInput
@@ -135,16 +137,16 @@ export function LoginForm({
         </div>
         <label className="flex items-center gap-2 text-xs">
           <Checkbox id="remember" name="remember" />
-          <span>Remember me</span>
+          <span>{t("login.rememberMe")}</span>
         </label>
         <Button type="submit" className={AUTH_BUTTON} disabled={submitting}>
           {submitting ? (
             <span className="flex items-center justify-center gap-2">
               <LoadingSpinner size="sm" />
-              Signing in…
+              {t("login.signingIn")}
             </span>
           ) : (
-            "Log in"
+            t("login.submit")
           )}
         </Button>
         <AuthSocialButtons
@@ -153,9 +155,9 @@ export function LoginForm({
           }}
         />
         <AuthSwitch
-          prompt="Don't have an account?"
+          prompt={t("login.noAccount")}
           href="/signup"
-          label="Sign up"
+          label={t("login.signUp")}
           onNavigate={() => {
             stayOnAuth.current = true
           }}

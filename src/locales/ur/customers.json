@@ -1,0 +1,66 @@
+{
+  "title": "گاہک",
+  "add": "گاہک شامل کریں",
+  "addButton": "نیا گاہک",
+  "search": "گاہک تلاش کریں…",
+  "empty": "کوئی گاہک نہیں ملا۔",
+  "tabs": {
+    "all": "تمام",
+    "active": "فعال",
+    "inactive": "غیر فعال"
+  },
+  "columns": {
+    "id": "آئی ڈی",
+    "name": "نام",
+    "description": "تفصیل",
+    "openingBalance": "ابتدائی بیلنس",
+    "totalSales": "کل فروخت",
+    "totalPayments": "کل ادائیگیاں",
+    "balance": "بیلنس",
+    "phone": "فون نمبر",
+    "email": "ای میل",
+    "status": "حیثیت"
+  },
+  "actions": {
+    "view": "دیکھیں",
+    "edit": "ترمیم",
+    "duplicate": "نقل بنائیں",
+    "delete": "حذف کریں",
+    "openMenu": "مینو کھولیں",
+    "deleteSelected": "منتخب حذف کریں",
+    "viewRecord": "ریکارڈ دیکھیں",
+    "viewTimeline": "ٹائم لائن دیکھیں"
+  },
+  "record": "گاہک کا ریکارڈ",
+  "timeline": {
+    "title": "ٹائم لائن",
+    "back": "گاہکوں پر واپس",
+    "notFound": "گاہک نہیں ملا۔",
+    "empty": "ابھی کوئی بل یا واپسی نہیں۔",
+    "createInvoice": "بل بنائیں",
+    "total": "کل",
+    "paid": "ادا شدہ",
+    "balance": "بیلنس",
+    "return": "واپسی",
+    "returnAmount": "واپسی کی رقم",
+    "itemCount": "{{count}} آئٹمز"
+  },
+  "sheet": {
+    "add": "گاہک شامل کریں",
+    "edit": "گاہک میں ترمیم",
+    "addDescription": "گاہک کی تفصیلات اور تصویر درج کریں۔ محفوظ کرنا صرف ڈیمو ہے۔",
+    "create": "گاہک بنائیں",
+    "save": "گاہک محفوظ کریں"
+  },
+  "toasts": {
+    "removedNamed": "{{name}} ہٹا دیا گیا (ڈیمو)۔",
+    "duplicatedNamed": "{{name}} کی نقل بن گئی (ڈیمو)۔",
+    "nameRequired": "گاہک کا نام درکار ہے۔",
+    "created": "گاہک بن گیا (ڈیمو)۔",
+    "saved": "گاہک محفوظ ہو گیا (ڈیمو)۔",
+    "removedCount": "{{count}} گاہک ہٹا دیے گئے (ڈیمو)۔"
+  },
+  "entity": {
+    "customer": "گاہک"
+  }
+}

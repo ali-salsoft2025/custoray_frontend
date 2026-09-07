@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { IconCamera, IconX } from "@tabler/icons-react"
+import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 
 import { SettingsSection } from "@/components/settings/settings-section"
@@ -16,6 +17,7 @@ import {
 } from "@/lib/company-settings"
 
 export function CompanySettingsForm() {
+  const { t } = useTranslation("settings")
   const [settings, setSettings] = useState<CompanySettings>(DEFAULT_COMPANY_SETTINGS)
 
   useEffect(() => {
@@ -35,18 +37,18 @@ export function CompanySettingsForm() {
 
   const handleSave = () => {
     saveCompanySettings(settings)
-    toast.success("Company settings saved.")
+    toast.success(t("company.toastSaved"))
   }
 
   const logoPreview = settings.logoUrl.trim() || "/assets/logo-2.png"
 
   return (
     <SettingsSection
-      title="Company profile"
-      description="Business details used on invoice PDFs and other documents."
+      title={t("company.title")}
+      description={t("company.description")}
       footer={
         <Button type="button" onClick={handleSave}>
-          Save company profile
+          {t("company.save")}
         </Button>
       }
     >
@@ -59,7 +61,7 @@ export function CompanySettingsForm() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={logoPreview}
-              alt="Company logo"
+              alt={t("company.logoAlt")}
               className="max-h-full max-w-full object-contain p-3"
             />
             <span className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
@@ -69,8 +71,8 @@ export function CompanySettingsForm() {
           {settings.logoUrl ? (
             <button
               type="button"
-              className="bg-background text-muted-foreground hover:bg-destructive/10 hover:text-destructive absolute -top-1 -right-1 flex size-7 items-center justify-center rounded-full border shadow-sm"
-              aria-label="Remove logo"
+              className="bg-background text-muted-foreground hover:bg-destructive/10 hover:text-destructive absolute -top-1 -end-1 flex size-7 items-center justify-center rounded-full border shadow-sm"
+              aria-label={t("company.removeLogo")}
               onClick={() => update({ logoUrl: "" })}
             >
               <IconX className="size-3.5" />
@@ -89,15 +91,15 @@ export function CompanySettingsForm() {
         </div>
 
         <div className="text-muted-foreground min-w-0 flex-1 space-y-1 text-sm lg:pt-2">
-          <p className="text-foreground font-medium">Company logo</p>
-          <p>Upload your logo for invoices and printed documents.</p>
-          <p>Leave empty to use the default Custoray logo.</p>
+          <p className="text-foreground font-medium">{t("company.logoTitle")}</p>
+          <p>{t("company.logoHint")}</p>
+          <p>{t("company.logoDefaultHint")}</p>
         </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5 sm:col-span-2">
-          <Label htmlFor="company-name">Company name</Label>
+          <Label htmlFor="company-name">{t("company.name")}</Label>
           <Input
             id="company-name"
             value={settings.name}
@@ -105,7 +107,7 @@ export function CompanySettingsForm() {
           />
         </div>
         <div className="space-y-1.5 sm:col-span-2">
-          <Label htmlFor="company-tagline">Tagline</Label>
+          <Label htmlFor="company-tagline">{t("company.tagline")}</Label>
           <Input
             id="company-tagline"
             value={settings.tagline}
@@ -113,7 +115,7 @@ export function CompanySettingsForm() {
           />
         </div>
         <div className="space-y-1.5 sm:col-span-2">
-          <Label htmlFor="company-address-1">Address line 1</Label>
+          <Label htmlFor="company-address-1">{t("company.addressLine1")}</Label>
           <Input
             id="company-address-1"
             value={settings.addressLine1}
@@ -121,7 +123,7 @@ export function CompanySettingsForm() {
           />
         </div>
         <div className="space-y-1.5 sm:col-span-2">
-          <Label htmlFor="company-address-2">Address line 2</Label>
+          <Label htmlFor="company-address-2">{t("company.addressLine2")}</Label>
           <Input
             id="company-address-2"
             value={settings.addressLine2}
@@ -129,7 +131,7 @@ export function CompanySettingsForm() {
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="company-phone">Phone</Label>
+          <Label htmlFor="company-phone">{t("company.phone")}</Label>
           <Input
             id="company-phone"
             value={settings.phone}
@@ -137,7 +139,7 @@ export function CompanySettingsForm() {
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="company-email">Email</Label>
+          <Label htmlFor="company-email">{t("company.email")}</Label>
           <Input
             id="company-email"
             type="email"

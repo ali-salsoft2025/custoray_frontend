@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
 
 import { Switch } from "@/components/ui/switch"
 import { AppPreferencesForm } from "@/components/settings/app-preferences-form"
@@ -63,6 +64,7 @@ function Row({
 }
 
 export default function NotificationsSettingsPage() {
+  const { t } = useTranslation("settings")
   const [notifications, setNotifications] = useState<NotificationState>(DEFAULT_NOTIFICATIONS)
 
   useEffect(() => {
@@ -81,20 +83,20 @@ export default function NotificationsSettingsPage() {
     <div className="space-y-8">
       <div className="divide-border max-w-2xl divide-y">
         <Row
-          title="In-app notifications"
-          description="Alerts and updates inside Custoray."
+          title={t("notifications.inApp")}
+          description={t("notifications.inAppDesc")}
           checked={notifications.app}
           onCheckedChange={(app) => update({ app })}
         />
         <Row
-          title="Email notifications"
-          description="Summaries and important account emails."
+          title={t("notifications.email")}
+          description={t("notifications.emailDesc")}
           checked={notifications.email}
           onCheckedChange={(email) => update({ email })}
         />
         <Row
-          title="SMS notifications"
-          description="Text messages for urgent alerts."
+          title={t("notifications.sms")}
+          description={t("notifications.smsDesc")}
           checked={notifications.sms}
           onCheckedChange={(sms) => update({ sms })}
         />

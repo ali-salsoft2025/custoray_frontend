@@ -4,6 +4,7 @@ import { useRef } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 import {
   EmployeeForm,
@@ -28,6 +29,8 @@ export function EmployeeFormPage({
   const router = useRouter()
   const formRef = useRef<EmployeeFormHandle>(null)
   const { addEmployee, updateEmployee } = useEmployees()
+  const { t } = useTranslation("employees")
+  const { t: tc } = useTranslation("common")
   const formId =
     mode === "add" ? "employee-add-form" : `employee-edit-${employee?.id}`
   const formEmployee = mode === "add" ? EMPTY_EMPLOYEE : employee ?? EMPTY_EMPLOYEE
@@ -35,7 +38,7 @@ export function EmployeeFormPage({
   const handleSubmit = (values: EmployeeFormValues) => {
     if (mode === "add") {
       const created = addEmployee(employeeFromValues(values, 0))
-      toast.success("Employee created.")
+      toast.success(t("list.toastCreated"))
       router.push(`/employees/${created.id}`)
       return
     }
@@ -45,7 +48,7 @@ export function EmployeeFormPage({
         employee.id,
         employeeFromValues(values, employee.id, employee)
       )
-      toast.success("Employee saved.")
+      toast.success(t("list.toastSaved"))
       router.push(`/employees/${employee.id}`)
     }
   }
@@ -54,12 +57,10 @@ export function EmployeeFormPage({
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
         <h3 className="text-lg font-semibold">
-          {mode === "add" ? "Add new employee" : `Edit ${employee?.name}`}
+          {mode === "add" ? t("profilePage.addTitle") : t("edit")}
         </h3>
         <p className="text-muted-foreground mt-1 text-sm">
-          {mode === "add"
-            ? "Create a team member profile, set module permissions, and optionally portal login."
-            : "Update profile details, module permissions, and portal credentials."}
+          {mode === "add" ? t("profilePage.addHint") : t("profilePage.editHint")}
         </p>
       </div>
 
@@ -75,7 +76,7 @@ export function EmployeeFormPage({
 
       <div className="flex flex-wrap gap-2">
         <Button type="button" onClick={() => formRef.current?.goNextOrSubmit()}>
-          {mode === "add" ? "Create employee" : "Save changes"}
+          {mode === "add" ? t("list.createEmployee") : t("payrollPage.saveChanges")}
         </Button>
         <Button type="button" variant="outline" asChild>
           <Link
@@ -85,7 +86,7 @@ export function EmployeeFormPage({
                 : "/employees"
             }
           >
-            Cancel
+            {tc("actions.cancel")}
           </Link>
         </Button>
       </div>

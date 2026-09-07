@@ -1,8 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { Building2, ChevronsUpDown, Plus } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { Building2, ChevronsUpDown, Plus, Settings } from "lucide-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 import { useAuth } from "@/context/auth-context"
 import { cn } from "@/lib/utils"
@@ -34,7 +36,10 @@ import {
 } from "@/components/ui/sidebar"
 
 export function CompanySwitcher() {
+  const router = useRouter()
   const { isMobile, state } = useSidebar()
+  const { t } = useTranslation("nav")
+  const { t: tc } = useTranslation("common")
   const collapsed = state === "collapsed" && !isMobile
   const { companies, activeCompany, switchCompany, createCompany } = useAuth()
   const [createOpen, setCreateOpen] = React.useState(false)
@@ -51,7 +56,7 @@ export function CompanySwitcher() {
       setPending(true)
       await switchCompany(tenantId)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not switch company")
+      toast.error(err instanceof Error ? err.message : t("companySwitcher.couldNotSwitch"))
       setPending(false)
     }
   }
@@ -66,9 +71,9 @@ export function CompanySwitcher() {
       await createCompany(name)
       setCreateOpen(false)
       setBusinessName("")
-      toast.success("Company created")
+      toast.success(t("companySwitcher.created"))
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not create company")
+      toast.error(err instanceof Error ? err.message : t("companySwitcher.couldNotCreate"))
     } finally {
       setPending(false)
     }
@@ -99,14 +104,14 @@ export function CompanySwitcher() {
                 </span>
                 <div
                   className={cn(
-                    "grid flex-1 text-left text-sm leading-tight",
+                    "grid flex-1 text-start text-sm leading-tight",
                     collapsed && "hidden"
                   )}
                 >
                   <span className="truncate font-medium">{activeCompany.name}</span>
                   <span className="truncate text-xs">{activeCompany.plan}</span>
                 </div>
-                <ChevronsUpDown className={cn("ml-auto", collapsed && "hidden")} />
+                <ChevronsUpDown className={cn("ms-auto", collapsed && "hidden")} />
               </SidebarMenuButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent
@@ -116,7 +121,7 @@ export function CompanySwitcher() {
               sideOffset={4}
             >
               <DropdownMenuLabel className="text-muted-foreground text-xs">
-                Companies
+                {t("companySwitcher.companies")}
               </DropdownMenuLabel>
               {companies.map((company, index) => (
                 <DropdownMenuItem
@@ -135,6 +140,15 @@ export function CompanySwitcher() {
               ))}
               <DropdownMenuSeparator />
               <DropdownMenuItem
+                className="cursor-pointer gap-2 p-2"
+                onSelect={() => router.push("/settings")}
+              >
+                <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
+                  <Settings className="size-3.5 shrink-0" />
+                </div>
+                <div className="font-medium">{t("companySwitcher.settings")}</div>
+              </DropdownMenuItem>
+              <DropdownMenuItem
                 className="gap-2 p-2"
                 onSelect={() => {
                   setBusinessName("")
@@ -144,7 +158,7 @@ export function CompanySwitcher() {
                 <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
                   <Plus className="size-4" />
                 </div>
-                <div className="text-muted-foreground font-medium">Add company</div>
+                <div className="text-muted-foreground font-medium">{t("companySwitcher.add")}</div>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -155,13 +169,13 @@ export function CompanySwitcher() {
         <DialogContent>
           <form onSubmit={handleCreate}>
             <DialogHeader>
-              <DialogTitle>Add company</DialogTitle>
+              <DialogTitle>{t("companySwitcher.add")}</DialogTitle>
               <DialogDescription>
-                Create another company under this account. You can switch between them anytime.
+                {t("companySwitcher.addDescription")}
               </DialogDescription>
             </DialogHeader>
             <div className="py-4">
-              <Label htmlFor="new-company-name">Company name</Label>
+              <Label htmlFor="new-company-name">{t("companySwitcher.name")}</Label>
               <Input
                 id="new-company-name"
                 className="mt-2"
@@ -175,10 +189,10 @@ export function CompanySwitcher() {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
-                Cancel
+                {tc("actions.cancel")}
               </Button>
               <Button type="submit" disabled={pending || businessName.trim().length < 2}>
-                {pending ? "Creating…" : "Create company"}
+                {pending ? tc("actions.creating") : t("companySwitcher.create")}
               </Button>
             </DialogFooter>
           </form>

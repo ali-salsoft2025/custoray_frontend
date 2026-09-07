@@ -6,6 +6,7 @@ import {
   IconCloudDownload,
 } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 import {
   FastestMoversChart,
@@ -111,29 +112,39 @@ function statusIconTone(status: InventoryReorderRow["status"]): string {
   return "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
 }
 
+function reorderStatusLabel(
+  status: InventoryReorderRow["status"],
+  t: (key: string) => string
+) {
+  if (status === "Critical") return t("inventoryPage.statusCritical")
+  if (status === "Reorder") return t("inventoryPage.statusReorder")
+  if (status === "Overstocked") return t("inventoryPage.statusOverstocked")
+  return t("inventoryPage.statusHealthy")
+}
+
 function ReorderList({ rows }: { rows: InventoryReorderRow[] }) {
+  const { t } = useTranslation("reports")
   return (
     <div className={cn(panelClass, "overflow-hidden")}>
       <div className="flex items-start justify-between gap-3 px-5 pt-5 pb-3">
         <div>
           <p className="text-sm font-semibold tracking-tight">
-            Reorder suggestions
+            {t("inventoryPage.reorderSuggestions")}
           </p>
           <p className="text-muted-foreground mt-0.5 text-xs">
-            Based on average daily usage and a {REORDER_LEAD_TIME_DAYS}-day lead
-            time
+            {t("inventoryPage.leadTimeHint", { days: REORDER_LEAD_TIME_DAYS })}
           </p>
         </div>
         {rows.length > 0 ? (
           <span className="text-muted-foreground rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium tabular-nums">
-            {rows.length} shown
+            {t("shared.shownCount", { count: rows.length })}
           </span>
         ) : null}
       </div>
 
       {rows.length === 0 ? (
         <p className="text-muted-foreground flex items-center justify-center px-5 py-12 text-center text-sm">
-          No products match these filters.
+          {t("inventoryPage.noProducts")}
         </p>
       ) : (
         <div className="border-border/50 border-t">
@@ -141,28 +152,28 @@ function ReorderList({ rows }: { rows: InventoryReorderRow[] }) {
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 <TableHead className="text-muted-foreground h-10 px-4 text-[11px] font-semibold tracking-wide uppercase">
-                  SKU
+                  {t("inventoryPage.sku")}
                 </TableHead>
                 <TableHead className="text-muted-foreground h-10 px-4 text-[11px] font-semibold tracking-wide uppercase">
-                  Product
+                  {t("inventoryPage.product")}
                 </TableHead>
                 <TableHead className="text-muted-foreground h-10 px-4 text-[11px] font-semibold tracking-wide uppercase">
-                  Status
+                  {t("inventoryPage.status")}
                 </TableHead>
                 <TableHead className="text-muted-foreground h-10 px-4 text-right text-[11px] font-semibold tracking-wide uppercase">
-                  On hand
+                  {t("inventoryPage.onHand")}
                 </TableHead>
                 <TableHead className="text-muted-foreground h-10 px-4 text-right text-[11px] font-semibold tracking-wide uppercase">
-                  Daily use
+                  {t("inventoryPage.dailyUse")}
                 </TableHead>
                 <TableHead className="text-muted-foreground h-10 px-4 text-right text-[11px] font-semibold tracking-wide uppercase">
-                  Days cover
+                  {t("inventoryPage.daysCover")}
                 </TableHead>
                 <TableHead className="text-muted-foreground h-10 px-4 text-right text-[11px] font-semibold tracking-wide uppercase">
-                  Reorder at
+                  {t("inventoryPage.reorderAt")}
                 </TableHead>
                 <TableHead className="text-muted-foreground h-10 px-4 text-right text-[11px] font-semibold tracking-wide uppercase">
-                  Suggested
+                  {t("inventoryPage.suggested")}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -192,8 +203,8 @@ function ReorderList({ rows }: { rows: InventoryReorderRow[] }) {
                           <p className="text-muted-foreground truncate text-[11px]">
                             {row.category}
                             {row.daysSinceLastIssue != null
-                              ? ` · sold ${row.daysSinceLastIssue}d ago`
-                              : " · never sold"}
+                              ? ` · ${t("inventoryPage.soldAgo", { days: row.daysSinceLastIssue })}`
+                              : ` · ${t("inventoryPage.neverSold")}`}
                           </p>
                         </div>
                       </div>
@@ -206,7 +217,7 @@ function ReorderList({ rows }: { rows: InventoryReorderRow[] }) {
                           reorderStatusBadgeClass(row.status)
                         )}
                       >
-                        {row.status}
+                        {reorderStatusLabel(row.status, t)}
                       </Badge>
                     </TableCell>
                     <TableCell
@@ -266,6 +277,7 @@ function withPresetDates(
 }
 
 export function InventoryReports() {
+  const { t } = useTranslation("reports")
   const { products } = useProducts()
   const [filter, setFilter] = React.useState<InventoryReportFilter>(() =>
     createDefaultInventoryReportFilter()
@@ -333,28 +345,29 @@ export function InventoryReports() {
 
   const handleExport = () => {
     if (reorderRows.length === 0) {
-      toast.error("No stock to export for these filters.")
+      toast.error(t("inventoryPage.toastNoStock"))
       return
     }
 
     downloadRowsAsXls(
       reorderRows.map((row) => ({
-        SKU: row.sku,
-        Product: row.productName,
-        Category: row.category,
-        Brand: row.brand,
-        Status: row.status,
-        "On hand": row.stock,
-        "Avg daily usage": row.avgDailyUsage.toFixed(2),
-        "Days of cover": formatDaysOfCover(row.daysOfCover),
-        "Reorder point": row.reorderPoint,
-        "Suggested qty": row.suggestedQty,
-        "Stock value": row.stockValue,
-        "Days since last sale": row.daysSinceLastIssue ?? "never",
+        [t("inventoryPage.sku")]: row.sku,
+        [t("inventoryPage.product")]: row.productName,
+        [t("inventoryPage.category")]: row.category,
+        [t("inventoryPage.exportBrand")]: row.brand,
+        [t("inventoryPage.status")]: reorderStatusLabel(row.status, t),
+        [t("inventoryPage.exportOnHand")]: row.stock,
+        [t("inventoryPage.exportAvgDaily")]: row.avgDailyUsage.toFixed(2),
+        [t("inventoryPage.exportDaysCover")]: formatDaysOfCover(row.daysOfCover),
+        [t("inventoryPage.exportReorderPoint")]: row.reorderPoint,
+        [t("inventoryPage.exportSuggestedQty")]: row.suggestedQty,
+        [t("inventoryPage.exportStockValue")]: row.stockValue,
+        [t("inventoryPage.exportDaysSinceSale")]:
+          row.daysSinceLastIssue ?? t("inventoryPage.exportNever"),
       })),
       `inventory-report-${filter.preset}.xls`
     )
-    toast.success("Report exported.")
+    toast.success(t("shared.toastExported"))
   }
 
   if (!ready) {
@@ -369,7 +382,7 @@ export function InventoryReports() {
           <p className="text-muted-foreground truncate text-xs">
             {formatDate(range.start)}
             {range.start !== range.end ? ` – ${formatDate(range.end)}` : ""} ·{" "}
-            {summary.skuCount} SKUs
+            {t("inventoryPage.skuCount", { count: summary.skuCount })}
           </p>
         </div>
 
@@ -385,7 +398,7 @@ export function InventoryReports() {
                     "text-muted-foreground hover:bg-muted/50 hover:text-foreground relative size-9 rounded-full border-0 shadow-none",
                     activeFilterCount > 0 && "bg-primary/5 text-foreground"
                   )}
-                  aria-label="Open filters"
+                  aria-label={t("shared.openFilters")}
                 >
                   <IconAdjustmentsHorizontal className="size-4 opacity-90" />
                   {activeFilterCount > 0 ? (
@@ -406,10 +419,10 @@ export function InventoryReports() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 space-y-1">
                     <h3 className="text-foreground text-sm font-semibold tracking-tight">
-                      Report filters
+                      {t("shared.reportFilters")}
                     </h3>
                     <p className="text-muted-foreground text-[11px] leading-relaxed">
-                      Movement window and category scope.
+                      {t("shared.inventoryFiltersHint")}
                     </p>
                   </div>
                   <Button
@@ -420,7 +433,7 @@ export function InventoryReports() {
                     disabled={activeFilterCount === 0}
                     onClick={resetFilters}
                   >
-                    Reset filters
+                    {t("shared.resetFilters")}
                   </Button>
                 </div>
               </div>
@@ -428,10 +441,10 @@ export function InventoryReports() {
               <div className="max-h-[min(70vh,28rem)] space-y-4 overflow-y-auto px-4 py-3">
                 <div className="space-y-2">
                   <Label className="text-muted-foreground block text-[11px] font-semibold tracking-wide uppercase">
-                    Period
+                    {t("shared.period")}
                   </Label>
                   <div className="flex flex-wrap gap-1.5">
-                    {INVENTORY_REPORT_PRESETS.map(({ value, label }) => {
+                    {INVENTORY_REPORT_PRESETS.map(({ value }) => {
                       const selected = filter.preset === value
                       return (
                         <Button
@@ -442,7 +455,7 @@ export function InventoryReports() {
                           className="h-7 rounded-full px-2.5 text-xs"
                           onClick={() => setPreset(value)}
                         >
-                          {label}
+                          {t(`presets.${value}`)}
                         </Button>
                       )
                     })}
@@ -451,12 +464,12 @@ export function InventoryReports() {
 
                 <div className="border-border/80 space-y-3 border-t pt-3">
                   <Label className="text-muted-foreground block text-[11px] font-semibold tracking-wide uppercase">
-                    Date range
+                    {t("shared.dateRange")}
                   </Label>
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div className="space-y-1.5">
                       <Label htmlFor="inventory-report-from" className="text-xs">
-                        From date
+                        {t("shared.fromDate")}
                       </Label>
                       <Input
                         id="inventory-report-from"
@@ -476,7 +489,7 @@ export function InventoryReports() {
                     </div>
                     <div className="space-y-1.5">
                       <Label htmlFor="inventory-report-to" className="text-xs">
-                        To date
+                        {t("shared.toDate")}
                       </Label>
                       <Input
                         id="inventory-report-to"
@@ -498,13 +511,13 @@ export function InventoryReports() {
                   <p className="text-muted-foreground text-[11px]">
                     {customDatesEnabled
                       ? `${formatDate(range.start)} – ${formatDate(range.end)}`
-                      : "Switch to Custom to edit dates."}
+                      : t("shared.switchToCustom")}
                   </p>
                 </div>
 
                 <div className="border-border/80 space-y-2 border-t pt-3">
                   <Label className="text-muted-foreground block text-[11px] font-semibold tracking-wide uppercase">
-                    Category
+                    {t("inventoryPage.category")}
                   </Label>
                   <div className="flex flex-wrap gap-1.5">
                     {categories.map((category) => {
@@ -525,8 +538,11 @@ export function InventoryReports() {
                   </div>
                   <p className="text-muted-foreground text-[11px]">
                     {filter.categories.length === 0
-                      ? "No selection shows every category."
-                      : `Showing ${filter.categories.length} of ${categories.length}.`}
+                      ? t("inventoryPage.noSelection")
+                      : t("inventoryPage.showingOf", {
+                          selected: filter.categories.length,
+                          total: categories.length,
+                        })}
                   </p>
                 </div>
               </div>
@@ -540,55 +556,74 @@ export function InventoryReports() {
             onClick={handleExport}
           >
             <IconCloudDownload />
-            <span className="hidden sm:inline">Export</span>
+            <span className="hidden sm:inline">{t("shared.export")}</span>
           </Button>
         </div>
       </div>
 
       <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs sm:grid-cols-2 xl:grid-cols-4">
         <InventoryStatCard
-          label="Units issued"
+          label={t("inventoryPage.unitsIssued")}
           value={String(summary.unitsIssued)}
-          badgeLabel={`${summary.turnoverRate.toFixed(0)}% turn`}
-          footerTitle={`${summary.unitsReceived} units received`}
-          footerHint={`Net ${summary.netUnits >= 0 ? "+" : ""}${summary.netUnits} units this period`}
+          badgeLabel={t("inventoryPage.turn", {
+            rate: summary.turnoverRate.toFixed(0),
+          })}
+          footerTitle={t("inventoryPage.unitsReceived", {
+            count: summary.unitsReceived,
+          })}
+          footerHint={t("inventoryPage.netUnits", {
+            sign: summary.netUnits >= 0 ? "+" : "",
+            count: summary.netUnits,
+          })}
         />
         <InventoryStatCard
-          label="Stock on hand"
+          label={t("inventoryPage.stockOnHand")}
           value={String(summary.unitCount)}
-          badgeLabel={`${summary.skuCount} SKUs`}
-          footerTitle={`${formatInventoryReportMoney(summary.stockValue)} at cost`}
-          footerHint={`${formatInventoryReportMoney(summary.retailValue)} at retail`}
+          badgeLabel={t("inventoryPage.skuCount", { count: summary.skuCount })}
+          footerTitle={t("inventoryPage.atCost", {
+            amount: formatInventoryReportMoney(summary.stockValue),
+          })}
+          footerHint={t("inventoryPage.atRetail", {
+            amount: formatInventoryReportMoney(summary.retailValue),
+          })}
         />
         <InventoryStatCard
-          label="Needs reordering"
+          label={t("inventoryPage.needsReordering")}
           value={String(summary.reorderCount)}
           badgeLabel={
             summary.criticalCount > 0
-              ? `${summary.criticalCount} critical`
+              ? t("inventoryPage.criticalCount", {
+                  count: summary.criticalCount,
+                })
               : undefined
           }
           footerTitle={
             summary.reorderCount === 0
-              ? "Every line has cover"
-              : `${summary.criticalCount} below lead time`
+              ? t("inventoryPage.everyLineHasCover")
+              : t("inventoryPage.belowLeadTime", {
+                  count: summary.criticalCount,
+                })
           }
           footerHint={
             summary.avgDaysOfCover != null
-              ? `Average ${formatDaysOfCover(summary.avgDaysOfCover)} days of cover`
-              : "No usage recorded yet"
+              ? t("inventoryPage.avgCover", {
+                  days: formatDaysOfCover(summary.avgDaysOfCover),
+                })
+              : t("inventoryPage.noUsage")
           }
         />
         <InventoryStatCard
-          label="Dead stock"
+          label={t("inventoryPage.deadStock")}
           value={formatInventoryReportMoney(summary.deadStockValue)}
-          badgeLabel={`${summary.deadStockCount} SKUs`}
+          badgeLabel={t("inventoryPage.skuCount", {
+            count: summary.deadStockCount,
+          })}
           footerTitle={
             summary.deadStockCount === 0
-              ? "Nothing sitting stale"
-              : "Capital tied up in slow lines"
+              ? t("inventoryPage.nothingStale")
+              : t("inventoryPage.capitalTied")
           }
-          footerHint="No sale in 60+ days"
+          footerHint={t("inventoryPage.noSale60")}
         />
       </div>
 

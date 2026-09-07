@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useTranslation } from "react-i18next";
 
 import { apiMe, type SessionPayload } from "@/lib/api/auth";
 
 export function TrialBanner() {
+  const { t } = useTranslation("plans");
   const [session, setSession] = useState<SessionPayload | null>(null);
 
   useEffect(() => {
@@ -27,11 +29,10 @@ export function TrialBanner() {
   return (
     <div className="bg-primary/10 border-primary/20 flex flex-wrap items-center justify-between gap-2 border-b px-4 py-2 text-sm">
       <span>
-        <strong>{session.plan.displayName}</strong> trial — {daysLeft} day
-        {daysLeft === 1 ? "" : "s"} left
+        {t("trialLine", { plan: session.plan.displayName, count: daysLeft })}
       </span>
       <Link href="/settings/billing" className="text-primary font-medium underline">
-        Plans & billing
+        {t("billing")}
       </Link>
     </div>
   );

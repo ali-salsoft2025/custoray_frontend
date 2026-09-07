@@ -1,3 +1,13 @@
+import {
+  DEFAULT_LANGUAGE,
+  isAppLanguage,
+  isRtlLanguage,
+  type AppLanguage,
+} from "@/i18n/config"
+
+export type { AppLanguage }
+export { isRtlLanguage }
+
 export type FontSizeKey = "sm" | "base" | "lg" | "xl"
 
 export type AppearancePrefs = {
@@ -5,7 +15,7 @@ export type AppearancePrefs = {
   customColor: string
   reduceMotion: boolean
   compactLayout: boolean
-  language: string
+  language: AppLanguage
   fontSize: FontSizeKey
 }
 
@@ -27,20 +37,19 @@ export const ACCENT_PRESETS = [
 ] as const
 
 export const LANGUAGES = [
-  { value: "en", label: "English" },
-  { value: "ar", label: "Arabic (العربية)" },
-] as const
+  { value: "en" as const, label: "English", nativeLabel: "English" },
+  { value: "ar" as const, label: "Arabic (العربية)", nativeLabel: "العربية" },
+  { value: "ur" as const, label: "Urdu (اردو)", nativeLabel: "اردو" },
+]
 
 export const DEFAULT_APPEARANCE: AppearancePrefs = {
   colorTheme: "green",
   customColor: "#92c720",
   reduceMotion: false,
   compactLayout: false,
-  language: "en",
+  language: DEFAULT_LANGUAGE,
   fontSize: "base",
 }
-
-const RTL_LANGS = new Set(["ar", "he", "fa", "ur"])
 
 function isHexColor(value: string) {
   return /^#([0-9a-fA-F]{6})$/.test(value.trim())
@@ -57,7 +66,9 @@ export function parseAppearance(raw: string | null): AppearancePrefs | null {
         : DEFAULT_APPEARANCE.customColor,
       reduceMotion: Boolean(parsed.reduceMotion),
       compactLayout: Boolean(parsed.compactLayout),
-      language: parsed.language === "ar" ? "ar" : "en",
+      language: isAppLanguage(String(parsed.language ?? ""))
+        ? (parsed.language as AppLanguage)
+        : DEFAULT_LANGUAGE,
       fontSize:
         parsed.fontSize === "sm" || parsed.fontSize === "lg" || parsed.fontSize === "xl"
           ? parsed.fontSize
@@ -103,15 +114,11 @@ export function applyAppearance(prefs: AppearancePrefs) {
   root.setAttribute("data-reduce-motion", prefs.reduceMotion ? "true" : "false")
   root.style.setProperty("--app-font-size", FONT_SIZE_VALUES[prefs.fontSize])
 
-  const rtl = RTL_LANGS.has(prefs.language)
+  const rtl = isRtlLanguage(prefs.language)
   root.setAttribute("dir", rtl ? "rtl" : "ltr")
   root.setAttribute("lang", prefs.language)
 }
 
 export function presetColor(id: string) {
   return ACCENT_PRESETS.find((item) => item.id === id)?.color ?? DEFAULT_APPEARANCE.customColor
-}
-
-export function isRtlLanguage(language: string) {
-  return RTL_LANGS.has(language)
 }

@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
 import {
   Bell,
   ChevronDown,
@@ -16,20 +17,26 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { cn } from "@/lib/utils"
 
-const GENERAL_HREFS = ["/settings", "/settings/appearance", "/settings/language"]
+const GENERAL_HREFS = [
+  "/settings",
+  "/settings/documents",
+  "/settings/appearance",
+  "/settings/language",
+]
 
 const GENERAL_ITEMS = [
-  { href: "/settings", label: "Company" },
-  { href: "/settings/appearance", label: "Appearance" },
-  { href: "/settings/language", label: "Language & region" },
-] as const
+  { href: "/settings", labelKey: "settingsNav.company" as const },
+  { href: "/settings/documents", labelKey: "settingsNav.documents" as const },
+  { href: "/settings/appearance", labelKey: "settingsNav.appearance" as const },
+  { href: "/settings/language", labelKey: "settingsNav.languageRegion" as const },
+]
 
 const TOP_ITEMS = [
-  { href: "/settings/account", label: "Account", icon: UserCircle },
-  { href: "/settings/team", label: "Team", icon: Users },
-  { href: "/settings/billing", label: "Plans & billing", icon: CreditCard },
-  { href: "/settings/notifications", label: "Notifications", icon: Bell },
-] as const
+  { href: "/settings/account", labelKey: "settingsNav.account" as const, icon: UserCircle },
+  { href: "/settings/team", labelKey: "settingsNav.team" as const, icon: Users },
+  { href: "/settings/billing", labelKey: "settingsNav.plansBilling" as const, icon: CreditCard },
+  { href: "/settings/notifications", labelKey: "settingsNav.notifications" as const, icon: Bell },
+]
 
 function isActive(pathname: string, href: string) {
   if (href === "/settings") return pathname === "/settings"
@@ -68,6 +75,7 @@ function NavLink({
 
 export function SettingsNav() {
   const pathname = usePathname() ?? ""
+  const { t } = useTranslation("nav")
   const generalActive = GENERAL_HREFS.some((href) => isActive(pathname, href))
   const [generalOpen, setGeneralOpen] = useState(generalActive)
 
@@ -84,20 +92,20 @@ export function SettingsNav() {
           )}
         >
           <Settings2 className="size-4 shrink-0" />
-          <span className="flex-1 text-left">General</span>
+          <span className="flex-1 text-start">{t("settingsNav.general")}</span>
           <ChevronDown
             className={cn(
-              "size-4 shrink-0 transition-transform",
-              generalOpen ? "rotate-0" : "-rotate-90"
+              "ms-auto size-4 shrink-0 transition-transform",
+              generalOpen ? "rotate-0" : "-rotate-90 rtl:rotate-90"
             )}
           />
         </CollapsibleTrigger>
-        <CollapsibleContent className="mt-0.5 ml-4 flex flex-col border-l pl-3">
+        <CollapsibleContent className="mt-0.5 ms-4 flex flex-col border-s ps-3">
           {GENERAL_ITEMS.map((item) => (
             <NavLink
               key={item.href}
               href={item.href}
-              label={item.label}
+              label={t(item.labelKey)}
               active={isActive(pathname, item.href)}
               nested
             />
@@ -109,7 +117,7 @@ export function SettingsNav() {
         <NavLink
           key={item.href}
           href={item.href}
-          label={item.label}
+          label={t(item.labelKey)}
           icon={item.icon}
           active={isActive(pathname, item.href)}
         />

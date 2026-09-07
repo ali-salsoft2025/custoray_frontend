@@ -32,6 +32,7 @@ import {
   paymentTimelineBucketLabel,
 } from "@/lib/payment-reports"
 import { cn } from "@/lib/utils"
+import { useTranslation } from "react-i18next"
 
 const panelClass =
   "rounded-2xl bg-card shadow-sm shadow-black/[0.03] ring-1 ring-border/50"
@@ -108,17 +109,18 @@ function truncate(value: string, max = 22): string {
   return value.length > max ? `${value.slice(0, max - 2)}…` : value
 }
 
+function agingBucketKey(bucket: string): "d0_30" | "d31_60" | "d61_90" | "d90plus" {
+  if (bucket.startsWith("0-30")) return "d0_30"
+  if (bucket.startsWith("31-60")) return "d31_60"
+  if (bucket.startsWith("61-90")) return "d61_90"
+  return "d90plus"
+}
+
 function shortTickLabel(label: string, bucket: PaymentTimelineBucket): string {
   if (bucket === "year") return label
   if (bucket === "month") return label.replace(/ (\d{2})(\d{2})$/, " ’$2")
   return label.replace(/,\s*\d{4}$/, "")
 }
-
-const cashFlowConfig = {
-  received: { label: "Received", color: COLORS.received },
-  paidOut: { label: "Paid out", color: COLORS.paidOut },
-  net: { label: "Net", color: COLORS.net },
-} satisfies ChartConfig
 
 export function CashFlowChart({
   data,
@@ -129,8 +131,14 @@ export function CashFlowChart({
   trends: PaymentReportTrends
   bucket?: PaymentTimelineBucket
 }) {
+  const { t } = useTranslation("reports")
   const netFillId = useChartGradientId("cf-net")
-  const grain = paymentTimelineBucketLabel(bucket).toLowerCase()
+  const grain = paymentTimelineBucketLabel(bucket)
+  const cashFlowConfig = {
+    received: { label: t("paymentsPage.chartReceived"), color: COLORS.received },
+    paidOut: { label: t("paymentsPage.chartPaidOut"), color: COLORS.paidOut },
+    net: { label: t("purchasesPage.chartNet"), color: COLORS.net },
+  } satisfies ChartConfig
 
   const chartData = React.useMemo(
     () =>
@@ -152,18 +160,22 @@ export function CashFlowChart({
   if (!hasActivity) {
     return (
       <ChartPanel
-        title="Cash flow"
-        description={`${paymentTimelineBucketLabel(bucket)} receipts against payouts`}
+        title={t("paymentsPage.cashFlow")}
+        description={t("paymentsPage.cashFlowHint", {
+          bucket: paymentTimelineBucketLabel(bucket),
+        })}
       >
-        <ChartEmpty message="No settled payments in this period." />
+        <ChartEmpty message={t("paymentsPage.noSettled")} />
       </ChartPanel>
     )
   }
 
   return (
     <ChartPanel
-      title="Cash flow"
-      description={`${paymentTimelineBucketLabel(bucket)} receipts against payouts`}
+      title={t("paymentsPage.cashFlow")}
+      description={t("paymentsPage.cashFlowHint", {
+        bucket: paymentTimelineBucketLabel(bucket),
+      })}
       action={
         <div className="flex flex-wrap items-center justify-end gap-1.5">
           <span className="rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium capitalize">
@@ -171,7 +183,7 @@ export function CashFlowChart({
           </span>
           {netTrend ? (
             <span className="rounded-full bg-primary/15 px-2.5 py-1 text-[11px] font-medium text-primary">
-              Net {netTrend}
+              {t("paymentsPage.netTrend", { trend: netTrend })}
               {trends.compareLabel ? ` ${trends.compareLabel}` : ""}
             </span>
           ) : null}
@@ -260,46 +272,47 @@ export function CashFlowChart({
   )
 }
 
-const agingConfig = {
-  receivable: { label: "Receivable", color: COLORS.receivable },
-  payable: { label: "Payable", color: COLORS.payable },
-} satisfies ChartConfig
-
 export function OutstandingAgingChart({ data }: { data: PaymentAgingRow[] }) {
+  const { t } = useTranslation("reports")
+  const agingConfig = {
+    receivable: { label: t("paymentsPage.chartReceivable"), color: COLORS.receivable },
+    payable: { label: t("paymentsPage.chartPayable"), color: COLORS.payable },
+  } satisfies ChartConfig
   const chartData = React.useMemo(
     () =>
       data.map((row) => ({
-        label: row.bucket,
+        label: t(`aging.${agingBucketKey(row.bucket)}`),
+        bucket: row.bucket,
         receivable: Number(row.receivable),
         payable: Number(row.payable),
         receivableCount: row.receivableCount,
         payableCount: row.payableCount,
       })),
-    [data]
+    [data, t]
   )
 
   const hasActivity = chartData.some(
     (row) => row.receivable > 0 || row.payable > 0
   )
   const overdue = chartData
-    .filter((row) => row.label !== "0-30 days")
+    .filter((row) => row.bucket !== "0-30 days")
     .reduce((sum, row) => sum + row.receivable + row.payable, 0)
 
   if (!hasActivity) {
     return (
       <ChartPanel
-        title="Outstanding aging"
-        description="Pending receivables and payables by age"
+        title={t("paymentsPage.outstandingAging")}
+        description={t("paymentsPage.agingHint")}
       >
-        <ChartEmpty message="Nothing outstanding — all settled." />
+        <ChartEmpty message={t("paymentsPage.nothingOutstanding")} />
       </ChartPanel>
     )
   }
 
   return (
     <ChartPanel
-      title="Outstanding aging"
-      description="Pending receivables and payables by age"
+      title={t("paymentsPage.outstandingAging")}
+      description={t("paymentsPage.agingHint")}
       action={
         <span
           className={cn(
@@ -310,8 +323,10 @@ export function OutstandingAgingChart({ data }: { data: PaymentAgingRow[] }) {
           )}
         >
           {overdue > 0
-            ? `${formatPaymentReportMoney(String(overdue))} past 30d`
-            : "All current"}
+            ? t("paymentsPage.past30d", {
+                amount: formatPaymentReportMoney(String(overdue)),
+              })
+            : t("paymentsPage.allCurrent")}
         </span>
       }
     >
@@ -358,7 +373,8 @@ export function OutstandingAgingChart({ data }: { data: PaymentAgingRow[] }) {
                     : item.payload?.payableCount
                   return (
                     <span className="tabular-nums">
-                      {formatPaymentReportMoney(String(value))} · {count} open
+                      {formatPaymentReportMoney(String(value))} ·{" "}
+                      {t("paymentsPage.openCount", { count })}
                     </span>
                   )
                 }}
@@ -384,10 +400,6 @@ export function OutstandingAgingChart({ data }: { data: PaymentAgingRow[] }) {
   )
 }
 
-const partiesConfig = {
-  total: { label: "Total", color: COLORS.received },
-} satisfies ChartConfig
-
 export function TopPartiesChart({
   data,
   title,
@@ -399,7 +411,11 @@ export function TopPartiesChart({
   description: string
   color?: string
 }) {
+  const { t } = useTranslation("reports")
   const barFillId = useChartGradientId("parties")
+  const partiesConfig = {
+    total: { label: t("paymentsPage.chartTotal"), color: COLORS.received },
+  } satisfies ChartConfig
 
   const chartData = React.useMemo(
     () =>
@@ -419,7 +435,7 @@ export function TopPartiesChart({
   if (!hasActivity) {
     return (
       <ChartPanel title={title} description={description}>
-        <ChartEmpty message="No settled payments in this period." />
+        <ChartEmpty message={t("paymentsPage.noSettled")} />
       </ChartPanel>
     )
   }
@@ -486,8 +502,9 @@ export function TopPartiesChart({
                 formatter={(value, _name, item) => (
                   <span className="tabular-nums">
                     {formatPaymentReportMoney(String(value))} ·{" "}
-                    {item.payload?.paymentCount} payment
-                    {item.payload?.paymentCount === 1 ? "" : "s"}
+                    {t("paymentsPage.paymentCount", {
+                      count: item.payload?.paymentCount,
+                    })}
                   </span>
                 )}
               />

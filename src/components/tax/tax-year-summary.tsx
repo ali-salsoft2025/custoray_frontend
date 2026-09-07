@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { IconDownload, IconArrowRight } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 import { StatCard, StatCardsGrid } from "@/components/stat-card"
 import { TaxPageLayout } from "@/components/tax/tax-page-layout"
@@ -23,6 +24,8 @@ const panelClass =
   "rounded-2xl bg-card shadow-sm shadow-black/[0.04] ring-1 ring-border/40"
 
 export function TaxYearSummaryReport() {
+  const { t } = useTranslation("tax")
+  const { t: tc } = useTranslation("common")
   const { settings } = useTaxSettings()
   const bundle = useTaxReportBundle()
   const profile = useTaxDisplayProfile()
@@ -30,7 +33,7 @@ export function TaxYearSummaryReport() {
 
   const handleExport = () => {
     if (!bundle) {
-      toast.error("Pick a fiscal period using the calendar in the top bar first.")
+      toast.error(t("toastPickPeriod"))
       return
     }
     downloadTaxReportXls(
@@ -38,7 +41,7 @@ export function TaxYearSummaryReport() {
       buildTaxExportMeta(settings, bundle.range),
       yearSummaryToRows(bundle.yearSummary, profile)
     )
-    toast.success("Report downloaded.")
+    toast.success(t("toastDownloaded"))
   }
 
   const summary = bundle?.yearSummary
@@ -46,14 +49,14 @@ export function TaxYearSummaryReport() {
   return (
     <TaxPageLayout
       step={3}
-      title="Year summary"
-      subtitle="The big picture — how many invoices, payments, and returns you had, plus trends by month."
-      explainTitle="Why share this with your accountant?"
-      explainBody="It saves them time. They get totals, monthly patterns, and your top customers and vendors in one view, alongside the detailed profit and balance reports."
+      title={t("ys.title")}
+      subtitle={t("ys.subtitle")}
+      explainTitle={t("ys.explainTitle")}
+      explainBody={t("ys.explainBody")}
       actions={
         <Button type="button" variant="outline" size="sm" onClick={handleExport}>
           <IconDownload className="size-4" />
-          Download
+          {tc("actions.download")}
         </Button>
       }
     >
@@ -61,28 +64,28 @@ export function TaxYearSummaryReport() {
         <>
           <StatCardsGrid>
             <StatCard
-              label="Sales invoices"
+              label={t("ys.salesInvoices")}
               value={String(summary.counts.salesInvoices)}
-              hint={`${summary.counts.pendingSales} still pending`}
+              hint={t("stillPending", { count: summary.counts.pendingSales })}
             />
             <StatCard
-              label="Purchase orders"
+              label={t("ys.purchaseOrders")}
               value={String(summary.counts.purchaseOrders)}
-              hint={`${summary.counts.pendingPurchases} still pending`}
+              hint={t("stillPending", { count: summary.counts.pendingPurchases })}
             />
             <StatCard
-              label="Returns"
+              label={t("ys.returns")}
               value={String(
                 summary.counts.salesReturns + summary.counts.purchaseReturns
               )}
-              hint="Sales and purchase returns"
+              hint={t("ys.returnsHint")}
             />
             <StatCard
-              label="Payments logged"
+              label={t("ys.paymentsLogged")}
               value={String(
                 summary.counts.customerPayments + summary.counts.vendorPayments
               )}
-              hint="Money in and out"
+              hint={t("ys.moneyInOut")}
             />
           </StatCardsGrid>
 
@@ -91,16 +94,14 @@ export function TaxYearSummaryReport() {
           {summary.monthly.length > 0 ? (
             <div className={cn(panelClass, "overflow-hidden")}>
               <div className="border-border/40 border-b px-4 py-3">
-                <p className="text-sm font-semibold">Month by month</p>
-                <p className="text-muted-foreground text-xs">
-                  Green-ish numbers are good — more in than out.
-                </p>
+                <p className="text-sm font-semibold">{t("ys.monthByMonth")}</p>
+                <p className="text-muted-foreground text-xs">{t("ys.monthHint")}</p>
               </div>
               <div className="hidden grid-cols-4 gap-2 border-border/40 border-b px-4 py-2 text-[11px] font-medium sm:grid">
-                <span>Month</span>
-                <span>Money in</span>
-                <span>Money out</span>
-                <span>Difference</span>
+                <span>{t("ys.month")}</span>
+                <span>{t("ys.moneyInCol")}</span>
+                <span>{t("ys.moneyOutCol")}</span>
+                <span>{t("ys.difference")}</span>
               </div>
               <div className="divide-border/30 divide-y">
                 {summary.monthly.map((row) => (
@@ -119,23 +120,21 @@ export function TaxYearSummaryReport() {
           ) : null}
 
           <div className="grid gap-3 lg:grid-cols-2">
-            <PartyList title="Top customers" rows={summary.topCustomers} fmt={fmt} />
-            <PartyList title="Top vendors" rows={summary.topVendors} fmt={fmt} />
+            <PartyList title={t("ys.topCustomers")} rows={summary.topCustomers} fmt={fmt} />
+            <PartyList title={t("ys.topVendors")} rows={summary.topVendors} fmt={fmt} />
           </div>
 
           <TaxReportFootnote />
 
           <Button type="button" size="sm" className="w-fit" asChild>
             <Link href="/tax">
-              Back to download pack
+              {t("ys.backToPack")}
               <IconArrowRight className="size-4" />
             </Link>
           </Button>
         </>
       ) : (
-        <p className="text-muted-foreground text-sm">
-          Select a fiscal period from the calendar in the top bar to see this report.
-        </p>
+        <p className="text-muted-foreground text-sm">{t("selectPeriod")}</p>
       )}
     </TaxPageLayout>
   )
@@ -150,13 +149,14 @@ function PartyList({
   rows: { name: string; total: number; count: number }[]
   fmt: (value: number | string) => string
 }) {
+  const { t } = useTranslation("tax")
   return (
     <div className={cn(panelClass, "overflow-hidden")}>
       <div className="border-border/40 border-b px-4 py-3">
         <p className="text-sm font-semibold">{title}</p>
       </div>
       {rows.length === 0 ? (
-        <p className="text-muted-foreground px-4 py-6 text-sm">No data in this period yet.</p>
+        <p className="text-muted-foreground px-4 py-6 text-sm">{t("ys.noData")}</p>
       ) : (
         <div className="divide-border/30 divide-y">
           {rows.map((row) => (
@@ -167,7 +167,7 @@ function PartyList({
               <div className="min-w-0">
                 <p className="truncate font-medium">{row.name}</p>
                 <p className="text-muted-foreground text-xs">
-                  {row.count} transaction{row.count === 1 ? "" : "s"}
+                  {t("ys.transaction", { count: row.count })}
                 </p>
               </div>
               <p className="shrink-0 font-semibold tabular-nums">{fmt(row.total)}</p>

@@ -1,5 +1,6 @@
 import { formatMoney } from "@/lib/customers"
 import { type ProductRow } from "@/lib/products"
+import i18n from "@/i18n"
 
 export type InventoryStockLevel = "In Stock" | "Low Stock" | "Out of Stock"
 
@@ -240,8 +241,8 @@ export function formatInventoryReportFilterLabel(
   filter: InventoryReportFilter
 ): string {
   const range = resolveInventoryReportRange(filter)
-  if (filter.preset === "this_month") return "This month"
-  if (filter.preset === "last_month") return "Last month"
+  if (filter.preset === "this_month") return i18n.t("presets.thisMonth", { ns: "reports" })
+  if (filter.preset === "last_month") return i18n.t("presets.lastMonth", { ns: "reports" })
   if (range.start === range.end) return formatDate(range.start)
   return `${formatDate(range.start)} – ${formatDate(range.end)}`
 }
@@ -432,9 +433,7 @@ export function resolveInventoryTimelineBucket(
 export function inventoryTimelineBucketLabel(
   bucket: InventoryTimelineBucket
 ): string {
-  if (bucket === "week") return "Weekly"
-  if (bucket === "month") return "Monthly"
-  return "Daily"
+  return i18n.t(`buckets.${bucket}`, { ns: "reports" })
 }
 
 function startOfWeekMonday(iso: string): string {

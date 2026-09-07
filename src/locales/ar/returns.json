@@ -1,0 +1,101 @@
+{
+  "title": "المرتجعات",
+  "search": {
+    "bills": "البحث في المرتجعات…",
+    "items": "البحث في الأصناف المرتجعة…"
+  },
+  "viewMode": {
+    "aria": "وضع عرض المرتجعات",
+    "billDescription": "حسب المرتجع — صف واحد لكل مستند مرتجع",
+    "itemDescription": "حسب الصنف — صف واحد لكل بند مرتجع"
+  },
+  "tabs": {
+    "all": "الكل",
+    "sales": "مبيعات",
+    "purchase": "مشتريات",
+    "pending": "معلّق",
+    "completed": "مكتمل"
+  },
+  "type": {
+    "sales": "مبيعات",
+    "purchase": "مشتريات"
+  },
+  "columns": {
+    "srNo": "م",
+    "returnNumber": "رقم المرتجع",
+    "type": "النوع",
+    "reference": "المرجع",
+    "party": "الطرف",
+    "date": "التاريخ",
+    "returnAmt": "مبلغ المرتجع",
+    "refundDue": "المسترد المستحق",
+    "balanceDue": "الرصيد المستحق",
+    "status": "الحالة",
+    "item": "الصنف",
+    "qty": "الكمية",
+    "lineTotal": "إجمالي البند"
+  },
+  "actions": {
+    "view": "عرض",
+    "delete": "حذف",
+    "deleteReturn": "حذف المرتجع",
+    "openMenu": "فتح القائمة"
+  },
+  "toasts": {
+    "removedNamed": "تم حذف {{name}} (تجريبي).",
+    "addItem": "أضف صنفاً واحداً على الأقل للإرجاع.",
+    "onlyCompleted": "يمكن إرجاع الأصناف المدفوعة المكتملة فقط. ألغِ الأصناف المعلّقة بدلاً من ذلك.",
+    "recorded": "تم تسجيل المرتجع وتحديث المصدر (تجريبي).",
+    "saved": "تم حفظ المرتجع (تجريبي)."
+  },
+  "detail": {
+    "salesReturn": "مرتجع مبيعات",
+    "purchaseReturn": "مرتجع مشتريات",
+    "customer": "العميل",
+    "vendor": "المورّد",
+    "type": "النوع",
+    "reference": "المرجع",
+    "returnDate": "تاريخ الإرجاع",
+    "status": "الحالة",
+    "returnAmount": "مبلغ المرتجع",
+    "paymentImpact": "أثر الدفع",
+    "originalTotal": "الإجمالي الأصلي",
+    "paid": "المدفوع",
+    "newTotal": "الإجمالي الجديد",
+    "refundDue": "المسترد المستحق",
+    "balanceDue": "الرصيد المستحق",
+    "returnedItems": "الأصناف المرتجعة",
+    "qtyTimes": "الكمية {{qty}} × {{price}}",
+    "notes": "ملاحظات",
+    "item": "الصنف",
+    "returnNumber": "رقم المرتجع",
+    "date": "التاريخ",
+    "quantity": "الكمية",
+    "lineTotal": "إجمالي البند",
+    "refundDueOnReturn": "المسترد المستحق (على المرتجع)",
+    "balanceDueOnReturn": "الرصيد المستحق (على المرتجع)"
+  },
+  "form": {
+    "sale": "بيع",
+    "purchase": "شراء",
+    "returnOf": "مرتجع {{type}}",
+    "reasonPlaceholder": "سبب الإرجاع…",
+    "returnNumber": "رقم المرتجع",
+    "returnDate": "تاريخ الإرجاع",
+    "notes": "ملاحظات",
+    "itemsToReturn": "أصناف للإرجاع",
+    "returnQty": "كمية الإرجاع",
+    "maxQty": "الحد {{count}}",
+    "unitPrice": "سعر الوحدة",
+    "paidAmount": "المبلغ المدفوع",
+    "recordReturn": "تسجيل المرتجع"
+  },
+  "create": {
+    "returnSale": "إرجاع بيع",
+    "returnPurchase": "إرجاع مشتريات",
+    "createReturn": "إنشاء مرتجع"
+  },
+  "entity": {
+    "return": "مرتجع"
+  }
+}

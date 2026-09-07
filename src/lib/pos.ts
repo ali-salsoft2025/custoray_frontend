@@ -9,6 +9,22 @@ import type { ProductRow } from "@/lib/products"
 
 export const POS_ORDER_DESCRIPTION = "POS sale"
 export const POS_DISCOUNT_LINE_NAME = "Discount"
+export const POS_ADDITION_LINE_NAME = "Addition"
+
+function normalizeLineName(name: string): string {
+  return name.trim().toLowerCase()
+}
+
+export function isDiscountLine(line: { productName: string }): boolean {
+  return normalizeLineName(line.productName) === POS_DISCOUNT_LINE_NAME.toLowerCase()
+}
+
+export function isAdditionLine(line: { productName: string }): boolean {
+  const name = normalizeLineName(line.productName)
+  return (
+    name === POS_ADDITION_LINE_NAME.toLowerCase() || name === "additions"
+  )
+}
 
 export type PosCartLine = {
   productId: number
@@ -75,6 +91,29 @@ export function nextPosInvoiceNumber(
 export function cartSubtotal(cart: PosCartLine[]): string {
   const lines = cart.map((line) => ({ lineTotal: cartLineTotal(line) }))
   return computeOrderTotal(lines)
+}
+
+export function cartListSubtotal(cart: PosCartLine[]): string {
+  const lines = cart.map((line) => ({ lineTotal: cartLineBaseTotal(line) }))
+  return computeOrderTotal(lines)
+}
+
+export function cartAdjustmentTotals(cart: PosCartLine[]): {
+  discounts: string
+  additions: string
+} {
+  let discounts = 0
+  let additions = 0
+  for (const line of cart) {
+    const adjustment = Number(cartLineAdjustment(line))
+    if (!Number.isFinite(adjustment)) continue
+    if (adjustment > 0.005) additions += adjustment
+    else if (adjustment < -0.005) discounts += Math.abs(adjustment)
+  }
+  return {
+    discounts: discounts.toFixed(2),
+    additions: additions.toFixed(2),
+  }
 }
 
 export function normalizeDiscountAmount(
@@ -168,23 +207,29 @@ export function buildPosOrderFromCart(
   }
 }
 
+function isActiveLifecycle(lifecycle: ProductRow["lifecycle"] | string | undefined) {
+  return String(lifecycle ?? "active").toLowerCase() === "active"
+}
+
+function inStock(product: ProductRow) {
+  return Number(product.stock) > 0
+}
+
 /** Active inventory rows for the POS sale catalog. */
 export function posCatalogProducts(
   products: ProductRow[],
   options?: { hideOutOfStock?: boolean }
 ): ProductRow[] {
   const hideOutOfStock = options?.hideOutOfStock ?? true
-  return products
-    .filter(
-      (product) =>
-        product.lifecycle === "active" && (hideOutOfStock ? product.stock > 0 : true)
-    )
-    .sort((a, b) => a.name.localeCompare(b.name))
+  const active = products.filter((product) => isActiveLifecycle(product.lifecycle))
+  const available = hideOutOfStock ? active.filter(inStock) : active
+  const catalog = available.length > 0 ? available : active
+  return [...catalog].sort((a, b) => a.name.localeCompare(b.name))
 }
 
 /** Active inventory rows for POS returns (includes out-of-stock items). */
 export function posReturnCatalogProducts(products: ProductRow[]): ProductRow[] {
   return products
-    .filter((product) => product.lifecycle === "active")
+    .filter((product) => isActiveLifecycle(product.lifecycle))
     .sort((a, b) => a.name.localeCompare(b.name))
 }

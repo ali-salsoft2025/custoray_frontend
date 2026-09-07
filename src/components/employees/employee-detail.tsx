@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react"
 import { EyeIcon, EyeOffIcon } from "lucide-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 import { CustomerAvatar } from "@/components/customers/customer-avatar"
 import { Badge } from "@/components/ui/badge"
@@ -21,7 +22,6 @@ import {
 import { formatMoney } from "@/lib/employee-payroll"
 import {
   statusBadgeClass,
-  statusLabel,
   type EmployeeRow,
 } from "@/lib/employees"
 
@@ -37,6 +37,8 @@ function detailRow(label: string, value: ReactNode) {
 export function EmployeeDetail({ employee }: { employee: EmployeeRow }) {
   const { canAdmin } = useAuth()
   const { updateEmployee } = useEmployees()
+  const { t } = useTranslation("employees")
+  const { t: tc } = useTranslation("common")
   const permissions = effectivePermissions(employee.permissions)
   const modulesWithAccess = MODULE_IDS.filter((id) => {
     const m = permissions.modules[id]
@@ -69,11 +71,11 @@ export function EmployeeDetail({ employee }: { employee: EmployeeRow }) {
     if (!canAdmin) return
     const email = portalEmail.trim().toLowerCase()
     if (!email) {
-      toast.error("Login email is required.")
+      toast.error(t("detail.toastEmailRequired"))
       return
     }
     if (!portalPassword.trim()) {
-      toast.error("Password is required.")
+      toast.error(t("detail.toastPasswordRequired"))
       return
     }
     updateEmployee(employee.id, {
@@ -82,7 +84,7 @@ export function EmployeeDetail({ employee }: { employee: EmployeeRow }) {
       portalPassword: portalPassword.trim(),
     })
     setEditingCredentials(false)
-    toast.success("Login credentials updated.")
+    toast.success(t("detail.toastCredentialsUpdated"))
   }
 
   return (
@@ -94,47 +96,47 @@ export function EmployeeDetail({ employee }: { employee: EmployeeRow }) {
             {employee.name}
           </p>
           <p className="text-muted-foreground text-xs">
-            {employee.designation !== "—" ? employee.designation : "Employee"} · ID{" "}
+            {employee.designation !== "—" ? employee.designation : t("form.employeeFallback")} · ID{" "}
             {employee.id}
           </p>
         </div>
       </div>
       <dl className="space-y-3">
-        {detailRow("Work email", employee.email || "—")}
-        {detailRow("Phone", employee.phone)}
-        {detailRow("Department", employee.department)}
-        {detailRow("Job title", employee.designation)}
-        {detailRow("Start date", employee.hireDate)}
-        {detailRow("Monthly salary", formatMoney(employee.baseSalary))}
+        {detailRow(t("form.workEmail"), employee.email || "—")}
+        {detailRow(t("form.phone"), employee.phone)}
+        {detailRow(t("columns.department"), employee.department)}
+        {detailRow(t("form.jobTitle"), employee.designation)}
+        {detailRow(t("form.startDate"), employee.hireDate)}
+        {detailRow(t("form.monthlySalary"), formatMoney(employee.baseSalary))}
         {detailRow(
-          "Status",
+          t("columns.status"),
           <Badge variant="outline" className={statusBadgeClass(employee.status)}>
-            {statusLabel(employee.status)}
+            {t(`status.${employee.status}`)}
           </Badge>
         )}
         {detailRow(
-          "Portal login",
+          t("detail.portalLogin"),
           employee.portalEnabled ? (
             <Badge
               variant="outline"
               className="border-emerald-500/30 text-emerald-700 dark:text-emerald-400"
             >
-              Enabled
+              {t("status.enabled")}
             </Badge>
           ) : (
-            <Badge variant="outline">Disabled</Badge>
+            <Badge variant="outline">{t("status.disabled")}</Badge>
           )
         )}
-        {detailRow("Access summary", permissionSummary(employee.permissions))}
+        {detailRow(t("detail.accessSummary"), permissionSummary(employee.permissions))}
       </dl>
 
       {canAdmin && employee.portalEnabled ? (
         <div className="space-y-3 rounded-lg border border-border/60 p-4">
           <div className="flex items-start justify-between gap-2">
             <div>
-              <p className="text-sm font-semibold">Login credentials</p>
+              <p className="text-sm font-semibold">{t("form.loginCredentials")}</p>
               <p className="text-muted-foreground text-xs leading-relaxed">
-                Admins can view and update portal email and password.
+                {t("detail.loginCredentialsHint")}
               </p>
             </div>
             {!editingCredentials ? (
@@ -148,7 +150,7 @@ export function EmployeeDetail({ employee }: { employee: EmployeeRow }) {
                   setEditingCredentials(true)
                 }}
               >
-                Edit
+                {tc("actions.edit")}
               </Button>
             ) : null}
           </div>
@@ -156,7 +158,7 @@ export function EmployeeDetail({ employee }: { employee: EmployeeRow }) {
           {editingCredentials ? (
             <div className="space-y-3">
               <div className="flex flex-col gap-2">
-                <Label htmlFor={`cred-email-${employee.id}`}>Login email</Label>
+                <Label htmlFor={`cred-email-${employee.id}`}>{t("form.loginEmail")}</Label>
                 <Input
                   id={`cred-email-${employee.id}`}
                   type="email"
@@ -166,7 +168,7 @@ export function EmployeeDetail({ employee }: { employee: EmployeeRow }) {
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor={`cred-password-${employee.id}`}>Password</Label>
+                <Label htmlFor={`cred-password-${employee.id}`}>{t("form.password")}</Label>
                 <PasswordInput
                   id={`cred-password-${employee.id}`}
                   value={portalPassword}
@@ -181,7 +183,7 @@ export function EmployeeDetail({ employee }: { employee: EmployeeRow }) {
                   onClick={saveCredentials}
                   disabled={!credentialsDirty}
                 >
-                  Save credentials
+                  {t("detail.saveCredentials")}
                 </Button>
                 <Button
                   type="button"
@@ -189,15 +191,15 @@ export function EmployeeDetail({ employee }: { employee: EmployeeRow }) {
                   size="sm"
                   onClick={resetCredentials}
                 >
-                  Cancel
+                  {tc("actions.cancel")}
                 </Button>
               </div>
             </div>
           ) : (
             <dl className="space-y-3">
-              {detailRow("Login email", employee.portalEmail || "—")}
+              {detailRow(t("form.loginEmail"), employee.portalEmail || "—")}
               {detailRow(
-                "Password",
+                t("form.password"),
                 <div className="flex items-center gap-2">
                   <span className="font-mono text-sm">
                     {showPassword
@@ -213,7 +215,7 @@ export function EmployeeDetail({ employee }: { employee: EmployeeRow }) {
                     className="size-7"
                     onClick={() => setShowPassword((v) => !v)}
                     aria-label={
-                      showPassword ? "Hide password" : "Show password"
+                      showPassword ? t("detail.hidePassword") : t("detail.showPassword")
                     }
                   >
                     {showPassword ? (
@@ -231,28 +233,28 @@ export function EmployeeDetail({ employee }: { employee: EmployeeRow }) {
 
       {!canAdmin && employee.portalEnabled ? (
         <dl className="space-y-3">
-          {detailRow("Login email", employee.portalEmail || "—")}
+          {detailRow(t("form.loginEmail"), employee.portalEmail || "—")}
         </dl>
       ) : null}
 
       <div className="space-y-2">
-        <p className="text-sm font-semibold">Module access</p>
+        <p className="text-sm font-semibold">{t("detail.moduleAccess")}</p>
         {permissions.admin ? (
           <p className="text-muted-foreground text-sm">
-            Admin — full access to all modules.
+            {t("detail.adminFullAccess")}
           </p>
         ) : modulesWithAccess.length === 0 ? (
           <p className="text-muted-foreground text-sm">
-            No module permissions assigned.
+            {t("detail.noModulePermissions")}
           </p>
         ) : (
           <ul className="space-y-1.5 text-sm">
             {modulesWithAccess.map((id) => {
               const m = permissions.modules[id]
               const parts = [
-                m.add ? "Add" : null,
-                m.edit ? "Edit" : null,
-                m.delete ? "Delete" : null,
+                m.add ? t("matrix.add") : null,
+                m.edit ? t("matrix.edit") : null,
+                m.delete ? t("matrix.delete") : null,
               ].filter(Boolean)
               return (
                 <li

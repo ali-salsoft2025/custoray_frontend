@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 
 import { AuthCodeInput } from "@/components/auth/auth-code-input"
@@ -17,6 +18,7 @@ import { useAuth } from "@/context/auth-context"
 import { clearTwoFactorChallenge, loadTwoFactorChallenge } from "@/lib/two-factor"
 
 export function TwoFactorForm() {
+  const { t } = useTranslation("auth")
   const router = useRouter()
   const { completeTwoFactor, session, hydrated } = useAuth()
   const [code, setCode] = useState("")
@@ -33,14 +35,14 @@ export function TwoFactorForm() {
       router.replace("/home")
       return
     }
-    toast.error("Sign in first to verify your authenticator code.")
+    toast.error(t("twoFactor.toastSignInFirst"))
     router.replace("/")
-  }, [hydrated, session, router])
+  }, [hydrated, session, router, t])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (code.length !== 6) {
-      toast.error("Enter the 6-digit code from Google Authenticator.")
+      toast.error(t("twoFactor.toastEnterCode"))
       return
     }
 
@@ -53,7 +55,9 @@ export function TwoFactorForm() {
       return
     }
 
-    toast.success(result.accessAllowed ? "Welcome back!" : "Your trial has ended.")
+    toast.success(
+      result.accessAllowed ? t("login.toastWelcome") : t("login.toastTrialEnded")
+    )
     router.replace(result.accessAllowed ? "/home" : "/trial-ended")
   }
 
@@ -62,13 +66,13 @@ export function TwoFactorForm() {
   return (
     <AuthShell hero="twofa">
       <AuthHeading
-        title="Authenticator code"
+        title={t("twoFactor.title")}
         accent="code"
-        subtitle="Open Google Authenticator and enter the 6-digit code for Custoray."
+        subtitle={t("twoFactor.subtitle")}
       />
       <form className="space-y-3" onSubmit={handleSubmit}>
         <div className="grid gap-2">
-          <Label htmlFor="otp">Google Authenticator</Label>
+          <Label htmlFor="otp">{t("twoFactor.label")}</Label>
           <AuthCodeInput id="otp" value={code} onChange={setCode} />
         </div>
         <Button
@@ -79,14 +83,14 @@ export function TwoFactorForm() {
           {verifying ? (
             <span className="flex items-center justify-center gap-2">
               <LoadingSpinner size="sm" />
-              Verifying…
+              {t("twoFactor.verifying")}
             </span>
           ) : (
-            "Verify and continue"
+            t("twoFactor.verify")
           )}
         </Button>
         <p className="text-muted-foreground pt-1 text-center text-xs">
-          Use a different account?{" "}
+          {t("twoFactor.differentAccount")}{" "}
           <button
             type="button"
             className="text-primary font-medium hover:underline"
@@ -95,7 +99,7 @@ export function TwoFactorForm() {
               router.replace("/")
             }}
           >
-            Back to sign in
+            {t("twoFactor.backToSignIn")}
           </button>
         </p>
       </form>

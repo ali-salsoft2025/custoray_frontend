@@ -10,12 +10,14 @@ import {
   IconTrash,
 } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
+import type { TFunction } from "i18next"
 
 import { PurchaseDetail } from "@/components/purchases/purchase-detail"
 import { PurchaseForm } from "@/components/purchases/purchase-form"
 import { PurchaseStatusBadge } from "@/components/purchases/purchase-status-badge"
 import { DataTableColumnHeader } from "@/components/data-table-column-header"
-import { DataTable, type DataTableTab } from "@/components/data-table"
+import { DataTable } from "@/components/data-table"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -50,13 +52,6 @@ import {
   type PurchaseRow,
 } from "@/lib/purchases"
 
-const invoiceTabs: DataTableTab[] = [
-  { value: "all", label: "All" },
-  { value: "pending", label: "Pending" },
-  { value: "completed", label: "Completed" },
-  { value: "cancelled", label: "Cancelled" },
-]
-
 type PurchaseInvoiceSidebarState =
   | { mode: "view"; purchase: PurchaseRow }
   | { mode: "edit"; purchase: PurchaseRow }
@@ -69,6 +64,8 @@ function purchaseInvoiceTabFilter(row: PurchaseRow, tab: string) {
 }
 
 function getPurchaseInvoiceColumns(
+  t: TFunction<"documents">,
+  tc: TFunction<"common">,
   openSidebar: (row: PurchaseRow, mode: "view" | "edit") => void,
   onDelete: (row: PurchaseRow) => void,
   onDuplicate: (row: PurchaseRow) => void
@@ -84,7 +81,7 @@ function getPurchaseInvoiceColumns(
               (table.getIsSomePageRowsSelected() && "indeterminate")
             }
             onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-            aria-label="Select all"
+            aria-label={tc("table.selectAll")}
           />
         </div>
       ),
@@ -93,7 +90,7 @@ function getPurchaseInvoiceColumns(
           <Checkbox
             checked={row.getIsSelected()}
             onCheckedChange={(value) => row.toggleSelected(!!value)}
-            aria-label="Select row"
+            aria-label={tc("table.selectRow")}
           />
         </div>
       ),
@@ -103,7 +100,7 @@ function getPurchaseInvoiceColumns(
     {
       accessorKey: "purchaseNumber",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Invoice #" />
+        <DataTableColumnHeader column={column} title={t("table.invoiceNumber")} />
       ),
       cell: ({ row }) => (
         <button
@@ -120,7 +117,7 @@ function getPurchaseInvoiceColumns(
     {
       accessorKey: "vendorName",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Vendor" />
+        <DataTableColumnHeader column={column} title={t("labels.vendor")} />
       ),
       cell: ({ row }) => (
         <span className="text-foreground max-w-[10rem] truncate">
@@ -133,7 +130,7 @@ function getPurchaseInvoiceColumns(
       id: "items",
       accessorFn: (row) => row.lines.length,
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Items" align="center" />
+        <DataTableColumnHeader column={column} title={t("table.items")} align="center" />
       ),
       cell: ({ row }) => (
         <div className="flex justify-center">
@@ -147,7 +144,7 @@ function getPurchaseInvoiceColumns(
     {
       accessorKey: "purchaseDate",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Date" />
+        <DataTableColumnHeader column={column} title={t("labels.date")} />
       ),
       cell: ({ row }) => (
         <span className="text-muted-foreground tabular-nums text-xs">
@@ -159,7 +156,7 @@ function getPurchaseInvoiceColumns(
     {
       accessorKey: "totalAmount",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Total amount" align="center" />
+        <DataTableColumnHeader column={column} title={t("table.totalAmount")} align="center" />
       ),
       cell: ({ row }) => (
         <div className="flex justify-center">
@@ -173,7 +170,7 @@ function getPurchaseInvoiceColumns(
     {
       accessorKey: "paidAmount",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Paid amount" align="center" />
+        <DataTableColumnHeader column={column} title={t("table.paidAmount")} align="center" />
       ),
       cell: ({ row }) => (
         <div className="flex justify-center">
@@ -188,7 +185,7 @@ function getPurchaseInvoiceColumns(
       id: "balance",
       accessorFn: (row) => Number(computeBalance(row)),
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Balance" align="center" />
+        <DataTableColumnHeader column={column} title={t("labels.balance")} align="center" />
       ),
       cell: ({ row }) => {
         const balance = computeBalance(row.original)
@@ -210,7 +207,7 @@ function getPurchaseInvoiceColumns(
     },
     {
       accessorKey: "status",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+      header: ({ column }) => <DataTableColumnHeader column={column} title={t("labels.status")} />,
       cell: ({ row }) => <PurchaseStatusBadge status={row.original.status} />,
       meta: { dataTableFilter: false },
     },
@@ -226,26 +223,26 @@ function getPurchaseInvoiceColumns(
               size="icon"
             >
               <IconDotsVertical />
-              <span className="sr-only">Open menu</span>
+              <span className="sr-only">{tc("actions.openMenu")}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40">
             <DropdownMenuItem onClick={() => openSidebar(row.original, "view")}>
               <IconEye />
-              View
+              {tc("actions.view")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => openSidebar(row.original, "edit")}>
               <IconPencil />
-              Edit
+              {tc("actions.edit")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onDuplicate(row.original)}>
               <IconCopy />
-              Duplicate
+              {tc("actions.duplicate")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem variant="destructive" onClick={() => onDelete(row.original)}>
               <IconTrash />
-              Delete
+              {tc("actions.delete")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -255,6 +252,8 @@ function getPurchaseInvoiceColumns(
 }
 
 export default function PurchaseInvoicePage() {
+  const { t } = useTranslation("documents")
+  const { t: tc } = useTranslation("common")
   const {
     purchases,
     setPurchases,
@@ -272,7 +271,7 @@ export default function PurchaseInvoicePage() {
       if (
         !(await confirmDeleteAction({
           itemName: purchase.purchaseNumber,
-          entityLabel: "purchase invoice",
+          entityLabel: t("entity.purchaseInvoice"),
         }))
       ) {
         return
@@ -281,7 +280,7 @@ export default function PurchaseInvoicePage() {
       if (sidebar?.mode !== "add" && sidebar?.purchase.id === purchase.id) {
         closeSidebar()
       }
-      toast.message(`Removed ${purchase.purchaseNumber} (demo).`)
+      toast.message(t("toasts.removedNamed", { name: purchase.purchaseNumber }))
     },
     [removePurchase, sidebar]
   )
@@ -291,13 +290,13 @@ export default function PurchaseInvoicePage() {
       if (
         !(await confirmDuplicateAction({
           itemName: purchase.purchaseNumber,
-          entityLabel: "purchase invoice",
+          entityLabel: t("entity.purchaseInvoice"),
         }))
       ) {
         return
       }
       const copy = duplicatePurchase(purchase.id)
-      if (copy) toast.success(`Duplicated ${purchase.purchaseNumber} (demo).`)
+      if (copy) toast.success(t("toasts.duplicatedNamed", { name: purchase.purchaseNumber }))
     },
     [duplicatePurchase]
   )
@@ -308,7 +307,7 @@ export default function PurchaseInvoicePage() {
       const fd = new FormData(e.currentTarget)
       const vendorName = String(fd.get("vendorName") ?? "").trim()
       if (!vendorName) {
-        toast.error("Vendor name is required.")
+        toast.error(t("toasts.vendorRequired"))
         return
       }
 
@@ -317,20 +316,20 @@ export default function PurchaseInvoicePage() {
         sidebar?.mode === "edit" && sidebar.purchase ? sidebar.purchase.id : 0
       )
       if (parsed.lines.length === 0 || !parsed.lines.some((l) => l.productName.trim())) {
-        toast.error("Add at least one line item with a product name.")
+        toast.error(t("toasts.lineRequired"))
         return
       }
 
       if (sidebar?.mode === "add") {
         addPurchase(parsed)
-        toast.success("Purchase invoice created (demo).")
+        toast.success(t("toasts.purchaseCreated"))
         closeSidebar()
         return
       }
 
       if (sidebar?.mode === "edit" && sidebar.purchase) {
         updatePurchase(sidebar.purchase.id, parsed)
-        toast.success("Purchase invoice saved (demo).")
+        toast.success(t("toasts.purchaseSaved"))
         closeSidebar()
       }
     },
@@ -340,11 +339,13 @@ export default function PurchaseInvoicePage() {
   const columns = useMemo(
     () =>
       getPurchaseInvoiceColumns(
+        t,
+        tc,
         (row, mode) => setSidebar({ purchase: row, mode }),
         handleDelete,
         handleDuplicate
       ),
-    [handleDelete, handleDuplicate]
+    [handleDelete, handleDuplicate, t, tc]
   )
 
   const sheetPurchase = sidebar && sidebar.mode !== "add" ? sidebar.purchase : null
@@ -376,18 +377,18 @@ export default function PurchaseInvoicePage() {
               <SheetHeader className="border-border/60 space-y-1 border-b px-6 py-5 text-left">
                 <SheetTitle className="text-lg leading-tight">
                   {sidebar.mode === "add"
-                    ? "Create purchase invoice"
+                    ? t("sheet.createPurchase")
                     : sidebar.mode === "edit"
-                      ? "Edit purchase invoice"
+                      ? t("sheet.editPurchase")
                       : sheetPurchase?.purchaseNumber}
                 </SheetTitle>
                 <SheetDescription>
                   {sidebar.mode === "add" ? (
-                    "Add vendor, line items, and payment details. Saving is demo only."
+                    t("sheet.addPurchaseHint")
                   ) : sidebar.mode === "edit" && sheetPurchase ? (
                     <>
                       {sheetPurchase.purchaseNumber}
-                      <span className="text-muted-foreground"> · ID {sheetPurchase.id}</span>
+                      <span className="text-muted-foreground"> · {t("sheet.id", { id: sheetPurchase.id })}</span>
                     </>
                   ) : sheetPurchase ? (
                     <>
@@ -429,21 +430,21 @@ export default function PurchaseInvoicePage() {
                         setSidebar({ mode: "edit", purchase: sheetPurchase })
                       }
                     >
-                      Edit
+                      {tc("actions.edit")}
                     </Button>
                     <SheetClose asChild>
-                      <Button className="w-full sm:w-auto">Close</Button>
+                      <Button className="w-full sm:w-auto">{tc("actions.close")}</Button>
                     </SheetClose>
                   </>
                 ) : (
                   <>
                     <SheetClose asChild>
                       <Button variant="outline" type="button">
-                        Cancel
+                        {tc("actions.cancel")}
                       </Button>
                     </SheetClose>
                     <Button type="submit" form={formId}>
-                      {sidebar.mode === "add" ? "Create invoice" : "Save invoice"}
+                      {sidebar.mode === "add" ? t("sheet.createInvoice") : t("sheet.saveInvoice")}
                     </Button>
                   </>
                 )}
@@ -456,8 +457,8 @@ export default function PurchaseInvoicePage() {
       <DataTable
         data={purchases}
         columns={columns}
-        addButtonLabel="New Purchase Invoice"
-        searchPlaceholder="Search purchase invoices..."
+        addButtonLabel={t("table.newPurchaseInvoice")}
+        searchPlaceholder={t("table.searchPurchases")}
         importRowMapper={mapImportedPurchase}
         importSampleFilename="purchase-invoices-sample.csv"
         exportFilename="purchase-invoices-export.csv"
@@ -466,14 +467,14 @@ export default function PurchaseInvoicePage() {
         bulkActions={[
           {
             id: "delete",
-            label: "Delete selected",
+            label: tc("actions.deleteSelected"),
             icon: <IconTrash className="size-4" />,
             variant: "destructive",
             onClick: async (selected) => {
               if (
                 !(await confirmDeleteAction({
                   count: selected.length,
-                  entityLabel: "purchase invoice",
+                  entityLabel: t("entity.purchaseInvoice"),
                 }))
               ) {
                 return
@@ -481,12 +482,17 @@ export default function PurchaseInvoicePage() {
               const ids = new Set(selected.map((s) => s.id))
               setPurchases((prev) => prev.filter((r) => !ids.has(r.id)))
               toast.message(
-                `Removed ${selected.length} purchase invoice${selected.length === 1 ? "" : "s"} (demo).`
+                t("toasts.removedPurchaseCount", { count: selected.length })
               )
             },
           },
         ]}
-        tabs={invoiceTabs}
+        tabs={[
+          { value: "all", label: tc("tabs.all") },
+          { value: "pending", label: tc("status.pending") },
+          { value: "completed", label: tc("status.completed") },
+          { value: "cancelled", label: tc("status.cancelled") },
+        ]}
         defaultTab="all"
         tabFilter={purchaseInvoiceTabFilter}
       />

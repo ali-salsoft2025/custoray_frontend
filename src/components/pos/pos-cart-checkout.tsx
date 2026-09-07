@@ -10,10 +10,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { ORDER_STATUSES, PAYMENT_METHODS, statusLabel, type OrderRow } from "@/lib/orders"
+import { ORDER_STATUSES, PAYMENT_METHODS, type OrderRow } from "@/lib/orders"
 import { normalizeDiscountAmount } from "@/lib/pos"
 import { formatMoney as formatCurrency } from "@/lib/customers"
 import { cn } from "@/lib/utils"
+import { useTranslation } from "react-i18next"
 
 function formatPosPositive(value: string) {
   return formatCurrency(value).replace(/^\$/, "Rs ")
@@ -31,6 +32,8 @@ type PosCartCheckoutProps = {
   appliedDiscount: string
   subtotal: string
   total: string
+  lineDiscounts?: string
+  lineAdditions?: string
   formatMoney: (value: string) => string
   disabled?: boolean
   processing?: boolean
@@ -55,6 +58,8 @@ export function PosCartCheckout({
   appliedDiscount,
   subtotal,
   total,
+  lineDiscounts = "0.00",
+  lineAdditions = "0.00",
   formatMoney,
   disabled,
   processing,
@@ -66,8 +71,18 @@ export function PosCartCheckout({
   paidAmountDraft = "",
   onPaidAmountDraftChange,
 }: PosCartCheckoutProps) {
+  const { t } = useTranslation("pos")
   const isReturn = variant === "return"
-  const hasDiscount = Number(appliedDiscount) > 0
+  const lineDiscountAmount = Number(lineDiscounts) || 0
+  const additionAmount = Number(lineAdditions) || 0
+  const cartDiscountAmount = Number(appliedDiscount) || 0
+  const totalDiscountAmount = lineDiscountAmount + cartDiscountAmount
+  const hasDiscount = cartDiscountAmount > 0
+  const hasLineDiscounts = totalDiscountAmount > 0.005
+  const hasAdditions = additionAmount > 0.005
+  const listSubtotal = (
+    Number(subtotal) - additionAmount + lineDiscountAmount
+  ).toFixed(2)
   const showPartialPayment = !isReturn && allowPartialPayment
   const balanceDue = Math.max(
     0,
@@ -75,69 +90,71 @@ export function PosCartCheckout({
   ).toFixed(2)
 
   const actionLabel = processing
-    ? "Processing…"
+    ? t("processing")
     : isReturn
       ? status === "completed"
-        ? "Complete return"
+        ? t("completeReturn")
         : status === "pending"
-          ? "Save pending return"
-          : "Save cancelled return"
+          ? t("savePendingReturn")
+          : t("saveCancelledReturn")
       : status === "completed"
-        ? "Complete sale"
+        ? t("completeSale")
         : status === "pending"
-          ? "Save pending sale"
-          : "Save cancelled sale"
+          ? t("savePendingSale")
+          : t("saveCancelledSale")
 
   return (
-    <div className="border-border/40 space-y-3 border-t p-4">
-      <div className="space-y-1.5">
-        <Label htmlFor="pos-payment" className="text-xs">
-          {isReturn ? "Refund method" : "Payment method"}
-        </Label>
-        <Select
-          value={paymentMethod}
-          onValueChange={(value) =>
-            onPaymentMethodChange(value as OrderRow["paymentMethod"])
-          }
-        >
-          <SelectTrigger id="pos-payment" className="h-10 w-full">
-            <SelectValue placeholder="Select payment method" />
-          </SelectTrigger>
-          <SelectContent>
-            {enabledPaymentMethods.map((method) => (
-              <SelectItem key={method} value={method}>
-                {method}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+    <div className="border-border/40 space-y-2.5 border-t p-3">
+      <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="pos-payment" className="text-xs">
+            {isReturn ? t("refund") : t("payment")}
+          </Label>
+          <Select
+            value={paymentMethod}
+            onValueChange={(value) =>
+              onPaymentMethodChange(value as OrderRow["paymentMethod"])
+            }
+          >
+            <SelectTrigger id="pos-payment" className="h-10 w-full">
+              <SelectValue placeholder={t("selectPaymentMethod")} />
+            </SelectTrigger>
+            <SelectContent>
+              {enabledPaymentMethods.map((method) => (
+                <SelectItem key={method} value={method}>
+                  {method}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="pos-status" className="text-xs">
-          Status
-        </Label>
-        <Select
-          value={status}
-          onValueChange={(value) => onStatusChange(value as OrderRow["status"])}
-        >
-          <SelectTrigger id="pos-status" className="h-10 w-full">
-            <SelectValue placeholder="Select status" />
-          </SelectTrigger>
-          <SelectContent>
-            {ORDER_STATUSES.map((option) => (
-              <SelectItem key={option} value={option}>
-                {statusLabel(option)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="space-y-1.5">
+          <Label htmlFor="pos-status" className="text-xs">
+            {t("status")}
+          </Label>
+          <Select
+            value={status}
+            onValueChange={(value) => onStatusChange(value as OrderRow["status"])}
+          >
+            <SelectTrigger id="pos-status" className="h-10 w-full">
+              <SelectValue placeholder={t("selectStatus")} />
+            </SelectTrigger>
+            <SelectContent>
+              {ORDER_STATUSES.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {t(`status.${option}`, { ns: "common" })}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {allowDiscounts ? (
         <div className="space-y-1.5">
           <Label htmlFor="pos-discount" className="text-xs">
-            Discount
+            {t("discount")}
           </Label>
           <div className="flex gap-2">
             <Input
@@ -159,7 +176,7 @@ export function PosCartCheckout({
               disabled={disabled}
               onClick={onApplyDiscount}
             >
-              Apply
+              {t("apply")}
             </Button>
           </div>
           {hasDiscount ? (
@@ -168,7 +185,7 @@ export function PosCartCheckout({
               onClick={onClearDiscount}
               className="text-muted-foreground hover:text-foreground text-xs font-medium"
             >
-              Remove discount
+              {t("removeDiscount")}
             </button>
           ) : null}
         </div>
@@ -177,7 +194,7 @@ export function PosCartCheckout({
       {showPartialPayment ? (
         <div className="space-y-1.5">
           <Label htmlFor="pos-paid-amount" className="text-xs">
-            Amount paid
+            {t("amountPaid")}
           </Label>
           <Input
             id="pos-paid-amount"
@@ -196,33 +213,41 @@ export function PosCartCheckout({
 
       <div className="space-y-2 text-sm">
         <div className="flex items-center justify-between gap-3">
-          <span className="text-muted-foreground">Subtotal</span>
-          <span className="tabular-nums">{formatMoney(subtotal)}</span>
+          <span className="text-muted-foreground">{t("subtotal")}</span>
+          <span className="tabular-nums">{formatMoney(listSubtotal)}</span>
         </div>
-        {hasDiscount ? (
+        {hasAdditions ? (
           <div className="flex items-center justify-between gap-3">
-            <span className="text-muted-foreground">Discount</span>
-            <span className="tabular-nums">
-              −{isReturn ? formatPosPositive(appliedDiscount) : formatMoney(appliedDiscount)}
+            <span className="text-muted-foreground">{t("additions")}</span>
+            <span className="tabular-nums text-amber-700 dark:text-amber-400">
+              +{formatMoney(additionAmount.toFixed(2))}
+            </span>
+          </div>
+        ) : null}
+        {hasLineDiscounts ? (
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-muted-foreground">{t("discounts")}</span>
+            <span className="tabular-nums text-emerald-600 dark:text-emerald-400">
+              −{formatMoney(totalDiscountAmount.toFixed(2))}
             </span>
           </div>
         ) : null}
         {showPartialPayment ? (
           <div className="flex items-center justify-between gap-3 text-xs">
-            <span className="text-muted-foreground">Balance due</span>
+            <span className="text-muted-foreground">{t("balanceDue")}</span>
             <span className="font-medium tabular-nums">{formatPosPositive(balanceDue)}</span>
           </div>
         ) : null}
         <div
           className={cn(
-            "flex items-center justify-between rounded-lg px-3 py-3",
-            isReturn ? "bg-amber-500/10" : "bg-muted/40"
+            "flex items-center justify-between rounded-xl px-3 py-3",
+            isReturn ? "bg-amber-500/10" : "bg-primary/10"
           )}
         >
-          <span className="font-medium">{isReturn ? "Refund total" : "Total due"}</span>
+          <span className="font-medium">{isReturn ? t("refundTotal") : t("totalDue")}</span>
           <span
             className={cn(
-              "text-lg font-semibold tabular-nums",
+              "text-lg font-semibold tabular-nums tracking-tight",
               isReturn && "text-amber-900 dark:text-amber-300"
             )}
           >
@@ -233,7 +258,7 @@ export function PosCartCheckout({
 
       <Button
         type="button"
-        className="h-11 w-full"
+        className="h-12 w-full text-[15px] font-semibold"
         disabled={disabled || processing}
         onClick={onCompleteSale}
       >

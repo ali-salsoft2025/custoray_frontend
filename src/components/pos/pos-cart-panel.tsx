@@ -1,11 +1,14 @@
 "use client"
 
+import { useMemo } from "react"
 import { IconShoppingCart } from "@tabler/icons-react"
+import { useTranslation } from "react-i18next"
 
 import { PosCartCheckout } from "@/components/pos/pos-cart-checkout"
 import { PosCartLineControls } from "@/components/pos/pos-cart-line-controls"
 import { Button } from "@/components/ui/button"
 import {
+  cartAdjustmentTotals,
   cartLineBaseTotal,
   cartLineHasAdjustment,
   cartLineTotal,
@@ -78,25 +81,34 @@ export function PosCartPanel({
   onPaidAmountDraftChange,
   className,
 }: PosCartPanelProps) {
+  const { t } = useTranslation("pos")
   const isReturn = variant === "return"
   const cartItemCount = cart.reduce((sum, line) => sum + line.quantity, 0)
   const selectedLine =
     cart.find((line) => line.productId === selectedProductId) ?? cart[cart.length - 1] ?? null
+  const { discounts: lineDiscounts, additions: lineAdditions } = useMemo(
+    () => cartAdjustmentTotals(cart),
+    [cart]
+  )
 
   return (
     <aside
       className={cn(
-        "flex flex-col overflow-hidden rounded-xl bg-card shadow-sm shadow-black/[0.04] ring-1 ring-border/40 xl:max-h-[calc(100vh-8rem)]",
+        "flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-card shadow-sm shadow-black/[0.04] ring-1 ring-border/40",
         className
       )}
     >
       <div className="border-border/40 flex items-center justify-between gap-2 border-b px-4 py-3">
-        <p className="text-sm font-semibold">
-          {isReturn ? "Return" : "Cart"}
-          <span className="text-muted-foreground ml-1.5 font-normal text-xs">
-            {cartItemCount === 0 ? "· empty" : `· ${cartItemCount} items`}
-          </span>
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-semibold">{isReturn ? t("return") : t("cart")}</p>
+          {cartItemCount > 0 ? (
+            <span className="bg-primary/10 text-primary inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold tabular-nums">
+              {cartItemCount}
+            </span>
+          ) : (
+            <span className="text-muted-foreground text-xs">{t("empty")}</span>
+          )}
+        </div>
         {cart.length > 0 ? (
           <Button
             type="button"
@@ -105,7 +117,7 @@ export function PosCartPanel({
             className="text-muted-foreground h-8 px-2 text-xs"
             onClick={onClearCart}
           >
-            Clear
+            {t("clear")}
           </Button>
         ) : null}
       </div>
@@ -113,8 +125,15 @@ export function PosCartPanel({
       <div className="min-h-[160px] flex-1 space-y-2 overflow-y-auto p-3">
         {cart.length === 0 ? (
           <div className="text-muted-foreground flex min-h-[140px] flex-col items-center justify-center gap-2 text-center text-sm">
-            <IconShoppingCart className="size-6 opacity-30" stroke={1.5} />
-            Tap a product to {isReturn ? "return" : "add"}
+            <div className="bg-muted/60 flex size-11 items-center justify-center rounded-2xl">
+              <IconShoppingCart className="size-5 opacity-50" stroke={1.5} />
+            </div>
+            <p className="font-medium text-foreground/80">
+              {isReturn ? t("noItemsToReturn") : t("cartEmpty")}
+            </p>
+            <p className="max-w-[12rem] text-xs">
+              {isReturn ? t("tapToAddReturn") : t("tapToAddSale")}
+            </p>
           </div>
         ) : (
           cart.map((line) => {
@@ -128,8 +147,8 @@ export function PosCartPanel({
                 className={cn(
                   "rounded-lg ring-1 transition-colors",
                   isSelected
-                    ? "bg-primary/[0.04] ring-primary/35"
-                    : "bg-muted/25 ring-border/25"
+                    ? "bg-primary/[0.06] ring-primary/40"
+                    : "bg-muted/25 ring-border/25 hover:bg-muted/40"
                 )}
               >
                 <button
@@ -192,6 +211,8 @@ export function PosCartPanel({
         appliedDiscount={appliedDiscount}
         subtotal={subtotal}
         total={total}
+        lineDiscounts={lineDiscounts}
+        lineAdditions={lineAdditions}
         formatMoney={formatMoney}
         disabled={disabled}
         processing={processing}

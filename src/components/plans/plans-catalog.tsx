@@ -2,6 +2,7 @@
 
 import { Check } from "lucide-react"
 import { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -50,6 +51,8 @@ function FeatureRow({ children }: { children: string }) {
 }
 
 export function PlansCatalog() {
+  const { t } = useTranslation("settings")
+  const { t: tCommon } = useTranslation()
   const { access, refreshAccess } = useAuth()
   useCheckoutReturn()
   const [plans, setPlans] = useState<PublicPlan[]>([])
@@ -100,7 +103,7 @@ export function PlansCatalog() {
 
   async function submitExtend() {
     if (reason.trim().length < 8) {
-      toast.error("Please explain why you need more time (at least 8 characters).")
+      toast.error(t("billing.toastExplainMoreTime"))
       return
     }
     setPending(true)
@@ -109,9 +112,9 @@ export function PlansCatalog() {
       await refreshAccess()
       setExtendOpen(false)
       setReason("")
-      toast.success("Request sent. We will email you when an admin responds.")
+      toast.success(t("billing.toastRequestSent"))
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not send request")
+      toast.error(err instanceof Error ? err.message : t("billing.toastCouldNotSend"))
     } finally {
       setPending(false)
     }
@@ -119,15 +122,15 @@ export function PlansCatalog() {
 
   function handleJoinNow() {
     if (!onTrial) {
-      toast.info("Turn on Annually, then pick a plan to get 2 months free.")
+      toast.info(t("billing.toastTurnOnAnnually"))
       return
     }
     if (!isOwner) {
-      toast.error("Ask the owner to request more trial time.")
+      toast.error(t("billing.toastAskOwnerTrial"))
       return
     }
     if (requested) {
-      toast.info("Your extension request is already pending.")
+      toast.info(t("billing.toastRequestPending"))
       return
     }
     setExtendOpen(true)
@@ -135,11 +138,11 @@ export function PlansCatalog() {
 
   async function handleUpgrade(planCode: string) {
     if (!isOwner) {
-      toast.error("Ask the business owner to change the plan.")
+      toast.error(t("billing.toastAskOwnerPlan"))
       return
     }
     if (billingEnabled === false) {
-      toast.error("Stripe is not configured yet. Add the test keys on the API and restart it.")
+      toast.error(t("billing.toastStripeNotConfigured"))
       return
     }
     setCheckingOut(planCode)
@@ -147,16 +150,16 @@ export function PlansCatalog() {
       const result = await apiCheckout(planCode, interval, "/settings/billing")
       if (result.applied) {
         await refreshAccess()
-        toast.success("Plan updated")
+        toast.success(t("billing.toastPlanUpdated"))
         return
       }
       if (!result.checkoutUrl) {
-        toast.error("Stripe did not return a checkout page.")
+        toast.error(t("billing.toastNoCheckout"))
         return
       }
       window.location.assign(result.checkoutUrl)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not start checkout")
+      toast.error(err instanceof Error ? err.message : t("billing.toastCouldNotCheckout"))
     } finally {
       setCheckingOut(null)
     }
@@ -164,7 +167,7 @@ export function PlansCatalog() {
 
   async function handleManageBilling() {
     if (!isOwner) {
-      toast.error("Ask the business owner to manage billing.")
+      toast.error(t("billing.toastAskOwnerBilling"))
       return
     }
     setPending(true)
@@ -172,7 +175,7 @@ export function PlansCatalog() {
       const result = await apiBillingPortal()
       window.location.assign(result.portalUrl)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not open billing portal")
+      toast.error(err instanceof Error ? err.message : t("billing.toastCouldNotPortal"))
     } finally {
       setPending(false)
     }
@@ -192,20 +195,20 @@ export function PlansCatalog() {
     <div className="flex w-full flex-col gap-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-xl font-semibold tracking-tight uppercase">
-          Choose your plans
+          {t("billing.choosePlans")}
         </h2>
         <div className="flex items-center gap-3 text-sm">
           <span className={cn(!yearly && "text-foreground font-medium", yearly && "text-muted-foreground")}>
-            Monthly
+            {t("billing.monthly")}
           </span>
           <Switch
             checked={yearly}
             onCheckedChange={(checked) => setInterval(checked ? "yearly" : "monthly")}
-            aria-label="Bill annually"
+            aria-label={t("billing.billAnnually")}
             className="h-6 w-11"
           />
           <span className={cn(yearly && "text-foreground font-medium", !yearly && "text-muted-foreground")}>
-            Annually
+            {t("billing.annually")}
           </span>
         </div>
       </div>
@@ -216,20 +219,20 @@ export function PlansCatalog() {
             <p className="text-sm font-medium">
               {onTrial
                 ? trialEnds
-                  ? `Free trial available · ends ${trialEnds}`
-                  : "Free trial available"
-                : "2 months free on annual plans"}
+                  ? t("billing.trialEndsOn", { date: trialEnds })
+                  : t("billing.freeTrialAvailable")
+                : t("billing.twoMonthsFree")}
             </p>
             {yearly ? (
               <span className="bg-primary text-primary-foreground rounded px-1.5 py-0.5 text-[10px] font-semibold tracking-wide uppercase">
-                Save 2 months
+                {t("billing.saveTwoMonths")}
               </span>
             ) : null}
           </div>
           <p className="text-muted-foreground mt-1 text-sm">
             {onTrial
-              ? "Need more time? Request an extension, or pick a paid plan when you are ready."
-              : "Switch to annual billing and get the first 2 months free."}
+              ? t("billing.needMoreTime")
+              : t("billing.annualPromo")}
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">
@@ -239,11 +242,11 @@ export function PlansCatalog() {
               onClick={() => void handleManageBilling()}
               disabled={pending || Boolean(checkingOut)}
             >
-              Manage billing
+              {t("billing.manageBilling")}
             </Button>
           ) : null}
           <Button className="shrink-0" onClick={handleJoinNow} disabled={Boolean(onTrial && requested)}>
-            {onTrial && requested ? "Request sent" : "Join now"}
+            {onTrial && requested ? t("billing.requestSent") : t("billing.joinNow")}
           </Button>
         </div>
       </div>
@@ -268,18 +271,18 @@ export function PlansCatalog() {
                 <h3 className="text-lg font-semibold">{plan.displayName}</h3>
                 {recommended ? (
                   <span className="bg-primary text-primary-foreground rounded px-1.5 py-0.5 text-[10px] font-semibold tracking-wide uppercase">
-                    Most popular
+                    {t("billing.mostPopular")}
                   </span>
                 ) : plan.code === "professional" ? (
                   <span className="bg-primary text-primary-foreground rounded px-1.5 py-0.5 text-[10px] font-semibold tracking-wide uppercase">
-                    Scale
+                    {t("billing.scale")}
                   </span>
                 ) : null}
               </div>
               <p className="text-muted-foreground mt-1 text-sm">{PLAN_BLURB[plan.code]}</p>
               <p className="mt-4 text-sm font-medium">
                 {price}
-                <span className="text-muted-foreground font-normal">/month</span>
+                <span className="text-muted-foreground font-normal">{t("billing.perMonth")}</span>
               </p>
 
               <Button
@@ -289,12 +292,12 @@ export function PlansCatalog() {
                 onClick={current ? undefined : () => void handleUpgrade(plan.code)}
               >
                 {current
-                  ? "Your current plan"
+                  ? t("billing.yourCurrentPlan")
                   : checkingOut === plan.code
-                    ? "Redirecting…"
+                    ? t("billing.redirecting")
                     : onTrial
-                      ? "Subscribe"
-                      : "Upgrade"}
+                      ? t("billing.subscribe")
+                      : t("billing.upgrade")}
               </Button>
 
               <div className="bg-border my-5 h-px w-full" />
@@ -315,25 +318,24 @@ export function PlansCatalog() {
       <Dialog open={extendOpen} onOpenChange={setExtendOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Extend trial</DialogTitle>
+            <DialogTitle>{t("billing.extendTrial")}</DialogTitle>
             <DialogDescription>
-              Tell us why you need more time. An admin reviews this, and extra trial
-              days are limited.
+              {t("billing.extendTrialDescription")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
-            <Label htmlFor="extend-trial-reason">Reason</Label>
+            <Label htmlFor="extend-trial-reason">{t("billing.reason")}</Label>
             <textarea
               id="extend-trial-reason"
               className="border-input bg-background placeholder:text-muted-foreground focus-visible:ring-ring min-h-24 w-full rounded-md border px-3 py-2 text-sm outline-none focus-visible:ring-2"
               value={reason}
               onChange={(event) => setReason(event.target.value)}
-              placeholder="A few more days to finish setup / waiting on payment…"
+              placeholder={t("billing.extensionPlaceholder")}
             />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setExtendOpen(false)}>
-              Cancel
+              {tCommon("actions.cancel")}
             </Button>
             <Button
               type="button"
@@ -343,10 +345,10 @@ export function PlansCatalog() {
               {pending ? (
                 <span className="flex items-center gap-2">
                   <LoadingSpinner size="sm" />
-                  Sending…
+                  {t("billing.sending")}
                 </span>
               ) : (
-                "Send request"
+                t("billing.sendRequest")
               )}
             </Button>
           </DialogFooter>

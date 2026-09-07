@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useMemo, useState, type FormEvent } from "react"
+import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -20,6 +21,7 @@ type ReturnFormProps = {
 }
 
 export function ReturnForm({ formId, returnDoc, onSubmit }: ReturnFormProps) {
+  const { t } = useTranslation("returns")
   const [lines, setLines] = useState<ReturnLineRow[]>(
     returnDoc.lines.length > 0 ? returnDoc.lines : []
   )
@@ -47,8 +49,9 @@ export function ReturnForm({ formId, returnDoc, onSubmit }: ReturnFormProps) {
     )
   }, [])
 
-  const typeLabel = returnDoc.type === "sales" ? "Sale" : "Purchase"
-  const partyLabel = returnDoc.type === "sales" ? "Customer" : "Vendor"
+  const typeLabel = returnDoc.type === "sales" ? t("form.sale") : t("form.purchase")
+  const partyLabel =
+    returnDoc.type === "sales" ? t("detail.customer") : t("detail.vendor")
 
   return (
     <form id={formId} className="flex flex-col gap-4 text-sm" onSubmit={onSubmit}>
@@ -62,7 +65,7 @@ export function ReturnForm({ formId, returnDoc, onSubmit }: ReturnFormProps) {
 
       <div className="bg-muted/30 border-border/60 rounded-lg border p-3 text-sm">
         <p className="text-muted-foreground">
-          {typeLabel} return ·{" "}
+          {t("form.returnOf", { type: typeLabel })} ·{" "}
           <span className="text-foreground font-medium">{returnDoc.referenceNumber}</span>
         </p>
         <p className="text-muted-foreground mt-1">
@@ -73,7 +76,7 @@ export function ReturnForm({ formId, returnDoc, onSubmit }: ReturnFormProps) {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-2">
-          <Label htmlFor={`${formId}-returnNumber`}>Return #</Label>
+          <Label htmlFor={`${formId}-returnNumber`}>{t("form.returnNumber")}</Label>
           <Input
             id={`${formId}-returnNumber`}
             name="returnNumber"
@@ -82,7 +85,7 @@ export function ReturnForm({ formId, returnDoc, onSubmit }: ReturnFormProps) {
           />
         </div>
         <div className="flex flex-col gap-2">
-          <Label htmlFor={`${formId}-returnDate`}>Return date</Label>
+          <Label htmlFor={`${formId}-returnDate`}>{t("form.returnDate")}</Label>
           <Input
             id={`${formId}-returnDate`}
             name="returnDate"
@@ -94,17 +97,17 @@ export function ReturnForm({ formId, returnDoc, onSubmit }: ReturnFormProps) {
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor={`${formId}-description`}>Notes</Label>
+        <Label htmlFor={`${formId}-description`}>{t("form.notes")}</Label>
         <Input
           id={`${formId}-description`}
           name="description"
           defaultValue={returnDoc.description === "—" ? "" : returnDoc.description}
-          placeholder="Reason for return…"
+          placeholder={t("form.reasonPlaceholder")}
         />
       </div>
 
       <div className="flex flex-col gap-3">
-        <Label>Items to return</Label>
+        <Label>{t("form.itemsToReturn")}</Label>
         <div className="flex flex-col gap-3">
           {lines.map((line, index) => (
             <div
@@ -135,7 +138,7 @@ export function ReturnForm({ formId, returnDoc, onSubmit }: ReturnFormProps) {
               <p className="text-foreground font-medium">{line.productName}</p>
               <div className="grid grid-cols-3 gap-2">
                 <div className="flex flex-col gap-1">
-                  <Label htmlFor={`${formId}-qty-${index}`}>Return qty</Label>
+                  <Label htmlFor={`${formId}-qty-${index}`}>{t("form.returnQty")}</Label>
                   <Input
                     id={`${formId}-qty-${index}`}
                     name={`lines[${index}].quantity`}
@@ -146,17 +149,17 @@ export function ReturnForm({ formId, returnDoc, onSubmit }: ReturnFormProps) {
                     onChange={(e) => updateLine(index, Number(e.target.value) || 1)}
                   />
                   <span className="text-muted-foreground text-xs">
-                    Max {line.maxQuantity}
+                    {t("form.maxQty", { count: line.maxQuantity })}
                   </span>
                 </div>
                 <div className="flex flex-col gap-1">
-                  <Label>Unit price</Label>
+                  <Label>{t("form.unitPrice")}</Label>
                   <div className="text-muted-foreground flex h-9 items-center tabular-nums">
                     {formatMoney(line.unitPrice)}
                   </div>
                 </div>
                 <div className="flex flex-col gap-1">
-                  <Label>Line total</Label>
+                  <Label>{t("detail.lineTotal")}</Label>
                   <div className="text-foreground flex h-9 items-center tabular-nums">
                     {line.lineTotal}
                   </div>
@@ -168,27 +171,27 @@ export function ReturnForm({ formId, returnDoc, onSubmit }: ReturnFormProps) {
       </div>
 
       <div className="border-border/60 bg-muted/20 space-y-2 rounded-lg border p-3">
-        <p className="text-foreground font-medium">Payment impact</p>
+        <p className="text-foreground font-medium">{t("detail.paymentImpact")}</p>
         <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-          <span className="text-muted-foreground">Original total</span>
+          <span className="text-muted-foreground">{t("detail.originalTotal")}</span>
           <span className="text-right tabular-nums">
             {formatMoney(returnDoc.sourceTotalBefore)}
           </span>
-          <span className="text-muted-foreground">Paid amount</span>
+          <span className="text-muted-foreground">{t("form.paidAmount")}</span>
           <span className="text-right tabular-nums">
             {formatMoney(returnDoc.sourcePaidAmount)}
           </span>
-          <span className="text-muted-foreground">Return amount</span>
+          <span className="text-muted-foreground">{t("detail.returnAmount")}</span>
           <span className="text-right tabular-nums text-amber-700 dark:text-amber-400">
             −{returnTotal}
           </span>
-          <span className="text-muted-foreground">New total</span>
+          <span className="text-muted-foreground">{t("detail.newTotal")}</span>
           <span className="text-right tabular-nums">
             {formatMoney(paymentImpact.sourceTotalAfter)}
           </span>
           {Number(paymentImpact.refundDue) > 0 ? (
             <>
-              <span className="text-muted-foreground">Refund due</span>
+              <span className="text-muted-foreground">{t("detail.refundDue")}</span>
               <span className="text-right font-medium text-emerald-700 tabular-nums dark:text-emerald-400">
                 {formatMoney(paymentImpact.refundDue)}
               </span>
@@ -196,7 +199,7 @@ export function ReturnForm({ formId, returnDoc, onSubmit }: ReturnFormProps) {
           ) : null}
           {Number(paymentImpact.balanceDue) > 0 ? (
             <>
-              <span className="text-muted-foreground">Balance due</span>
+              <span className="text-muted-foreground">{t("detail.balanceDue")}</span>
               <span className="text-right font-medium text-amber-700 tabular-nums dark:text-amber-400">
                 {formatMoney(paymentImpact.balanceDue)}
               </span>
@@ -206,16 +209,16 @@ export function ReturnForm({ formId, returnDoc, onSubmit }: ReturnFormProps) {
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor={`${formId}-status`}>Status</Label>
+        <Label htmlFor={`${formId}-status`}>{t("detail.status")}</Label>
         <select
           id={`${formId}-status`}
           name="status"
           defaultValue={returnDoc.status}
           className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm shadow-xs outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px]"
         >
-          <option value="pending">Pending</option>
-          <option value="completed">Completed</option>
-          <option value="cancelled">Cancelled</option>
+          <option value="pending">{t("status.pending", { ns: "common" })}</option>
+          <option value="completed">{t("status.completed", { ns: "common" })}</option>
+          <option value="cancelled">{t("status.cancelled", { ns: "common" })}</option>
         </select>
       </div>
     </form>

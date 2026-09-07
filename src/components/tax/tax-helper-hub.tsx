@@ -11,6 +11,7 @@ import {
   IconSum,
 } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 import { StatCard, StatCardsGrid } from "@/components/stat-card"
 import { TaxDisclaimer } from "@/components/tax/tax-disclaimer"
@@ -76,6 +77,7 @@ function ReportStepLink({
   href: string
   icon: React.ReactNode
 }) {
+  const { t } = useTranslation("tax")
   return (
     <Link
       href={href}
@@ -94,7 +96,9 @@ function ReportStepLink({
           {done ? <IconCheck className="size-4" stroke={2} /> : icon}
         </div>
         <div className="min-w-0">
-          <p className="text-primary text-[11px] font-semibold uppercase">Step {step}</p>
+          <p className="text-primary text-[11px] font-semibold uppercase">
+            {t("step", { step })}
+          </p>
           <p className="text-sm font-semibold">{plainTitle}</p>
           <p className="text-muted-foreground mt-0.5 text-xs leading-relaxed">{description}</p>
         </div>
@@ -102,7 +106,7 @@ function ReportStepLink({
       <div className="flex items-center justify-between gap-2 sm:justify-end">
         <span className="text-muted-foreground text-xs sm:hidden">{title}</span>
         <span className="text-primary inline-flex items-center gap-1 text-xs font-medium">
-          Open
+          {t("open")}
           <IconArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
         </span>
       </div>
@@ -111,6 +115,7 @@ function ReportStepLink({
 }
 
 export function TaxHelperHub() {
+  const { t } = useTranslation("tax")
   const { settings } = useTaxSettings()
   const bundle = useTaxReportBundle()
   const { orders } = useOrders()
@@ -120,7 +125,7 @@ export function TaxHelperHub() {
 
   const handleExportPack = () => {
     if (!bundle) {
-      toast.error("Pick a fiscal period using the calendar in the top bar first.")
+      toast.error(t("toastPickPeriod"))
       return
     }
     const sales = filterByDateRange(
@@ -149,21 +154,21 @@ export function TaxHelperHub() {
       ),
       yearSummary: yearSummaryToRows(bundle.yearSummary, profile),
       monthly: bundle.yearSummary.monthly.map((row) => ({
-        Month: row.label,
-        Revenue: formatTaxMoney(row.revenue, profile),
-        Expenses: formatTaxMoney(row.expenses, profile),
-        Net: formatTaxMoney(row.net, profile),
+        [t("export.month")]: row.label,
+        [t("export.revenue")]: formatTaxMoney(row.revenue, profile),
+        [t("export.expenses")]: formatTaxMoney(row.expenses, profile),
+        [t("export.net")]: formatTaxMoney(row.net, profile),
       })),
       manualEntries: settings.manualEntries.map((entry) => ({
-        Name: entry.label,
-        Type: manualEntryCategoryLabel(entry.category),
-        Amount: formatTaxMoney(entry.amount, profile),
-        Note: entry.note ?? "",
+        [t("export.name")]: entry.label,
+        [t("export.type")]: manualEntryCategoryLabel(entry.category),
+        [t("export.amount")]: formatTaxMoney(entry.amount, profile),
+        [t("export.note")]: entry.note ?? "",
       })),
       sales,
       purchases: purchaseRows,
     })
-    toast.success("Download started — send this file to your accountant.")
+    toast.success(t("toastPackStarted"))
   }
 
   const pl = bundle?.profitAndLoss
@@ -174,92 +179,78 @@ export function TaxHelperHub() {
     <div className="flex flex-col gap-6">
       <div className="rounded-2xl bg-gradient-to-br from-primary/12 via-primary/5 to-transparent px-5 py-6 ring-1 ring-primary/15 sm:px-7 sm:py-8">
         <p className="text-primary text-xs font-semibold tracking-wide uppercase">
-          Year-end tax prep
+          {t("hub.kicker")}
         </p>
         <h2 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
-          Tax Helper
+          {t("title")}
         </h2>
         <p className="text-muted-foreground mt-2 max-w-2xl text-sm leading-relaxed">
-          A simple step-by-step guide — no accounting degree needed. We pull numbers from
-          your sales and purchases, you add anything missing, then download a pack for
-          your accountant.
+          {t("hub.intro")}
         </p>
       </div>
 
       <TaxDisclaimer />
 
       <section className="space-y-3">
-        <StepHeader
-          step={1}
-          title="Check your date range"
-          description="Use the calendar button in the top bar to pick the fiscal year or period you are preparing for."
-        />
+        <StepHeader step={1} title={t("hub.step1Title")} description={t("hub.step1Body")} />
         <TaxTermBanner />
       </section>
 
       <section className="space-y-3">
-        <StepHeader
-          step={2}
-          title="Add anything Custoray might be missing"
-          description="Bank fees, equipment, loans, or side income — add them here and we include them in your reports."
-        />
+        <StepHeader step={2} title={t("hub.step2Title")} description={t("hub.step2Body")} />
         <TaxManualEntries />
       </section>
 
       {bundle ? (
         <section className="space-y-3">
-          <StepHeader
-            step={3}
-            title="Review your numbers"
-            description="A quick summary, then open each report for the full plain-language breakdown."
-          />
+          <StepHeader step={3} title={t("hub.step3Title")} description={t("hub.step3Body")} />
           <StatCardsGrid>
             <StatCard
-              label="Money in"
+              label={t("hub.moneyIn")}
               value={fmt(pl!.netRevenue)}
-              hint="Sales plus any extra income you added"
+              hint={t("hub.moneyInHint")}
             />
             <StatCard
-              label="Money out"
+              label={t("hub.moneyOut")}
               value={fmt(pl!.netPurchases)}
-              hint="Purchases plus any extra expenses you added"
+              hint={t("hub.moneyOutHint")}
             />
             <StatCard
-              label="What you kept"
+              label={t("hub.whatYouKept")}
               value={fmt(pl!.grossProfitEstimate)}
-              hint="Rough profit for the period"
+              hint={t("hub.whatYouKeptHint")}
             />
             <StatCard
-              label="Net worth (est.)"
+              label={t("hub.netWorth")}
               value={fmt(bs!.estimatedEquity)}
-              hint="What you have minus what you owe"
+              hint={t("hub.netWorthHint")}
             />
           </StatCardsGrid>
           <div className="grid gap-3 pt-1">
           <ReportStepLink
             step={3}
             done={Boolean(bundle && pl!.netRevenue > 0)}
-            plainTitle="Money in vs money out"
-            title="Profit & loss"
-            description="See what came in from sales and what went out on purchases — like a simple income statement."
+            plainTitle={t("hub.plTitle")}
+            title={t("hub.plName")}
+            description={t("hub.plHint")}
             href="/tax/profit-loss"
             icon={<IconSum className="size-4" stroke={1.75} />}
           />
           <ReportStepLink
             step={3}
             done={Boolean(bundle && bs!.totalAssets > 0)}
-            plainTitle="What you own & owe"
-            title="Balance sheet"
-            description="A snapshot of customer balances, inventory, and bills — what the business has and owes today."
+            plainTitle={t("hub.bsTitle")}
+            title={t("hub.bsName")}
+            description={t("hub.bsHint")}
             href="/tax/balance-sheet"
             icon={<IconScale className="size-4" stroke={1.75} />}
           />
           <ReportStepLink
             step={3}
             done={Boolean(bundle && bundle.yearSummary.counts.salesInvoices > 0)}
-            plainTitle="Everything in one place"
-            title="Year summary"
-            description="Counts, monthly trends, and your biggest customers and vendors — great for your accountant."
+            plainTitle={t("hub.ysTitle")}
+            title={t("hub.ysName")}
+            description={t("hub.ysHint")}
             href="/tax/year-summary"
             icon={<IconFileSpreadsheet className="size-4" stroke={1.75} />}
           />
@@ -269,18 +260,14 @@ export function TaxHelperHub() {
         <section className="space-y-3">
           <StepHeader
             step={3}
-            title="Review your numbers"
-            description="Pick a fiscal period from the top bar calendar to see summaries and reports."
+            title={t("hub.step3Title")}
+            description={t("hub.step3Empty")}
           />
         </section>
       )}
 
       <section className="space-y-3">
-        <StepHeader
-          step={4}
-          title="Download for your accountant"
-          description="One Excel file with all reports and details. Optional: add your tax ID and notes in settings first."
-        />
+        <StepHeader step={4} title={t("hub.step4Title")} description={t("hub.step4Body")} />
         <div
           className={cn(
             panelClass,
@@ -292,21 +279,20 @@ export function TaxHelperHub() {
               <IconDownload className="size-5" stroke={1.75} />
             </div>
             <div>
-              <p className="text-sm font-semibold">Accountant pack (.xls)</p>
+              <p className="text-sm font-semibold">{t("hub.packTitle")}</p>
               <p className="text-muted-foreground mt-0.5 text-xs leading-relaxed">
-                Includes profit &amp; loss, balance sheet, year summary, monthly chart, sales
-                &amp; purchase lists
-                {hasManualEntries ? ", and your manual entries" : ""}.
+                {t("hub.packBody")}
+                {hasManualEntries ? t("hub.packManual") : ""}.
               </p>
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button type="button" variant="outline" size="sm" asChild>
-              <Link href="/tax/settings">Add tax ID &amp; notes</Link>
+              <Link href="/tax/settings">{t("hub.addTaxId")}</Link>
             </Button>
             <Button type="button" size="sm" onClick={handleExportPack}>
               <IconDownload className="size-4" />
-              Download pack
+              {t("hub.downloadPack")}
             </Button>
           </div>
         </div>

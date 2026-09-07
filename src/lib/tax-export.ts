@@ -1,5 +1,6 @@
 import * as XLSX from "xlsx"
 
+import i18n from "@/i18n"
 import { downloadBlob } from "@/lib/csv"
 import { loadCompanySettings } from "@/lib/company-settings"
 import type { OrderRow } from "@/lib/orders"
@@ -34,20 +35,33 @@ export function buildTaxExportMeta(
   }
 }
 
+function tx(key: string) {
+  return i18n.t(key, { ns: "tax" })
+}
+
 function metaRows(meta: TaxExportMeta): Record<string, string>[] {
   const rows: Record<string, string>[] = [
-    { Field: "Company", Value: meta.companyName },
-    { Field: "Currency", Value: meta.currency },
-    { Field: "Period", Value: meta.termLabel },
-    { Field: "Generated", Value: meta.generatedAt },
+    { [tx("export.field")]: tx("export.company"), [tx("export.value")]: meta.companyName },
+    { [tx("export.field")]: tx("export.currency"), [tx("export.value")]: meta.currency },
+    { [tx("export.field")]: tx("export.period"), [tx("export.value")]: meta.termLabel },
+    { [tx("export.field")]: tx("export.generated"), [tx("export.value")]: meta.generatedAt },
   ]
   if (meta.businessTaxId) {
-    rows.push({ Field: "Tax ID", Value: meta.businessTaxId })
+    rows.push({ [tx("export.field")]: tx("export.taxId"), [tx("export.value")]: meta.businessTaxId })
   }
   if (meta.accountantNotes) {
-    rows.push({ Field: "Notes", Value: meta.accountantNotes })
+    rows.push({ [tx("export.field")]: tx("export.notes"), [tx("export.value")]: meta.accountantNotes })
   }
   return rows
+}
+
+function reportRows(lines: TaxReportLine[]) {
+  return lines.map((row) => ({
+    [tx("export.section")]: row.section,
+    [tx("export.line")]: row.line,
+    [tx("export.amount")]: row.amount,
+    [tx("export.note")]: row.note ?? "",
+  }))
 }
 
 export function downloadTaxReportXls(
@@ -56,18 +70,11 @@ export function downloadTaxReportXls(
   lines: TaxReportLine[]
 ) {
   const wb = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(metaRows(meta)), "Info")
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(metaRows(meta)), tx("export.sheetInfo"))
   XLSX.utils.book_append_sheet(
     wb,
-    XLSX.utils.json_to_sheet(
-      lines.map((row) => ({
-        Section: row.section,
-        Line: row.line,
-        Amount: row.amount,
-        Note: row.note ?? "",
-      }))
-    ),
-    "Report"
+    XLSX.utils.json_to_sheet(reportRows(lines)),
+    tx("export.sheetReport")
   )
   const out = XLSX.write(wb, { type: "array", bookType: "xls" })
   downloadBlob(filename, new Blob([out], { type: "application/vnd.ms-excel" }))
@@ -84,78 +91,65 @@ export function downloadAccountantPack(input: {
   purchases: PurchaseRow[]
 }) {
   const wb = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(metaRows(input.meta)), "Info")
   XLSX.utils.book_append_sheet(
     wb,
-    XLSX.utils.json_to_sheet(
-      input.profitAndLoss.map((row) => ({
-        Section: row.section,
-        Line: row.line,
-        Amount: row.amount,
-        Note: row.note ?? "",
-      }))
-    ),
-    "Money in vs out"
+    XLSX.utils.json_to_sheet(metaRows(input.meta)),
+    tx("export.sheetInfo")
   )
   XLSX.utils.book_append_sheet(
     wb,
-    XLSX.utils.json_to_sheet(
-      input.balanceSheet.map((row) => ({
-        Section: row.section,
-        Line: row.line,
-        Amount: row.amount,
-        Note: row.note ?? "",
-      }))
-    ),
-    "Own and owe"
+    XLSX.utils.json_to_sheet(reportRows(input.profitAndLoss)),
+    tx("export.sheetMoneyInOut")
   )
   XLSX.utils.book_append_sheet(
     wb,
-    XLSX.utils.json_to_sheet(
-      input.yearSummary.map((row) => ({
-        Section: row.section,
-        Line: row.line,
-        Amount: row.amount,
-        Note: row.note ?? "",
-      }))
-    ),
-    "Year summary"
+    XLSX.utils.json_to_sheet(reportRows(input.balanceSheet)),
+    tx("export.sheetOwnOwe")
+  )
+  XLSX.utils.book_append_sheet(
+    wb,
+    XLSX.utils.json_to_sheet(reportRows(input.yearSummary)),
+    tx("export.sheetYearSummary")
   )
   if (input.manualEntries.length > 0) {
     XLSX.utils.book_append_sheet(
       wb,
       XLSX.utils.json_to_sheet(input.manualEntries),
-      "Manual entries"
+      tx("export.sheetManual")
     )
   }
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(input.monthly), "Monthly")
+  XLSX.utils.book_append_sheet(
+    wb,
+    XLSX.utils.json_to_sheet(input.monthly),
+    tx("export.sheetMonthly")
+  )
   XLSX.utils.book_append_sheet(
     wb,
     XLSX.utils.json_to_sheet(
       input.sales.map((row) => ({
-        Invoice: row.invoiceNumber,
-        Date: row.orderDate,
-        Customer: row.customerName,
-        Status: row.status,
-        Total: row.totalAmount,
-        Paid: row.paidAmount,
+        [tx("export.invoice")]: row.invoiceNumber,
+        [tx("export.date")]: row.orderDate,
+        [tx("export.customer")]: row.customerName,
+        [tx("export.status")]: row.status,
+        [tx("export.total")]: row.totalAmount,
+        [tx("export.paid")]: row.paidAmount,
       }))
     ),
-    "Sales detail"
+    tx("export.sheetSales")
   )
   XLSX.utils.book_append_sheet(
     wb,
     XLSX.utils.json_to_sheet(
       input.purchases.map((row) => ({
-        PO: row.purchaseNumber,
-        Date: row.purchaseDate,
-        Vendor: row.vendorName,
-        Status: row.status,
-        Total: row.totalAmount,
-        Paid: row.paidAmount,
+        [tx("export.po")]: row.purchaseNumber,
+        [tx("export.date")]: row.purchaseDate,
+        [tx("export.vendor")]: row.vendorName,
+        [tx("export.status")]: row.status,
+        [tx("export.total")]: row.totalAmount,
+        [tx("export.paid")]: row.paidAmount,
       }))
     ),
-    "Purchase detail"
+    tx("export.sheetPurchases")
   )
   const out = XLSX.write(wb, { type: "array", bookType: "xls" })
   downloadBlob(

@@ -2,12 +2,14 @@
 
 import Link from "next/link"
 import { IconShieldCheck } from "@tabler/icons-react"
+import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/context/auth-context"
 
 export function EmployeesAdminGuard({ children }: { children: React.ReactNode }) {
   const { canAdmin } = useAuth()
+  const { t } = useTranslation("employees")
 
   if (!canAdmin) {
     return (
@@ -16,14 +18,13 @@ export function EmployeesAdminGuard({ children }: { children: React.ReactNode })
           <IconShieldCheck className="text-muted-foreground size-7" stroke={1.5} />
         </div>
         <div>
-          <h2 className="text-lg font-semibold">Admin access required</h2>
+          <h2 className="text-lg font-semibold">{t("guard.title")}</h2>
           <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
-            Only business admins can manage employees, permissions, payroll, and leave.
-            Ask your admin if you need access.
+            {t("guard.body")}
           </p>
         </div>
         <Button type="button" variant="outline" asChild className="mx-auto w-fit">
-          <Link href="/home">Back to dashboard</Link>
+          <Link href="/home">{t("guard.back")}</Link>
         </Button>
       </div>
     )

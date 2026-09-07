@@ -142,3 +142,25 @@ export function parsePersistedProducts(raw: string | null): ProductRow[] | null 
     return null
   }
 }
+
+/** Inventory page stores rows without `id`; POS/API catalog needs a ProductRow. */
+export const INVENTORY_PRODUCTS_STORAGE_KEY = "custoray-inventory-products-v1"
+
+export function loadStoredProducts(): ProductRow[] {
+  if (typeof window === "undefined") return [...initialProducts]
+  const keys = [PRODUCTS_STORAGE_KEY, INVENTORY_PRODUCTS_STORAGE_KEY]
+  for (const key of keys) {
+    const raw = window.localStorage.getItem(key)
+    const strict = parsePersistedProducts(raw)
+    if (strict?.length) return strict
+    if (!raw) continue
+    try {
+      const parsed = JSON.parse(raw) as unknown
+      if (!Array.isArray(parsed) || parsed.length === 0) continue
+      return (parsed as RawProductRow[]).map(normalizeRawProduct)
+    } catch {
+      /* try next key */
+    }
+  }
+  return [...initialProducts]
+}

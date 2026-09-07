@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { IconDownload, IconArrowRight } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 import { TaxManualEntries } from "@/components/tax/tax-manual-entries"
 import { TaxPageLayout } from "@/components/tax/tax-page-layout"
@@ -18,13 +19,15 @@ import { buildTaxExportMeta, downloadTaxReportXls } from "@/lib/tax-export"
 import { profitAndLossToRows } from "@/lib/tax-reports"
 
 export function TaxProfitLossReport() {
+  const { t } = useTranslation("tax")
+  const { t: tc } = useTranslation("common")
   const { settings } = useTaxSettings()
   const bundle = useTaxReportBundle()
   const profile = useTaxDisplayProfile()
 
   const handleExport = () => {
     if (!bundle) {
-      toast.error("Pick a fiscal period using the calendar in the top bar first.")
+      toast.error(t("toastPickPeriod"))
       return
     }
     downloadTaxReportXls(
@@ -37,20 +40,20 @@ export function TaxProfitLossReport() {
         settings.manualEntries
       )
     )
-    toast.success("Report downloaded.")
+    toast.success(t("toastDownloaded"))
   }
 
   return (
     <TaxPageLayout
       step={3}
-      title="Money in vs money out"
-      subtitle="Think of this as: what did the business earn, and what did it spend, during your selected period?"
-      explainTitle="What am I looking at?"
-      explainBody="Money in comes from completed sales (plus anything you added manually). Money out comes from completed purchases (plus manual expenses). The bottom line is a rough profit — hand this to your accountant rather than using it to file taxes yourself."
+      title={t("pl.title")}
+      subtitle={t("pl.subtitle")}
+      explainTitle={t("pl.explainTitle")}
+      explainBody={t("pl.explainBody")}
       actions={
         <Button type="button" variant="outline" size="sm" onClick={handleExport}>
           <IconDownload className="size-4" />
-          Download
+          {tc("actions.download")}
         </Button>
       }
     >
@@ -68,15 +71,13 @@ export function TaxProfitLossReport() {
           <TaxReportFootnote />
           <Button type="button" variant="outline" size="sm" className="w-fit" asChild>
             <Link href="/tax/balance-sheet">
-              Next: What you own &amp; owe
+              {t("pl.next")}
               <IconArrowRight className="size-4" />
             </Link>
           </Button>
         </>
       ) : (
-        <p className="text-muted-foreground text-sm">
-          Select a fiscal period from the calendar in the top bar to see this report.
-        </p>
+        <p className="text-muted-foreground text-sm">{t("selectPeriod")}</p>
       )}
     </TaxPageLayout>
   )

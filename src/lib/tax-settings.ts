@@ -1,5 +1,7 @@
 import { z } from "zod"
 
+import i18n from "@/i18n"
+
 import {
   defaultBusinessTypeForRegion,
   defaultTaxIdsForRegion,
@@ -177,5 +179,5 @@ export function createManualEntry(
 }
 
 export function manualEntryCategoryLabel(category: TaxManualEntryCategory): string {
-  return TAX_MANUAL_ENTRY_CATEGORIES.find((item) => item.value === category)?.label ?? category
+  return i18n.t(`categories.${category}`, { ns: "tax" })
 }

@@ -123,7 +123,7 @@ export function InfiniteScrollSelect({
           aria-invalid={ariaInvalid}
           disabled={disabled}
           className={cn(
-            "border-input bg-background hover:bg-background dark:bg-input/30 dark:hover:bg-input/30 flex h-9 w-full items-center gap-2 px-3 font-normal shadow-xs",
+            "border-input bg-background hover:bg-background dark:bg-input/30 dark:hover:bg-input/30 relative flex h-9 w-full items-center justify-start gap-2 pe-8 ps-3 font-normal shadow-xs",
             !selected && "text-muted-foreground",
             className
           )}
@@ -133,10 +133,10 @@ export function InfiniteScrollSelect({
               {leadingIcon}
             </span>
           ) : null}
-          <span className="min-w-0 flex-1 truncate text-left">
+          <span className="min-w-0 flex-1 truncate text-start">
             {selected?.label ?? placeholder}
           </span>
-          <IconChevronDown className="text-muted-foreground size-4 shrink-0 opacity-60" />
+          <IconChevronDown className="text-muted-foreground pointer-events-none absolute end-2.5 top-1/2 size-4 -translate-y-1/2 opacity-60" />
         </Button>
       </PopoverTrigger>
       <PopoverContent
@@ -148,7 +148,7 @@ export function InfiniteScrollSelect({
       >
         <div className="border-border/60 border-b p-2">
           <div className="relative">
-            <IconSearch className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
+            <IconSearch className="text-muted-foreground pointer-events-none absolute top-1/2 start-2.5 size-4 -translate-y-1/2" />
             <Input
               ref={searchInputRef}
               value={search}
@@ -160,7 +160,7 @@ export function InfiniteScrollSelect({
                 }
               }}
               placeholder={searchPlaceholder}
-              className="pointer-events-auto h-8 pl-9"
+              className="pointer-events-auto h-8 ps-9"
             />
           </div>
         </div>

@@ -116,7 +116,7 @@ function NavGeneralCollapsibleItem({
           <SidebarMenuButton isActive={isActive} type="button">
             <item.icon />
             <span>{item.name}</span>
-            <IconChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible-item:rotate-90" />
+            <IconChevronRight className="ms-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible-item:rotate-90 rtl:rotate-180 group-data-[state=open]/collapsible-item:rtl:rotate-90" />
           </SidebarMenuButton>
         </CollapsibleTrigger>
         <CollapsibleContent>

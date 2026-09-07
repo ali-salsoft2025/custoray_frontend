@@ -1,5 +1,7 @@
 "use client"
 
+import { useTranslation } from "react-i18next"
+
 import { formatDate, type ReturnRow } from "@/lib/returns"
 import { cn } from "@/lib/utils"
 
@@ -20,15 +22,16 @@ export function PosReturnPanel({
   onDismissJustCreated,
   className,
 }: PosReturnPanelProps) {
+  const { t } = useTranslation("pos")
   return (
     <div
       className={cn(
-        "rounded-xl bg-card px-3 py-2 text-xs shadow-sm shadow-black/[0.04] ring-1 ring-border/40",
+        "rounded-xl bg-card px-4 py-2.5 text-xs shadow-sm shadow-black/[0.04] ring-1 ring-border/40",
         className
       )}
     >
       <div className="flex items-baseline justify-between gap-2">
-        <span className="text-muted-foreground">Next return</span>
+        <span className="text-muted-foreground">{t("nextReturn")}</span>
         <span className="font-semibold tabular-nums">{nextReturnNumber}</span>
       </div>
 
@@ -52,8 +55,11 @@ export function PosReturnPanel({
         </div>
       ) : lastCreated ? (
         <p className="text-muted-foreground mt-1 truncate text-[10px]">
-          Last {lastCreated.returnNumber} · {formatDate(lastCreated.returnDate)} ·{" "}
-          {formatMoney(lastCreated.totalAmount)}
+          {t("lastReceipt", {
+            number: lastCreated.returnNumber,
+            date: formatDate(lastCreated.returnDate),
+            amount: formatMoney(lastCreated.totalAmount),
+          })}
         </p>
       ) : null}
     </div>

@@ -1,7 +1,6 @@
 import type { ReactNode } from "react"
 import { Badge } from "@/components/ui/badge"
 import { CustomerAvatar } from "@/components/customers/customer-avatar"
-import { CustomerOrderCards } from "@/components/customers/customer-order-cards"
 import {
   computeBalance,
   formatMoney,
@@ -43,7 +42,6 @@ export function CustomerDetail({ customer }: { customer: CustomerRow }) {
           </Badge>
         )}
       </dl>
-      <CustomerOrderCards customer={customer} />
     </div>
   )
 }

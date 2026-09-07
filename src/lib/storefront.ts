@@ -1,5 +1,6 @@
 import { z } from "zod"
 
+import i18n from "@/i18n"
 import { formatMoney } from "@/lib/customers"
 import {
   computeLineTotal,
@@ -181,7 +182,7 @@ export function presetDisplayName(
     preset.category,
     preset.variant,
   ].filter((part) => Boolean(part && part !== "—"))
-  return parts.join(" · ") || "Custom QR"
+  return parts.join(" · ") || i18n.t("customQr", { ns: "storefront" })
 }
 
 export function prefillSummary(

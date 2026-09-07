@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { ColumnDef } from "@tanstack/react-table"
 import { IconDotsVertical, IconEye, IconTrash } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
+import type { TFunction } from "i18next"
 
 import { ReturnDetail } from "@/components/returns/return-detail"
 import { ReturnLineDetail } from "@/components/returns/return-line-detail"
@@ -42,14 +44,6 @@ import {
   type ReturnLineReportRow,
 } from "@/lib/returns-report"
 
-const returnTabs: DataTableTab[] = [
-  { value: "all", label: "All" },
-  { value: "sales", label: "Sales" },
-  { value: "purchase", label: "Purchase" },
-  { value: "pending", label: "Pending" },
-  { value: "completed", label: "Completed" },
-]
-
 function returnBillTabFilter(row: ReturnRow, tab: string) {
   if (tab === "all") return true
   if (tab === "sales" || tab === "purchase") return row.type === tab
@@ -71,11 +65,7 @@ function statusBadgeClass(status: ReturnRow["status"]) {
   return "border-border px-1.5 text-muted-foreground"
 }
 
-function statusLabel(status: ReturnRow["status"]) {
-  return status.charAt(0).toUpperCase() + status.slice(1)
-}
-
-function selectColumn<T>(): ColumnDef<T> {
+function selectColumn<T>(t: TFunction<"returns">): ColumnDef<T> {
   return {
     id: "select",
     header: ({ table }) => (
@@ -86,7 +76,7 @@ function selectColumn<T>(): ColumnDef<T> {
             (table.getIsSomePageRowsSelected() && "indeterminate")
           }
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
+          aria-label={t("table.selectAll", { ns: "common" })}
         />
       </div>
     ),
@@ -95,7 +85,7 @@ function selectColumn<T>(): ColumnDef<T> {
         <Checkbox
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
+          aria-label={t("table.selectRow", { ns: "common" })}
         />
       </div>
     ),
@@ -104,10 +94,12 @@ function selectColumn<T>(): ColumnDef<T> {
   }
 }
 
-function srNoColumn<T>(): ColumnDef<T> {
+function srNoColumn<T>(t: TFunction<"returns">): ColumnDef<T> {
   return {
     id: "srNo",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Sr No" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title={t("columns.srNo")} />
+    ),
     cell: ({ row, table }) => {
       const { pageIndex, pageSize } = table.getState().pagination
       return (
@@ -122,16 +114,17 @@ function srNoColumn<T>(): ColumnDef<T> {
 }
 
 function getReturnBillColumns(
+  t: TFunction<"returns">,
   openView: (row: ReturnRow) => void,
   onDelete: (row: ReturnRow) => void
 ): ColumnDef<ReturnRow>[] {
   return [
-    selectColumn<ReturnRow>(),
-    srNoColumn<ReturnRow>(),
+    selectColumn<ReturnRow>(t),
+    srNoColumn<ReturnRow>(t),
     {
       accessorKey: "returnNumber",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Return #" />
+        <DataTableColumnHeader column={column} title={t("columns.returnNumber")} />
       ),
       cell: ({ row }) => (
         <button
@@ -146,21 +139,23 @@ function getReturnBillColumns(
     },
     {
       accessorKey: "type",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Type" />,
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t("columns.type")} />
+      ),
       cell: ({ row }) => (
-        <span className="capitalize">{row.original.type}</span>
+        <span>{t(`type.${row.original.type}`)}</span>
       ),
     },
     {
       accessorKey: "referenceNumber",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Reference" />
+        <DataTableColumnHeader column={column} title={t("columns.reference")} />
       ),
     },
     {
       accessorKey: "partyName",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Party" />
+        <DataTableColumnHeader column={column} title={t("columns.party")} />
       ),
       cell: ({ row }) => (
         <span className="max-w-[10rem] truncate">{row.original.partyName}</span>
@@ -168,7 +163,9 @@ function getReturnBillColumns(
     },
     {
       accessorKey: "returnDate",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Date" />,
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t("columns.date")} />
+      ),
       cell: ({ row }) => (
         <span className="text-muted-foreground text-xs tabular-nums">
           {formatDate(row.original.returnDate)}
@@ -178,7 +175,7 @@ function getReturnBillColumns(
     {
       accessorKey: "totalAmount",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Return amt" align="center" />
+        <DataTableColumnHeader column={column} title={t("columns.returnAmt")} align="center" />
       ),
       cell: ({ row }) => (
         <div className="flex justify-center tabular-nums">
@@ -189,7 +186,7 @@ function getReturnBillColumns(
     {
       accessorKey: "refundDue",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Refund due" align="center" />
+        <DataTableColumnHeader column={column} title={t("columns.refundDue")} align="center" />
       ),
       cell: ({ row }) => (
         <div className="flex justify-center">
@@ -206,7 +203,7 @@ function getReturnBillColumns(
     {
       accessorKey: "balanceDue",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Balance due" align="center" />
+        <DataTableColumnHeader column={column} title={t("columns.balanceDue")} align="center" />
       ),
       cell: ({ row }) => (
         <div className="flex justify-center">
@@ -222,10 +219,12 @@ function getReturnBillColumns(
     },
     {
       accessorKey: "status",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t("columns.status")} />
+      ),
       cell: ({ row }) => (
         <Badge variant="outline" className={statusBadgeClass(row.original.status)}>
-          {statusLabel(row.original.status)}
+          {t(`status.${row.original.status}`, { ns: "common" })}
         </Badge>
       ),
     },
@@ -242,12 +241,12 @@ function getReturnBillColumns(
           <DropdownMenuContent align="end" className="w-40">
             <DropdownMenuItem onClick={() => openView(row.original)}>
               <IconEye />
-              View
+              {t("actions.view")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem variant="destructive" onClick={() => onDelete(row.original)}>
               <IconTrash />
-              Delete
+              {t("actions.delete")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -257,16 +256,17 @@ function getReturnBillColumns(
 }
 
 function getReturnLineColumns(
+  t: TFunction<"returns">,
   openLineView: (row: ReturnLineReportRow) => void,
   onDeleteReturn: (returnId: number) => void
 ): ColumnDef<ReturnLineReportRow>[] {
   return [
-    selectColumn<ReturnLineReportRow>(),
-    srNoColumn<ReturnLineReportRow>(),
+    selectColumn<ReturnLineReportRow>(t),
+    srNoColumn<ReturnLineReportRow>(t),
     {
       accessorKey: "returnNumber",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Return #" />
+        <DataTableColumnHeader column={column} title={t("columns.returnNumber")} />
       ),
       cell: ({ row }) => (
         <button
@@ -280,18 +280,22 @@ function getReturnLineColumns(
     },
     {
       accessorKey: "type",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Type" />,
-      cell: ({ row }) => <span className="capitalize">{row.original.type}</span>,
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t("columns.type")} />
+      ),
+      cell: ({ row }) => <span>{t(`type.${row.original.type}`)}</span>,
     },
     {
       accessorKey: "referenceNumber",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Reference" />
+        <DataTableColumnHeader column={column} title={t("columns.reference")} />
       ),
     },
     {
       accessorKey: "productName",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Item" />,
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t("columns.item")} />
+      ),
       cell: ({ row }) => (
         <span className="max-w-[14rem] truncate">{row.original.productName}</span>
       ),
@@ -299,7 +303,7 @@ function getReturnLineColumns(
     {
       accessorKey: "quantity",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Qty" align="center" />
+        <DataTableColumnHeader column={column} title={t("columns.qty")} align="center" />
       ),
       cell: ({ row }) => (
         <div className="flex justify-center tabular-nums">{row.original.quantity}</div>
@@ -308,7 +312,7 @@ function getReturnLineColumns(
     {
       accessorKey: "lineTotal",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Line total" align="center" />
+        <DataTableColumnHeader column={column} title={t("columns.lineTotal")} align="center" />
       ),
       cell: ({ row }) => (
         <div className="flex justify-center tabular-nums">
@@ -319,7 +323,7 @@ function getReturnLineColumns(
     {
       accessorKey: "refundDue",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Refund due" align="center" />
+        <DataTableColumnHeader column={column} title={t("columns.refundDue")} align="center" />
       ),
       cell: ({ row }) => (
         <div className="flex justify-center">
@@ -346,7 +350,7 @@ function getReturnLineColumns(
           <DropdownMenuContent align="end" className="w-40">
             <DropdownMenuItem onClick={() => openLineView(row.original)}>
               <IconEye />
-              View
+              {t("actions.view")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
@@ -354,7 +358,7 @@ function getReturnLineColumns(
               onClick={() => onDeleteReturn(row.original.returnId)}
             >
               <IconTrash />
-              Delete return
+              {t("actions.deleteReturn")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -364,6 +368,7 @@ function getReturnLineColumns(
 }
 
 export default function ReturnsPage() {
+  const { t } = useTranslation("returns")
   const { returns, removeReturn } = useReturns()
   const [viewMode, setViewMode] = useState<BillItemViewMode>("item")
   const [viewReturn, setViewReturn] = useState<ReturnRow | null>(null)
@@ -387,16 +392,16 @@ export default function ReturnsPage() {
       if (
         !(await confirmDeleteAction({
           itemName: row.returnNumber,
-          entityLabel: "return",
+          entityLabel: t("entity.return"),
         }))
       ) {
         return
       }
       removeReturn(row.id)
       if (viewReturn?.id === row.id) setViewReturn(null)
-      toast.message(`Removed ${row.returnNumber} (demo).`)
+      toast.message(t("toasts.removedNamed", { name: row.returnNumber }))
     },
-    [removeReturn, viewReturn]
+    [removeReturn, viewReturn, t]
   )
 
   const handleDeleteById = useCallback(
@@ -413,17 +418,25 @@ export default function ReturnsPage() {
   )
 
   const billColumns = useMemo(
-    () => getReturnBillColumns((row) => setViewReturn(row), handleDelete),
-    [handleDelete]
+    () => getReturnBillColumns(t, (row) => setViewReturn(row), handleDelete),
+    [t, handleDelete]
   )
 
   const lineColumns = useMemo(
     () =>
-      getReturnLineColumns((row) => setViewLine(row), (id) => {
+      getReturnLineColumns(t, (row) => setViewLine(row), (id) => {
         void handleDeleteById(id)
       }),
-    [handleDeleteById]
+    [t, handleDeleteById]
   )
+
+  const returnTabs: DataTableTab[] = [
+    { value: "all", label: t("tabs.all") },
+    { value: "sales", label: t("tabs.sales") },
+    { value: "purchase", label: t("tabs.purchase") },
+    { value: "pending", label: t("tabs.pending") },
+    { value: "completed", label: t("tabs.completed") },
+  ]
 
   return (
     <>
@@ -442,7 +455,7 @@ export default function ReturnsPage() {
               </div>
               <SheetFooter className="border-border/60 border-t px-6 py-4">
                 <SheetClose asChild>
-                  <Button>Close</Button>
+                  <Button>{t("actions.close", { ns: "common" })}</Button>
                 </SheetClose>
               </SheetFooter>
             </>
@@ -463,7 +476,7 @@ export default function ReturnsPage() {
               </div>
               <SheetFooter className="border-border/60 border-t px-6 py-4">
                 <SheetClose asChild>
-                  <Button>Close</Button>
+                  <Button>{t("actions.close", { ns: "common" })}</Button>
                 </SheetClose>
               </SheetFooter>
             </>
@@ -475,7 +488,7 @@ export default function ReturnsPage() {
         <DataTable
           data={returns}
           columns={billColumns}
-          searchPlaceholder="Search returns…"
+          searchPlaceholder={t("search.bills")}
           exportFilename="returns-export.csv"
           showAddButton={false}
           showImportButton={false}
@@ -488,7 +501,7 @@ export default function ReturnsPage() {
         <DataTable
           data={returnLines}
           columns={lineColumns}
-          searchPlaceholder="Search returned items…"
+          searchPlaceholder={t("search.items")}
           exportFilename="return-lines-export.csv"
           showAddButton={false}
           showImportButton={false}

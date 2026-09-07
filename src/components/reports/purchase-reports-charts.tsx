@@ -32,6 +32,7 @@ import {
   purchaseTimelineBucketLabel,
 } from "@/lib/purchase-reports"
 import { cn } from "@/lib/utils"
+import { useTranslation } from "react-i18next"
 
 const panelClass =
   "rounded-2xl bg-card shadow-sm shadow-black/[0.03] ring-1 ring-border/50"
@@ -109,12 +110,6 @@ function shortTickLabel(label: string, bucket: PurchaseTimelineBucket): string {
   return label.replace(/,\s*\d{4}$/, "")
 }
 
-const performanceChartConfig = {
-  purchases: { label: "Spend", color: COLORS.purchases },
-  net: { label: "Net", color: COLORS.net },
-  orders: { label: "Orders", color: COLORS.orders },
-} satisfies ChartConfig
-
 export function PurchasePerformanceLineChart({
   data,
   trends,
@@ -125,9 +120,15 @@ export function PurchasePerformanceLineChart({
   trends: PurchaseReportTrends
   bucket?: PurchaseTimelineBucket
 }) {
+  const { t } = useTranslation("reports")
   const purchasesFillId = useChartGradientId("pperf-purchases")
   const netFillId = useChartGradientId("pperf-net")
   const grain = purchaseTimelineBucketLabel(bucket).toLowerCase()
+  const performanceChartConfig = {
+    purchases: { label: t("purchasesPage.chartSpend"), color: COLORS.purchases },
+    net: { label: t("purchasesPage.chartNet"), color: COLORS.net },
+    orders: { label: t("purchasesPage.chartOrders"), color: COLORS.orders },
+  } satisfies ChartConfig
 
   const chartData = React.useMemo(
     () =>
@@ -148,18 +149,22 @@ export function PurchasePerformanceLineChart({
   if (!hasActivity) {
     return (
       <ChartPanel
-        title="Purchase performance"
-        description={`${purchaseTimelineBucketLabel(bucket)} spend, net, and order volume`}
+        title={t("purchasesPage.performance")}
+        description={t("purchasesPage.performanceHint", {
+          bucket: purchaseTimelineBucketLabel(bucket),
+        })}
       >
-        <ChartEmpty message="No purchases in this period." />
+        <ChartEmpty message={t("purchasesPage.noPurchases")} />
       </ChartPanel>
     )
   }
 
   return (
     <ChartPanel
-      title="Purchase performance"
-      description={`${purchaseTimelineBucketLabel(bucket)} spend, net, and order volume`}
+      title={t("purchasesPage.performance")}
+      description={t("purchasesPage.performanceHint", {
+        bucket: purchaseTimelineBucketLabel(bucket),
+      })}
       action={
         <div className="flex flex-wrap items-center justify-end gap-1.5">
           <span className="rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium capitalize">
@@ -167,7 +172,7 @@ export function PurchasePerformanceLineChart({
           </span>
           {netTrend ? (
             <span className="rounded-full bg-primary/15 px-2.5 py-1 text-[11px] font-medium text-primary">
-              Net {netTrend}
+              {t("purchasesPage.netTrend", { trend: netTrend })}
               {trends.compareLabel ? ` ${trends.compareLabel}` : ""}
             </span>
           ) : null}
@@ -296,16 +301,11 @@ export function PurchasePerformanceLineChart({
   )
 }
 
-const purchasesVsReturnsConfig = {
-  purchases: { label: "Purchases", color: COLORS.purchases },
-  returns: { label: "Returns", color: COLORS.returns },
-} satisfies ChartConfig
-
 export function PurchasesVsReturnsChart({
   data,
   summary,
   trends,
-  periodLabel = "Selected period",
+  periodLabel,
   bucket = "day",
 }: {
   data: PurchaseDailyTotalRow[]
@@ -314,9 +314,15 @@ export function PurchasesVsReturnsChart({
   periodLabel?: string
   bucket?: PurchaseTimelineBucket
 }) {
+  const { t } = useTranslation("reports")
   const purchasesFillId = useChartGradientId("pvr-purchases")
   const returnsFillId = useChartGradientId("pvr-returns")
   const grain = purchaseTimelineBucketLabel(bucket)
+  const resolvedPeriod = periodLabel ?? t("purchasesPage.selectedPeriod")
+  const purchasesVsReturnsConfig = {
+    purchases: { label: t("purchasesPage.chartPurchases"), color: COLORS.purchases },
+    returns: { label: t("purchasesPage.chartReturns"), color: COLORS.returns },
+  } satisfies ChartConfig
 
   const chartData = React.useMemo(
     () =>
@@ -342,21 +348,27 @@ export function PurchasesVsReturnsChart({
   if (!hasActivity) {
     return (
       <ChartPanel
-        title="Purchases vs returns"
-        description={`${periodLabel} — ${grain.toLowerCase()} comparison`}
+        title={t("purchasesPage.vsReturns")}
+        description={t("purchasesPage.vsComparison", {
+          period: resolvedPeriod,
+          grain: grain.toLowerCase(),
+        })}
       >
-        <ChartEmpty message="No purchases or returns in this period." />
+        <ChartEmpty message={t("purchasesPage.noPurchasesOrReturns")} />
       </ChartPanel>
     )
   }
 
   return (
     <ChartPanel
-      title="Purchases vs returns"
-      description={`${periodLabel} — ${grain.toLowerCase()} comparison`}
+      title={t("purchasesPage.vsReturns")}
+      description={t("purchasesPage.vsComparison", {
+        period: resolvedPeriod,
+        grain: grain.toLowerCase(),
+      })}
       action={
         <span className="rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium tabular-nums">
-          {returnRate.toFixed(0)}% return rate
+          {t("salesPage.returnRateBadge", { rate: returnRate.toFixed(0) })}
           {returnsTrend && trends.compareLabel ? ` · ${returnsTrend}` : ""}
         </span>
       }
@@ -447,16 +459,16 @@ export function PurchasesVsReturnsChart({
   )
 }
 
-const topVendorsConfig = {
-  spend: { label: "Spend", color: COLORS.purchases },
-} satisfies ChartConfig
-
 export function PurchaseTopVendorsChart({
   data,
 }: {
   data: PurchaseTopVendorRow[]
 }) {
+  const { t } = useTranslation("reports")
   const barFillId = useChartGradientId("top-vendors")
+  const topVendorsConfig = {
+    spend: { label: t("purchasesPage.chartSpend"), color: COLORS.purchases },
+  } satisfies ChartConfig
 
   const chartData = React.useMemo(() => {
     const maxSpend = Math.max(...data.map((row) => Number(row.spend)), 1)
@@ -479,18 +491,18 @@ export function PurchaseTopVendorsChart({
   if (!hasActivity) {
     return (
       <ChartPanel
-        title="Top vendors by spend"
-        description="Where procurement budget went this period"
+        title={t("purchasesPage.topVendors")}
+        description={t("purchasesPage.topVendorsHint")}
       >
-        <ChartEmpty message="No vendor spend in this period." />
+        <ChartEmpty message={t("purchasesPage.noVendorSpend")} />
       </ChartPanel>
     )
   }
 
   return (
     <ChartPanel
-      title="Top vendors by spend"
-      description="Where procurement budget went this period"
+      title={t("purchasesPage.topVendors")}
+      description={t("purchasesPage.topVendorsHint")}
       action={
         leader ? (
           <span className="rounded-full bg-primary/15 px-2.5 py-1 text-[11px] font-medium text-primary">

@@ -93,6 +93,8 @@ type AuthContextValue = {
 const AuthContext = React.createContext<AuthContextValue | null>(null)
 
 function sessionFromMe(me: SessionPayload): AuthSession {
+  const membership =
+    me.companies?.find((company) => company.id === me.tenant.id) ?? me.companies?.[0]
   return {
     userId: me.user.id,
     name: me.user.name,
@@ -100,6 +102,7 @@ function sessionFromMe(me: SessionPayload): AuthSession {
     isAdmin: me.user.isOwner || me.permissions.admin,
     employeeId: null,
     permissions: me.permissions,
+    designation: membership?.role?.trim() || (me.user.isOwner ? "Owner" : ""),
   }
 }
 

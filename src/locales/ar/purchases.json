@@ -1,0 +1,78 @@
+{
+  "title": "المشتريات",
+  "add": "عملية شراء جديدة",
+  "addButton": "شراء جديد",
+  "search": {
+    "bills": "البحث في المشتريات بالفاتورة أو المورّد…",
+    "items": "البحث في المشتريات بالصنف أو المورّد أو الفاتورة…"
+  },
+  "tabs": {
+    "all": "الكل",
+    "pending": "معلّق",
+    "completed": "مكتمل",
+    "cancelled": "ملغى"
+  },
+  "status": {
+    "pending": "معلّق",
+    "completed": "مكتمل",
+    "cancelled": "ملغى"
+  },
+  "viewMode": {
+    "aria": "وضع عرض المشتريات",
+    "billDescription": "حسب الفاتورة — صف واحد لكل فاتورة",
+    "itemDescription": "حسب الصنف — صف واحد لكل بند مشترى"
+  },
+  "columns": {
+    "srNo": "م",
+    "invoiceNumber": "رقم الفاتورة",
+    "poNumber": "رقم أمر الشراء",
+    "vendor": "المورّد",
+    "date": "التاريخ",
+    "totalAmount": "المبلغ الإجمالي",
+    "paidAmount": "المبلغ المدفوع",
+    "balance": "الرصيد",
+    "status": "الحالة",
+    "item": "الصنف",
+    "qty": "الكمية",
+    "unitPrice": "سعر الوحدة",
+    "lineTotal": "إجمالي البند",
+    "items": "الأصناف"
+  },
+  "actions": {
+    "view": "عرض",
+    "edit": "تعديل",
+    "duplicate": "تكرار",
+    "return": "إرجاع",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "openMenu": "فتح القائمة",
+    "deleteSelected": "حذف المحدد",
+    "openPurchase": "فتح أمر الشراء"
+  },
+  "sheet": {
+    "create": "إنشاء أمر شراء",
+    "edit": "تعديل أمر الشراء",
+    "addDescription": "أضف رأس أمر الشراء والبنود. الحفظ للتجربة فقط.",
+    "createButton": "إنشاء شراء",
+    "saveButton": "حفظ الشراء"
+  },
+  "toasts": {
+    "removedNamed": "تم حذف {{name}} (تجريبي).",
+    "duplicatedNamed": "تم تكرار {{name}} (تجريبي).",
+    "removedLines": "تم حذف {{count}} بند (تجريبي).",
+    "removedPurchases": "تم حذف {{count}} أمر شراء (تجريبي).",
+    "onlyCompletedPaid": "يمكن إرجاع المشتريات المكتملة والمدفوعة فقط.",
+    "sourceNotFound": "لم يُعثر على أمر الشراء المصدر.",
+    "cancelled": "تم إلغاء {{name}}.",
+    "onlyPendingUnpaid": "يمكن إلغاء المشتريات المعلّقة وغير المدفوعة فقط.",
+    "vendorRequired": "اسم المورّد مطلوب.",
+    "lineRequired": "أضف بنداً واحداً على الأقل باسم منتج.",
+    "created": "تم إنشاء أمر الشراء (تجريبي).",
+    "saved": "تم حفظ أمر الشراء (تجريبي)."
+  },
+  "entity": {
+    "purchase": "عملية شراء",
+    "purchaseOrder": "أمر شراء",
+    "purchaseLineItem": "بند شراء"
+  }
+}

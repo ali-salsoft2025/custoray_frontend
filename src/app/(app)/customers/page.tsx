@@ -1,18 +1,24 @@
 "use client"
 
 import { useCallback, useMemo, useState, type FormEvent } from "react"
+import { useRouter } from "next/navigation"
 import { ColumnDef } from "@tanstack/react-table"
 import {
   IconCopy,
   IconDotsVertical,
   IconEye,
+  IconFileText,
+  IconHistory,
   IconPencil,
   IconTrash,
 } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
+import type { TFunction } from "i18next"
 
 import { CustomerDetail } from "@/components/customers/customer-detail"
 import { CustomerForm } from "@/components/customers/customer-form"
+import { CustomerRecordDialog } from "@/components/customers/customer-record-dialog"
 import { DataTableColumnHeader } from "@/components/data-table-column-header"
 import { DataTable, type DataTableTab } from "@/components/data-table"
 import { Button } from "@/components/ui/button"
@@ -44,15 +50,8 @@ import {
   EMPTY_CUSTOMER,
   formatMoney,
   mapImportedCustomer,
-  statusLabel,
   type CustomerRow,
 } from "@/lib/customers"
-
-const customerTabs: DataTableTab[] = [
-  { value: "all", label: "All" },
-  { value: "active", label: "Active" },
-  { value: "inactive", label: "Inactive" },
-]
 
 type CustomerSidebarState =
   | { mode: "view"; customer: CustomerRow }
@@ -66,9 +65,12 @@ function customerTabFilter(row: CustomerRow, tab: string) {
 }
 
 function getCustomerColumns(
+  t: TFunction<"customers">,
   openCustomerSidebar: (row: CustomerRow, mode: "view" | "edit") => void,
   onDelete: (row: CustomerRow) => void,
-  onDuplicate: (row: CustomerRow) => void
+  onDuplicate: (row: CustomerRow) => void,
+  onViewRecord: (row: CustomerRow) => void,
+  onViewTimeline: (row: CustomerRow) => void
 ): ColumnDef<CustomerRow>[] {
   return [
     {
@@ -81,7 +83,7 @@ function getCustomerColumns(
               (table.getIsSomePageRowsSelected() && "indeterminate")
             }
             onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-            aria-label="Select all"
+            aria-label={t("table.selectAll", { ns: "common" })}
           />
         </div>
       ),
@@ -90,7 +92,7 @@ function getCustomerColumns(
           <Checkbox
             checked={row.getIsSelected()}
             onCheckedChange={(value) => row.toggleSelected(!!value)}
-            aria-label="Select row"
+            aria-label={t("table.selectRow", { ns: "common" })}
           />
         </div>
       ),
@@ -99,7 +101,9 @@ function getCustomerColumns(
     },
     {
       accessorKey: "id",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="ID" />,
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t("columns.id")} />
+      ),
       cell: ({ row }) => (
         <span className="text-muted-foreground font-mono tabular-nums">
           {row.original.id}
@@ -110,7 +114,7 @@ function getCustomerColumns(
     {
       accessorKey: "name",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Name" />
+        <DataTableColumnHeader column={column} title={t("columns.name")} />
       ),
       cell: ({ row }) => (
         <button
@@ -127,7 +131,7 @@ function getCustomerColumns(
     {
       accessorKey: "description",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Description" />
+        <DataTableColumnHeader column={column} title={t("columns.description")} />
       ),
       cell: ({ row }) => (
         <span className="text-muted-foreground text-sm leading-snug whitespace-normal">
@@ -139,7 +143,7 @@ function getCustomerColumns(
     {
       accessorKey: "openingBalance",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Opening balance" />
+        <DataTableColumnHeader column={column} title={t("columns.openingBalance")} />
       ),
       cell: ({ row }) => (
         <span className="text-foreground tabular-nums">
@@ -151,7 +155,7 @@ function getCustomerColumns(
     {
       accessorKey: "totalSales",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Total sales" />
+        <DataTableColumnHeader column={column} title={t("columns.totalSales")} />
       ),
       cell: ({ row }) => (
         <span className="text-foreground tabular-nums">
@@ -163,7 +167,7 @@ function getCustomerColumns(
     {
       accessorKey: "totalPayments",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Total payments" />
+        <DataTableColumnHeader column={column} title={t("columns.totalPayments")} />
       ),
       cell: ({ row }) => (
         <span className="text-foreground tabular-nums">
@@ -176,7 +180,7 @@ function getCustomerColumns(
       id: "balance",
       accessorFn: (row) => Number(computeBalance(row)),
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Balance" />
+        <DataTableColumnHeader column={column} title={t("columns.balance")} />
       ),
       cell: ({ row }) => {
         const balance = computeBalance(row.original)
@@ -197,7 +201,7 @@ function getCustomerColumns(
     {
       accessorKey: "phone",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Phone number" />
+        <DataTableColumnHeader column={column} title={t("columns.phone")} />
       ),
       cell: ({ row }) => (
         <span className="text-muted-foreground tabular-nums text-xs">{row.original.phone}</span>
@@ -206,10 +210,12 @@ function getCustomerColumns(
     },
     {
       accessorKey: "status",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t("columns.status")} />
+      ),
       cell: ({ row }) => (
         <span className="text-muted-foreground text-sm">
-          {statusLabel(row.original.status)}
+          {t(`status.${row.original.status}`, { ns: "common" })}
         </span>
       ),
       meta: { dataTableFilter: false },
@@ -227,26 +233,34 @@ function getCustomerColumns(
               size="icon"
             >
               <IconDotsVertical />
-              <span className="sr-only">Open menu</span>
+              <span className="sr-only">{t("actions.openMenu")}</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-40">
+          <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem onClick={() => openCustomerSidebar(row.original, "view")}>
               <IconEye />
-              View
+              {t("actions.view")}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onViewTimeline(row.original)}>
+              <IconHistory />
+              {t("actions.viewTimeline")}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onViewRecord(row.original)}>
+              <IconFileText />
+              {t("record")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => openCustomerSidebar(row.original, "edit")}>
               <IconPencil />
-              Edit
+              {t("actions.edit")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onDuplicate(row.original)}>
               <IconCopy />
-              Duplicate
+              {t("actions.duplicate")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem variant="destructive" onClick={() => onDelete(row.original)}>
               <IconTrash />
-              Delete
+              {t("actions.delete")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -256,6 +270,8 @@ function getCustomerColumns(
 }
 
 export default function CustomersPage() {
+  const { t } = useTranslation("customers")
+  const router = useRouter()
   const {
     customers,
     setCustomers,
@@ -265,6 +281,7 @@ export default function CustomersPage() {
     duplicateCustomer,
   } = useCustomers()
   const [sidebar, setSidebar] = useState<CustomerSidebarState>(null)
+  const [recordCustomer, setRecordCustomer] = useState<CustomerRow | null>(null)
 
   const closeSidebar = () => setSidebar(null)
 
@@ -273,7 +290,7 @@ export default function CustomersPage() {
       if (
         !(await confirmDeleteAction({
           itemName: customer.name,
-          entityLabel: "customer",
+          entityLabel: t("entity.customer"),
         }))
       ) {
         return
@@ -282,7 +299,7 @@ export default function CustomersPage() {
       if (sidebar?.mode !== "add" && sidebar?.customer.id === customer.id) {
         closeSidebar()
       }
-      toast.message(`Removed ${customer.name} (demo).`)
+      toast.message(t("toasts.removedNamed", { name: customer.name }))
     },
     [removeCustomer, sidebar]
   )
@@ -292,13 +309,13 @@ export default function CustomersPage() {
       if (
         !(await confirmDuplicateAction({
           itemName: customer.name,
-          entityLabel: "customer",
+          entityLabel: t("entity.customer"),
         }))
       ) {
         return
       }
       const copy = duplicateCustomer(customer.id)
-      if (copy) toast.success(`Duplicated ${customer.name} (demo).`)
+      if (copy) toast.success(t("toasts.duplicatedNamed", { name: customer.name }))
     },
     [duplicateCustomer]
   )
@@ -309,13 +326,13 @@ export default function CustomersPage() {
       const fd = new FormData(e.currentTarget)
       const name = String(fd.get("name") ?? "").trim()
       if (!name) {
-        toast.error("Customer name is required.")
+        toast.error(t("toasts.nameRequired"))
         return
       }
 
       if (sidebar?.mode === "add") {
         addCustomer(customerFromFormData(fd, 0))
-        toast.success("Customer created (demo).")
+        toast.success(t("toasts.created"))
         closeSidebar()
         return
       }
@@ -325,7 +342,7 @@ export default function CustomersPage() {
           sidebar.customer.id,
           customerFromFormData(fd, sidebar.customer.id)
         )
-        toast.success("Customer saved (demo).")
+        toast.success(t("toasts.saved"))
         closeSidebar()
       }
     },
@@ -335,12 +352,21 @@ export default function CustomersPage() {
   const columns = useMemo(
     () =>
       getCustomerColumns(
+        t,
         (row, mode) => setSidebar({ customer: row, mode }),
         handleDelete,
-        handleDuplicate
+        handleDuplicate,
+        (row) => setRecordCustomer(row),
+        (row) => router.push(`/customers/${row.id}/timeline`)
       ),
-    [handleDelete, handleDuplicate]
+    [t, handleDelete, handleDuplicate, router]
   )
+
+  const customerTabs: DataTableTab[] = [
+    { value: "all", label: t("tabs.all") },
+    { value: "active", label: t("tabs.active") },
+    { value: "inactive", label: t("tabs.inactive") },
+  ]
 
   const sheetCustomer =
     sidebar && sidebar.mode !== "add" ? sidebar.customer : null
@@ -372,14 +398,14 @@ export default function CustomersPage() {
               <SheetHeader className="border-border/60 space-y-1 border-b px-6 py-5 text-left">
                 <SheetTitle className="text-lg leading-tight">
                   {sidebar.mode === "add"
-                    ? "Add customer"
+                    ? t("sheet.add")
                     : sidebar.mode === "edit"
-                      ? "Edit customer"
+                      ? t("sheet.edit")
                       : sheetCustomer?.name}
                 </SheetTitle>
                 <SheetDescription>
                   {sidebar.mode === "add" ? (
-                    "Fill in customer details and photo. Saving is demo only."
+                    t("sheet.addDescription")
                   ) : sidebar.mode === "edit" && sheetCustomer ? (
                     <>
                       {sheetCustomer.name}
@@ -419,24 +445,41 @@ export default function CustomersPage() {
                       className="w-full sm:w-auto"
                       onClick={() =>
                         sheetCustomer &&
+                        router.push(`/customers/${sheetCustomer.id}/timeline`)
+                      }
+                    >
+                      {t("actions.viewTimeline")}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full sm:w-auto"
+                      onClick={() => sheetCustomer && setRecordCustomer(sheetCustomer)}
+                    >
+                      {t("actions.viewRecord")}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full sm:w-auto"
+                      onClick={() =>
+                        sheetCustomer &&
                         setSidebar({ mode: "edit", customer: sheetCustomer })
                       }
                     >
-                      Edit
+                      {t("actions.edit")}
                     </Button>
                     <SheetClose asChild>
-                      <Button className="w-full sm:w-auto">Close</Button>
+                      <Button className="w-full sm:w-auto">{t("actions.close", { ns: "common" })}</Button>
                     </SheetClose>
                   </>
                 ) : (
                   <>
                     <SheetClose asChild>
                       <Button variant="outline" type="button">
-                        Cancel
+                        {t("actions.cancel", { ns: "common" })}
                       </Button>
                     </SheetClose>
                     <Button type="submit" form={formId}>
-                      {sidebar.mode === "add" ? "Create customer" : "Save customer"}
+                      {sidebar.mode === "add" ? t("sheet.create") : t("sheet.save")}
                     </Button>
                   </>
                 )}
@@ -446,37 +489,43 @@ export default function CustomersPage() {
         </SheetContent>
       </Sheet>
 
+      <CustomerRecordDialog
+        customer={recordCustomer}
+        open={recordCustomer !== null}
+        onOpenChange={(next) => {
+          if (!next) setRecordCustomer(null)
+        }}
+      />
+
       <DataTable
         data={customers}
         columns={columns}
-        addButtonLabel="New Customer"
-        searchPlaceholder="Search customers..."
+        addButtonLabel={t("addButton")}
+        searchPlaceholder={t("search")}
         importRowMapper={mapImportedCustomer}
         importSampleFilename="customers-sample.csv"
         exportFilename="customers-export.csv"
         onDataChange={setCustomers}
         onAddClick={() => setSidebar({ mode: "add" })}
-        defaultColumnVisibility={{ status: false, actions: false }}
+        defaultColumnVisibility={{ status: false }}
         bulkActions={[
           {
             id: "delete",
-            label: "Delete selected",
+            label: t("actions.deleteSelected"),
             icon: <IconTrash className="size-4" />,
             variant: "destructive",
             onClick: async (selected) => {
               if (
                 !(await confirmDeleteAction({
                   count: selected.length,
-                  entityLabel: "customer",
+                  entityLabel: t("entity.customer"),
                 }))
               ) {
                 return
               }
               const ids = new Set(selected.map((c) => c.id))
               setCustomers((prev) => prev.filter((r) => !ids.has(r.id)))
-              toast.message(
-                `Removed ${selected.length} customer${selected.length === 1 ? "" : "s"} (demo).`
-              )
+              toast.message(t("toasts.removedCount", { count: selected.length }))
             },
           },
         ]}

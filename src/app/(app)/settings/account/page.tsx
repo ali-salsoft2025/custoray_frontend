@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState, type FormEvent } from "react"
+import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 
 import { TwoFactorSettings } from "@/components/settings/two-factor-settings"
@@ -12,6 +13,7 @@ import { PasswordInput } from "@/components/ui/password-input"
 import { apiMe, apiPatchAccount } from "@/lib/api/auth"
 
 export default function AccountSettingsPage() {
+  const { t } = useTranslation("settings")
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -35,9 +37,9 @@ export default function AccountSettingsPage() {
       const updated = await apiPatchAccount(payload)
       setName(updated.name)
       setPassword("")
-      toast.success("Account updated")
+      toast.success(t("account.toastUpdated"))
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not save account")
+      toast.error(err instanceof Error ? err.message : t("account.toastError"))
     } finally {
       setSaving(false)
     }
@@ -47,17 +49,17 @@ export default function AccountSettingsPage() {
     <div className="w-full max-w-2xl space-y-6">
       <form onSubmit={handleSave}>
         <SettingsSection
-          title="Profile"
-          description="Your name and sign-in email for this organization."
+          title={t("account.profile")}
+          description={t("account.profileDescription")}
           footer={
             <Button type="submit" disabled={saving || name.trim().length < 1}>
-              {saving ? "Saving…" : "Save profile"}
+              {saving ? t("account.saving") : t("account.saveProfile")}
             </Button>
           }
         >
           <div className="grid gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="name">Name</Label>
+              <Label htmlFor="name">{t("account.name")}</Label>
               <Input
                 id="name"
                 value={name}
@@ -66,19 +68,19 @@ export default function AccountSettingsPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("account.email")}</Label>
               <Input id="email" type="email" value={email} readOnly />
               <p className="text-muted-foreground text-xs">
-                Email is used to sign in and cannot be changed here.
+                {t("account.emailHint")}
               </p>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="password">New password</Label>
+              <Label htmlFor="password">{t("account.newPassword")}</Label>
               <PasswordInput
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Leave blank to keep current password"
+                placeholder={t("account.passwordPlaceholder")}
                 minLength={8}
               />
             </div>

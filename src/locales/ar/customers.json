@@ -1,0 +1,66 @@
+{
+  "title": "العملاء",
+  "add": "إضافة عميل",
+  "addButton": "عميل جديد",
+  "search": "البحث في العملاء…",
+  "empty": "لم يُعثر على عملاء.",
+  "tabs": {
+    "all": "الكل",
+    "active": "نشط",
+    "inactive": "غير نشط"
+  },
+  "columns": {
+    "id": "المعرّف",
+    "name": "الاسم",
+    "description": "الوصف",
+    "openingBalance": "الرصيد الافتتاحي",
+    "totalSales": "إجمالي المبيعات",
+    "totalPayments": "إجمالي المدفوعات",
+    "balance": "الرصيد",
+    "phone": "رقم الهاتف",
+    "email": "البريد الإلكتروني",
+    "status": "الحالة"
+  },
+  "actions": {
+    "view": "عرض",
+    "edit": "تعديل",
+    "duplicate": "تكرار",
+    "delete": "حذف",
+    "openMenu": "فتح القائمة",
+    "deleteSelected": "حذف المحدد",
+    "viewRecord": "عرض السجل",
+    "viewTimeline": "عرض الخط الزمني"
+  },
+  "record": "سجل العميل",
+  "timeline": {
+    "title": "الخط الزمني",
+    "back": "العودة إلى العملاء",
+    "notFound": "العميل غير موجود.",
+    "empty": "لا فواتير أو مرتجعات بعد.",
+    "createInvoice": "إنشاء فاتورة",
+    "total": "الإجمالي",
+    "paid": "المدفوع",
+    "balance": "الرصيد",
+    "return": "مرتجع",
+    "returnAmount": "مبلغ المرتجع",
+    "itemCount": "{{count}} أصناف"
+  },
+  "sheet": {
+    "add": "إضافة عميل",
+    "edit": "تعديل العميل",
+    "addDescription": "أدخل بيانات العميل والصورة. الحفظ للتجربة فقط.",
+    "create": "إنشاء عميل",
+    "save": "حفظ العميل"
+  },
+  "toasts": {
+    "removedNamed": "تم حذف {{name}} (تجريبي).",
+    "duplicatedNamed": "تم تكرار {{name}} (تجريبي).",
+    "nameRequired": "اسم العميل مطلوب.",
+    "created": "تم إنشاء العميل (تجريبي).",
+    "saved": "تم حفظ العميل (تجريبي).",
+    "removedCount": "تم حذف {{count}} عميل (تجريبي)."
+  },
+  "entity": {
+    "customer": "عميل"
+  }
+}

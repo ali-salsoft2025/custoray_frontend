@@ -1,5 +1,6 @@
 import { z } from "zod"
 
+import i18n from "@/i18n"
 import { formatMoney } from "@/lib/customers"
 import { normalizeUniqueNumericIds } from "@/lib/utils"
 
@@ -96,9 +97,7 @@ export function computeNetPay(
 }
 
 export function payrollStatusLabel(status: PayrollStatus): string {
-  if (status === "paid") return "Paid"
-  if (status === "pending") return "Pending"
-  return "Draft"
+  return i18n.t(`payrollPage.status.${status}`, { ns: "employees" })
 }
 
 export function payrollStatusClass(status: PayrollStatus): string {

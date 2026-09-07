@@ -3,6 +3,7 @@
 import * as React from "react"
 import { IconDownload } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 import {
   PosDailyTrendChart,
@@ -48,6 +49,8 @@ function StatCard({
 }
 
 export function PosReports() {
+  const { t } = useTranslation("pos")
+  const { t: tc } = useTranslation("common")
   const { orders } = useOrders()
   const { returns } = useReturns()
   const [period, setPeriod] = React.useState<PosReportPeriod>("7d")
@@ -75,41 +78,41 @@ export function PosReports() {
 
   const handleExport = () => {
     if (dailyTotals.length === 0) {
-      toast.error("No data to export for this period.")
+      toast.error(t("reportsPage.toastNoData"))
       return
     }
 
     downloadRowsAsXls(
       dailyTotals.map((row) => ({
-        Date: row.label,
-        Sales: row.sales,
-        Returns: row.returns,
-        Net: row.net,
-        "Sale count": row.saleCount,
-        "Return count": row.returnCount,
+        [t("reportsPage.exportDate")]: row.label,
+        [t("reportsPage.exportSales")]: row.sales,
+        [t("reportsPage.exportReturns")]: row.returns,
+        [t("reportsPage.exportNet")]: row.net,
+        [t("reportsPage.exportSaleCount")]: row.saleCount,
+        [t("reportsPage.exportReturnCount")]: row.returnCount,
       })),
       `pos-report-${period}.xls`
     )
-    toast.success("Report exported.")
+    toast.success(t("reportsPage.toastExported"))
   }
 
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-xl font-semibold tracking-tight">POS reports</h2>
+          <h2 className="text-xl font-semibold tracking-tight">{t("reportsPage.title")}</h2>
           <p className="text-muted-foreground mt-1 text-sm">
-            Charts and summaries from register sales and returns.
+            {t("reportsPage.hint")}
           </p>
         </div>
         <Button type="button" variant="outline" size="sm" onClick={handleExport}>
           <IconDownload className="size-4" />
-          Export
+          {tc("actions.export")}
         </Button>
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {POS_REPORT_PERIODS.map(({ value, label }) => (
+        {POS_REPORT_PERIODS.map(({ value }) => (
           <button
             key={value}
             type="button"
@@ -121,31 +124,31 @@ export function PosReports() {
                 : "bg-muted/30 text-muted-foreground ring-border/40 hover:text-foreground"
             )}
           >
-            {label}
+            {t(`periods.${value}`)}
           </button>
         ))}
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          label="Gross sales"
+          label={t("reportsPage.grossSales")}
           value={formatPosReportMoney(summary.grossSales)}
-          hint={`${summary.saleCount} receipt${summary.saleCount === 1 ? "" : "s"}`}
+          hint={t("reportsPage.receiptCount", { count: summary.saleCount })}
         />
         <StatCard
-          label="Returns"
+          label={t("reportsPage.returns")}
           value={formatPosReportMoney(summary.totalReturns)}
-          hint={`${summary.returnCount} return${summary.returnCount === 1 ? "" : "s"}`}
+          hint={t("reportsPage.returnCount", { count: summary.returnCount })}
         />
         <StatCard
-          label="Net sales"
+          label={t("reportsPage.netSales")}
           value={formatPosReportMoney(summary.netSales)}
-          hint={`${summary.itemsSold} items sold`}
+          hint={t("reportsPage.itemsSold", { count: summary.itemsSold })}
         />
         <StatCard
-          label="Avg. ticket"
+          label={t("reportsPage.avgTicket")}
           value={formatPosReportMoney(summary.avgTicket)}
-          hint="Completed sales only"
+          hint={t("reportsPage.completedOnly")}
         />
       </div>
 
@@ -160,23 +163,23 @@ export function PosReports() {
 
       <div className={cn(panelClass, "overflow-hidden")}>
         <div className="border-border/40 border-b px-4 py-3">
-          <p className="text-sm font-semibold">Daily breakdown</p>
-          <p className="text-muted-foreground mt-0.5 text-xs">Detailed totals by date</p>
+          <p className="text-sm font-semibold">{t("reportsPage.dailyBreakdown")}</p>
+          <p className="text-muted-foreground mt-0.5 text-xs">{t("reportsPage.detailedTotals")}</p>
         </div>
         {dailyTotals.length === 0 ? (
           <p className="text-muted-foreground px-4 py-8 text-center text-sm">
-            No register activity in this period.
+            {t("reportsPage.noActivity")}
           </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[560px] text-sm">
               <thead>
                 <tr className="text-muted-foreground border-border/40 border-b text-left text-xs">
-                  <th className="px-4 py-2 font-medium">Date</th>
-                  <th className="px-4 py-2 text-right font-medium">Sales</th>
-                  <th className="px-4 py-2 text-right font-medium">Returns</th>
-                  <th className="px-4 py-2 text-right font-medium">Net</th>
-                  <th className="px-4 py-2 text-right font-medium">Receipts</th>
+                  <th className="px-4 py-2 font-medium">{t("reportsPage.date")}</th>
+                  <th className="px-4 py-2 text-right font-medium">{t("reportsPage.sales")}</th>
+                  <th className="px-4 py-2 text-right font-medium">{t("reportsPage.returns")}</th>
+                  <th className="px-4 py-2 text-right font-medium">{t("reportsPage.net")}</th>
+                  <th className="px-4 py-2 text-right font-medium">{t("reportsPage.receipts")}</th>
                 </tr>
               </thead>
               <tbody>

@@ -1,7 +1,11 @@
+import { isAdditionLine, isDiscountLine } from "@/lib/pos"
+
 type ReturnEligibleDocument = {
   status?: "pending" | "completed" | "cancelled"
   paidAmount: string
 }
+
+export const ALL_ITEMS_RETURNED_NAME = "(All items returned)"
 
 function parsePaidAmount(value: string): number {
   const paid = Number(String(value).replace(/,/g, ""))
@@ -19,4 +23,15 @@ export function canCancelDocument(doc: ReturnEligibleDocument): boolean {
   if (status === "cancelled") return false
   const unpaid = parsePaidAmount(doc.paidAmount) <= 0
   return unpaid && status === "pending"
+}
+
+export function isReturnableOrderLine(line: {
+  productName: string
+  quantity: number
+  lineTotal: string
+}): boolean {
+  const name = line.productName.trim()
+  if (!name || name === ALL_ITEMS_RETURNED_NAME) return false
+  if (isDiscountLine(line) || isAdditionLine(line)) return false
+  return line.quantity > 0 && Number(line.lineTotal) !== 0
 }

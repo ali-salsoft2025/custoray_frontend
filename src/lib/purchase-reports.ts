@@ -1,6 +1,7 @@
 import { formatMoney } from "@/lib/customers"
 import { computeBalance, formatDate, type PurchaseRow } from "@/lib/purchases"
 import type { ReturnRow } from "@/lib/returns"
+import i18n from "@/i18n"
 
 export type PurchaseReportPreset = "this_month" | "last_month" | "custom"
 
@@ -147,8 +148,8 @@ export function formatPurchaseReportFilterLabel(
   filter: PurchaseReportFilter
 ): string {
   const range = resolvePurchaseReportRange(filter)
-  if (filter.preset === "this_month") return "This month"
-  if (filter.preset === "last_month") return "Last month"
+  if (filter.preset === "this_month") return i18n.t("presets.thisMonth", { ns: "reports" })
+  if (filter.preset === "last_month") return i18n.t("presets.lastMonth", { ns: "reports" })
   if (range.start === range.end) return formatDate(range.start)
   return `${formatDate(range.start)} – ${formatDate(range.end)}`
 }
@@ -305,10 +306,10 @@ export function computePurchaseReportTrends(
     returnRateChangePct: pctChange(current.returnRate, previous.returnRate),
     compareLabel:
       filter.preset === "this_month"
-        ? "vs last month"
+        ? i18n.t("compare.vsLastMonth", { ns: "reports" })
         : filter.preset === "last_month"
-          ? "vs prior month"
-          : "vs prior period",
+          ? i18n.t("compare.vsPriorMonth", { ns: "reports" })
+          : i18n.t("compare.vsPriorPeriod", { ns: "reports" }),
   }
 }
 
@@ -487,10 +488,7 @@ export function resolvePurchaseTimelineBucket(
 export function purchaseTimelineBucketLabel(
   bucket: PurchaseTimelineBucket
 ): string {
-  if (bucket === "week") return "Weekly"
-  if (bucket === "month") return "Monthly"
-  if (bucket === "year") return "Yearly"
-  return "Daily"
+  return i18n.t(`buckets.${bucket}`, { ns: "reports" })
 }
 
 function startOfWeekMonday(iso: string): string {

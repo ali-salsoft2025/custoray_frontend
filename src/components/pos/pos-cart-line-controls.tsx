@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { IconMinus, IconPlus, IconRotateClockwise, IconTrash } from "@tabler/icons-react"
+import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -31,6 +32,8 @@ export function PosCartLineControls({
   onRemove,
   allowLinePriceEdit = true,
 }: PosCartLineControlsProps) {
+  const { t } = useTranslation("pos")
+  const { t: tc } = useTranslation("common")
   const [qtyDraft, setQtyDraft] = React.useState(String(line.quantity))
   const [priceDraft, setPriceDraft] = React.useState("")
 
@@ -94,6 +97,13 @@ export function PosCartLineControls({
                 if (qtyDraft.trim()) applyQuantity(qtyDraft)
                 else setQtyDraft(String(line.quantity))
               }}
+              onKeyDown={(event) => {
+                if (event.key !== "Enter") return
+                event.preventDefault()
+                if (qtyDraft.trim()) applyQuantity(qtyDraft)
+                else setQtyDraft(String(line.quantity))
+                event.currentTarget.blur()
+              }}
               className="h-9 px-1 text-center text-sm font-semibold tabular-nums"
             />
             <Button
@@ -122,12 +132,18 @@ export function PosCartLineControls({
               onBlur={() => {
                 if (priceDraft.trim()) applyPrice(priceDraft)
               }}
+              onKeyDown={(event) => {
+                if (event.key !== "Enter") return
+                event.preventDefault()
+                if (priceDraft.trim()) applyPrice(priceDraft)
+                event.currentTarget.blur()
+              }}
               className="h-9 text-sm font-semibold tabular-nums"
             />
           </div>
         ) : (
           <div className="flex flex-col justify-end pb-1">
-            <p className="text-muted-foreground text-xs font-medium">Line total</p>
+            <p className="text-muted-foreground text-xs font-medium">{t("lineTotal")}</p>
             <p className="text-sm font-semibold tabular-nums">{formatMoney(cartLineTotal(line))}</p>
           </div>
         )}
@@ -138,14 +154,14 @@ export function PosCartLineControls({
           size="icon"
           className="text-muted-foreground hover:text-destructive size-9 shrink-0"
           onClick={() => onRemove(line.productId)}
-          aria-label="Remove"
+          aria-label={t("remove")}
         >
           <IconTrash className="size-4" />
         </Button>
       </div>
 
       <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-        <span>List {formatMoney(baseTotal)}</span>
+        <span>{t("listPrice", { amount: formatMoney(baseTotal) })}</span>
         {hasAdjustment ? (
           <>
             <span
@@ -156,7 +172,7 @@ export function PosCartLineControls({
               )}
             >
               {adjustmentNum < 0
-                ? `${formatMoney(Math.abs(adjustmentNum).toFixed(2))} off`
+                ? t("offAmount", { amount: formatMoney(Math.abs(adjustmentNum).toFixed(2)) })
                 : `+${formatMoney(adjustment)}`}
             </span>
             <button
@@ -168,7 +184,7 @@ export function PosCartLineControls({
               className="hover:text-foreground inline-flex items-center gap-0.5 font-medium"
             >
               <IconRotateClockwise className="size-2.5" />
-              Reset
+              {tc("actions.reset")}
             </button>
           </>
         ) : null}

@@ -10,6 +10,7 @@ import {
   IconTrash,
 } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 import { EmployeeDetail } from "@/components/employees/employee-detail"
 import {
@@ -45,17 +46,9 @@ import {
   EMPTY_EMPLOYEE,
   employeeFromValues,
   mapImportedEmployee,
-  statusLabel,
   type EmployeeFormValues,
   type EmployeeRow,
 } from "@/lib/employees"
-
-const employeeTabs: DataTableTab[] = [
-  { value: "all", label: "All" },
-  { value: "active", label: "Active" },
-  { value: "inactive", label: "Inactive" },
-  { value: "portal", label: "Portal access" },
-]
 
 type EmployeeSidebarState =
   | { mode: "add" }
@@ -71,6 +64,8 @@ function employeeTabFilter(row: EmployeeRow, tab: string) {
 
 export function EmployeeList() {
   const { canAdmin } = useAuth()
+  const { t } = useTranslation("employees")
+  const { t: tc } = useTranslation("common")
   const {
     employees,
     setEmployees,
@@ -83,6 +78,12 @@ export function EmployeeList() {
   const [formStep, setFormStep] = useState<1 | 2>(1)
   const [portalEnabled, setPortalEnabled] = useState(false)
   const formRef = useRef<EmployeeFormHandle>(null)
+  const employeeTabs: DataTableTab[] = [
+    { value: "all", label: tc("tabs.all") },
+    { value: "active", label: tc("tabs.active") },
+    { value: "inactive", label: tc("tabs.inactive") },
+    { value: "portal", label: t("tabs.portalAccess") },
+  ]
 
   const closeSidebar = () => {
     setSidebar(null)
@@ -103,7 +104,7 @@ export function EmployeeList() {
       if (
         !(await confirmDeleteAction({
           itemName: employee.name,
-          entityLabel: "employee",
+          entityLabel: t("entity.employee"),
         }))
       ) {
         return
@@ -116,9 +117,9 @@ export function EmployeeList() {
       ) {
         closeSidebar()
       }
-      toast.message(`Removed ${employee.name}.`)
+      toast.message(t("list.toastRemoved", { name: employee.name }))
     },
-    [canAdmin, removeEmployee, sidebar]
+    [canAdmin, removeEmployee, sidebar, t]
   )
 
   const handleSubmit = useCallback(
@@ -126,7 +127,7 @@ export function EmployeeList() {
       if (!canAdmin) return
       if (sidebar?.mode === "add") {
         addEmployee(employeeFromValues(values, 0))
-        toast.success("Employee created.")
+        toast.success(t("list.toastCreated"))
         closeSidebar()
         return
       }
@@ -135,11 +136,11 @@ export function EmployeeList() {
           sidebar.employee.id,
           employeeFromValues(values, sidebar.employee.id, sidebar.employee)
         )
-        toast.success("Employee saved.")
+        toast.success(t("list.toastSaved"))
         closeSidebar()
       }
     },
-    [canAdmin, sidebar, addEmployee, updateEmployee]
+    [canAdmin, sidebar, addEmployee, updateEmployee, t]
   )
 
   const columns = useMemo<ColumnDef<EmployeeRow>[]>(
@@ -156,7 +157,7 @@ export function EmployeeList() {
               onCheckedChange={(value) =>
                 table.toggleAllPageRowsSelected(!!value)
               }
-              aria-label="Select all"
+              aria-label={tc("table.selectAll")}
             />
           </div>
         ),
@@ -165,7 +166,7 @@ export function EmployeeList() {
             <Checkbox
               checked={row.getIsSelected()}
               onCheckedChange={(value) => row.toggleSelected(!!value)}
-              aria-label="Select row"
+              aria-label={tc("table.selectRow")}
             />
           </div>
         ),
@@ -175,7 +176,7 @@ export function EmployeeList() {
       {
         accessorKey: "name",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Name" />
+          <DataTableColumnHeader column={column} title={t("columns.name")} />
         ),
         cell: ({ row }) => (
           <button
@@ -192,7 +193,7 @@ export function EmployeeList() {
       {
         accessorKey: "department",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Department" />
+          <DataTableColumnHeader column={column} title={t("columns.department")} />
         ),
         cell: ({ row }) => (
           <span className="text-muted-foreground">
@@ -204,7 +205,7 @@ export function EmployeeList() {
       {
         accessorKey: "baseSalary",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Salary" />
+          <DataTableColumnHeader column={column} title={t("columns.salary")} />
         ),
         cell: ({ row }) => (
           <span className="text-foreground tabular-nums">
@@ -216,22 +217,22 @@ export function EmployeeList() {
       {
         id: "portal",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Portal" />
+          <DataTableColumnHeader column={column} title={t("columns.portal")} />
         ),
         cell: ({ row }) =>
           row.original.portalEnabled ? (
             <span className="text-emerald-700 text-sm dark:text-emerald-400">
-              Active
+              {t("status.portalOn")}
             </span>
           ) : (
-            <span className="text-muted-foreground text-sm">Off</span>
+            <span className="text-muted-foreground text-sm">{t("status.portalOff")}</span>
           ),
         meta: { dataTableFilter: false },
       },
       {
         id: "permissions",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Access" />
+          <DataTableColumnHeader column={column} title={t("columns.access")} />
         ),
         cell: ({ row }) => (
           <span className="text-muted-foreground text-sm">
@@ -243,11 +244,11 @@ export function EmployeeList() {
       {
         accessorKey: "status",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Status" />
+          <DataTableColumnHeader column={column} title={t("columns.status")} />
         ),
         cell: ({ row }) => (
           <span className="text-muted-foreground text-sm">
-            {statusLabel(row.original.status)}
+            {t(`status.${row.original.status}`)}
           </span>
         ),
         meta: { dataTableFilter: false },
@@ -261,7 +262,7 @@ export function EmployeeList() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="size-8" size="icon">
                 <IconDotsVertical />
-                <span className="sr-only">Open menu</span>
+                <span className="sr-only">{tc("actions.openMenu")}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
@@ -269,7 +270,7 @@ export function EmployeeList() {
                 onClick={() => openSidebar(row.original, "view")}
               >
                 <IconEye />
-                View
+                {tc("actions.view")}
               </DropdownMenuItem>
               {canAdmin ? (
                 <>
@@ -277,12 +278,12 @@ export function EmployeeList() {
                     onClick={() => openSidebar(row.original, "edit")}
                   >
                     <IconPencil />
-                    Edit
+                    {tc("actions.edit")}
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href={`/employees/${row.original.id}`}>
                       <IconEye />
-                      Full profile
+                      {t("list.fullProfile")}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -291,14 +292,14 @@ export function EmployeeList() {
                     onClick={() => handleDelete(row.original)}
                   >
                     <IconTrash />
-                    Delete
+                    {tc("actions.delete")}
                   </DropdownMenuItem>
                 </>
               ) : (
                 <DropdownMenuItem asChild>
                   <Link href={`/employees/${row.original.id}`}>
                     <IconEye />
-                    Full profile
+                    {t("list.fullProfile")}
                   </Link>
                 </DropdownMenuItem>
               )}
@@ -307,7 +308,7 @@ export function EmployeeList() {
         ),
       },
     ],
-    [canAdmin, handleDelete, openSidebar]
+    [canAdmin, handleDelete, openSidebar, t, tc]
   )
 
   const sheetEmployeeId =
@@ -345,22 +346,22 @@ export function EmployeeList() {
               <SheetHeader className="border-border/60 space-y-1 border-b px-6 py-5 text-left">
                 <SheetTitle className="text-lg leading-tight">
                   {sidebar.mode === "add"
-                    ? "Add employee"
+                    ? t("add")
                     : sidebar.mode === "edit"
-                      ? "Edit employee"
+                      ? t("edit")
                       : sheetEmployee?.name}
                 </SheetTitle>
                 <SheetDescription>
                   {sidebar.mode === "add" ? (
                     formStep === 1
-                      ? "Step 1 — basic info and portal access."
-                      : "Step 2 — login credentials and module permissions."
+                      ? t("list.step1")
+                      : t("list.step2")
                   ) : sidebar.mode === "edit" && sheetEmployee ? (
                     <>
                       {sheetEmployee.name}
                       <span className="text-muted-foreground">
                         {" "}
-                        · {sheetEmployee.department || "No department"}
+                        · {sheetEmployee.department || t("list.noDepartment")}
                       </span>
                     </>
                   ) : sheetEmployee ? (
@@ -408,12 +409,12 @@ export function EmployeeList() {
                           setSidebar({ mode: "edit", employee: sheetEmployee })
                         }
                       >
-                        Edit
+                        {tc("actions.edit")}
                       </Button>
                     ) : null}
                     <SheetClose asChild>
                       <Button type="button" className="w-full sm:w-auto">
-                        Close
+                        {tc("actions.close")}
                       </Button>
                     </SheetClose>
                   </>
@@ -424,20 +425,20 @@ export function EmployeeList() {
                       variant="outline"
                       onClick={() => formRef.current?.goBack()}
                     >
-                      Back
+                      {tc("actions.back")}
                     </Button>
                     <Button
                       type="button"
                       onClick={() => formRef.current?.goNextOrSubmit()}
                     >
-                      Create employee
+                      {t("list.createEmployee")}
                     </Button>
                   </>
                 ) : (
                   <>
                     <SheetClose asChild>
                       <Button variant="outline" type="button">
-                        Cancel
+                        {tc("actions.cancel")}
                       </Button>
                     </SheetClose>
                     <Button
@@ -446,9 +447,9 @@ export function EmployeeList() {
                     >
                       {sidebar.mode === "add"
                         ? portalEnabled
-                          ? "Continue"
-                          : "Create employee"
-                        : "Save employee"}
+                          ? tc("actions.continue")
+                          : t("list.createEmployee")
+                        : t("list.saveEmployee")}
                     </Button>
                   </>
                 )}
@@ -461,15 +462,15 @@ export function EmployeeList() {
       <DataTable
         data={employees}
         columns={columns}
-        addButtonLabel="New Employee"
-        searchPlaceholder="Search employees..."
+        addButtonLabel={t("list.newEmployee")}
+        searchPlaceholder={t("list.searchPlaceholder")}
         importRowMapper={mapImportedEmployee}
         importSampleFilename="employees-sample.csv"
         exportFilename="employees-export.csv"
         onDataChange={setEmployees}
         onAddClick={() => {
           if (!canAdmin) {
-            toast.error("Only admins can add employees.")
+            toast.error(t("list.toastAdminOnly"))
             return
           }
           setSidebar({ mode: "add" })
@@ -481,21 +482,21 @@ export function EmployeeList() {
             ? [
                 {
                   id: "delete",
-                  label: "Delete selected",
+                  label: tc("actions.deleteSelected"),
                   icon: <IconTrash className="size-4" />,
                   variant: "destructive",
                   onClick: async (selected) => {
                     if (
                       !(await confirmDeleteAction({
                         count: selected.length,
-                        entityLabel: "employee",
+                        entityLabel: t("entity.employee"),
                       }))
                     ) {
                       return
                     }
                     const ids = new Set(selected.map((e) => e.id))
                     setEmployees((prev) => prev.filter((r) => !ids.has(r.id)))
-                    toast.message(`Removed ${selected.length} employee(s).`)
+                    toast.message(t("list.toastRemovedCount", { count: selected.length }))
                   },
                 },
               ]

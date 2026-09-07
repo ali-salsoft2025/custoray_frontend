@@ -1,8 +1,10 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import Link from "next/link"
 import { IconDeviceFloppy, IconPhoto, IconRotate } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 import { InvoiceTemplatePreview } from "@/components/invoices/invoice-template-preview"
 import { Button } from "@/components/ui/button"
@@ -55,33 +57,33 @@ type InvoiceBuilderProps = {
   suggestedTemplateName?: string
 }
 
-const LABEL_FIELDS: { key: keyof InvoiceBuilderLabels; label: string }[] = [
-  { key: "documentTitle", label: "Document title" },
-  { key: "billToLabel", label: "Bill-to label" },
-  { key: "dateLabel", label: "Date label" },
-  { key: "invoiceIdLabel", label: "Invoice ID label" },
-  { key: "statusLabel", label: "Status label" },
-  { key: "rowNumberColumn", label: "Row # column" },
-  { key: "descriptionColumn", label: "Description column" },
-  { key: "qtyColumn", label: "Qty column" },
-  { key: "rateColumn", label: "Unit price column" },
-  { key: "amountColumn", label: "Amount column" },
-  { key: "subtotalLabel", label: "Subtotal label" },
-  { key: "paidLabel", label: "Paid label" },
-  { key: "balanceLabel", label: "Balance due label" },
-  { key: "totalLabel", label: "Total label" },
-  { key: "thankYouMessage", label: "Thank-you message" },
-  { key: "footerNote", label: "Footer note" },
+const LABEL_FIELDS: (keyof InvoiceBuilderLabels)[] = [
+  "documentTitle",
+  "billToLabel",
+  "dateLabel",
+  "invoiceIdLabel",
+  "statusLabel",
+  "rowNumberColumn",
+  "descriptionColumn",
+  "qtyColumn",
+  "rateColumn",
+  "amountColumn",
+  "subtotalLabel",
+  "paidLabel",
+  "balanceLabel",
+  "totalLabel",
+  "thankYouMessage",
+  "footerNote",
 ]
 
 const FIELD_GROUPS = [
-  { id: "company" as const, title: "Company" },
-  { id: "invoice" as const, title: "Invoice details" },
-  { id: "customer" as const, title: "Customer" },
-  { id: "items" as const, title: "Line items" },
-  { id: "totals" as const, title: "Totals" },
-  { id: "footer" as const, title: "Footer" },
-]
+  "company",
+  "invoice",
+  "customer",
+  "items",
+  "totals",
+  "footer",
+] as const
 
 function readLogoFile(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -105,6 +107,7 @@ export function InvoiceBuilder({
   editingCustom,
   suggestedTemplateName = "",
 }: InvoiceBuilderProps) {
+  const { t } = useTranslation("documents")
   const [templateName, setTemplateName] = useState(suggestedTemplateName)
   const logoInputRef = useRef<HTMLInputElement>(null)
   const company = useMemo(() => loadCompanySettings(), [open])
@@ -151,39 +154,39 @@ export function InvoiceBuilder({
   const handleLogoUpload = async (file: File | undefined) => {
     if (!file) return
     if (!file.type.startsWith("image/")) {
-      toast.error("Please choose an image file for the logo.")
+      toast.error(t("builder.chooseImage"))
       return
     }
     try {
       const dataUrl = await readLogoFile(file)
       patchBuilder({ logoUrlOverride: dataUrl })
-      toast.success("Logo updated for this template.")
+      toast.success(t("builder.logoUpdated"))
     } catch {
-      toast.error("Could not upload logo.")
+      toast.error(t("builder.logoFailed"))
     }
   }
 
   const handleResetBuilder = () => {
     onBuilderChange(defaultInvoiceBuilderConfig())
-    toast.message("Builder reset to defaults.")
+    toast.message(t("builder.resetBuilder"))
   }
 
   const handleResetColors = () => {
     onColorsChange(getDefaultColorsForTemplate(baseLayout))
-    toast.message("Colors reset to layout defaults.")
+    toast.message(t("builder.resetColorsToast"))
   }
 
   const handleSaveCustom = () => {
     const name = templateName.trim()
     if (!name) {
-      toast.error("Enter a name for your custom template.")
+      toast.error(t("builder.enterName"))
       return
     }
     const template = editingCustom
       ? { ...editingCustom, name, baseLayout, colors, builder }
       : createCustomInvoiceTemplate(name, baseLayout, colors, builder)
     onSaveCustomTemplate(template)
-    toast.success(editingCustom ? "Custom template updated." : "Custom template saved.")
+    toast.success(editingCustom ? t("builder.customUpdated") : t("builder.customSaved"))
     onOpenChange(false)
   }
 
@@ -196,12 +199,10 @@ export function InvoiceBuilder({
       >
         <SheetHeader className="shrink-0 border-b px-6 py-4" style={{ borderColor: "#e5e7eb", backgroundColor: "#ffffff" }}>
           <SheetTitle style={{ color: "#111827" }}>
-            {editingCustom ? "Edit custom template" : "Create custom template"}
+            {editingCustom ? t("builder.editTitle") : t("builder.createTitle")}
           </SheetTitle>
           <SheetDescription style={{ color: "#6b7280" }}>
-            {editingCustom
-              ? "Update your saved template. Built-in presets cannot be changed."
-              : "Built-in presets are read-only. Your changes are saved as a new custom template."}
+            {editingCustom ? t("builder.editHint") : t("builder.createHint")}
           </SheetDescription>
         </SheetHeader>
 
@@ -209,29 +210,29 @@ export function InvoiceBuilder({
           <div className="min-h-0 flex-1 overflow-y-auto border-r p-4 lg:p-6" style={{ borderColor: "#e5e7eb", backgroundColor: "#ffffff" }}>
             <Tabs defaultValue="fields" className="flex flex-col gap-4">
               <TabsList className="grid w-full grid-cols-4 bg-[#f3f4f6]">
-                <TabsTrigger value="fields">Fields</TabsTrigger>
-                <TabsTrigger value="text">Text</TabsTrigger>
-                <TabsTrigger value="company">Company</TabsTrigger>
-                <TabsTrigger value="colors">Colors</TabsTrigger>
+                <TabsTrigger value="fields">{t("builder.tabFields")}</TabsTrigger>
+                <TabsTrigger value="text">{t("builder.tabText")}</TabsTrigger>
+                <TabsTrigger value="company">{t("builder.tabCompany")}</TabsTrigger>
+                <TabsTrigger value="colors">{t("builder.tabColors")}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="fields" className="mt-0 space-y-4">
                 <p className="text-xs" style={{ color: "#6b7280" }}>
-                  Show or hide sections on the invoice. Data fills automatically from orders and company settings.
+                  {t("builder.fieldsHint")}
                 </p>
-                {FIELD_GROUPS.map((group) => {
-                  const items = INVOICE_MERGE_FIELDS.filter((f) => f.group === group.id)
+                {FIELD_GROUPS.map((groupId) => {
+                  const items = INVOICE_MERGE_FIELDS.filter((f) => f.group === groupId)
                   return (
-                    <div key={group.id} className="rounded-lg border p-3" style={{ borderColor: "#e5e7eb" }}>
+                    <div key={groupId} className="rounded-lg border p-3" style={{ borderColor: "#e5e7eb" }}>
                       <p className="mb-2 text-xs font-semibold uppercase tracking-wide" style={{ color: "#374151" }}>
-                        {group.title}
+                        {t(`builder.groups.${groupId}`)}
                       </p>
                       <div className="flex flex-col gap-2">
                         {items.map((field) => (
                           <div key={field.id} className="flex items-center justify-between gap-3">
                             <div className="min-w-0">
                               <p className="text-sm font-medium" style={{ color: "#111827" }}>
-                                {field.label}
+                                {t(`mergeFields.${field.id}`)}
                               </p>
                               <p className="font-mono text-[10px]" style={{ color: "#9ca3af" }}>
                                 {field.hint}
@@ -250,10 +251,10 @@ export function InvoiceBuilder({
               </TabsContent>
 
               <TabsContent value="text" className="mt-0 space-y-3">
-                {LABEL_FIELDS.map(({ key, label }) => (
+                {LABEL_FIELDS.map((key) => (
                   <div key={key} className="flex flex-col gap-1.5">
                     <Label htmlFor={`builder-label-${key}`} className="text-xs" style={{ color: "#374151" }}>
-                      {label}
+                      {t(`builder.labelFields.${key}`)}
                     </Label>
                     <Input
                       id={`builder-label-${key}`}
@@ -265,16 +266,23 @@ export function InvoiceBuilder({
                 ))}
                 <Button type="button" variant="outline" size="sm" className="bg-white" onClick={handleResetBuilder}>
                   <IconRotate className="size-4" />
-                  Reset all text & fields
+                  {t("builder.resetText")}
                 </Button>
               </TabsContent>
 
               <TabsContent value="company" className="mt-0 space-y-4">
                 <p className="text-xs" style={{ color: "#6b7280" }}>
-                  Leave blank to use values from Settings → Company. Overrides apply only to this template.
+                  {t("builder.companyHint")}{" "}
+                  <Link
+                    href="/settings"
+                    className="text-primary font-medium underline underline-offset-2"
+                    onClick={() => onOpenChange(false)}
+                  >
+                    {t("builder.openCompanySettings")}
+                  </Link>
                 </p>
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-xs" style={{ color: "#374151" }}>Company name</Label>
+                  <Label className="text-xs" style={{ color: "#374151" }}>{t("builder.companyName")}</Label>
                   <Input
                     placeholder={company.name || "{{company_name}}"}
                     value={builder.companyNameOverride}
@@ -283,7 +291,7 @@ export function InvoiceBuilder({
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-xs" style={{ color: "#374151" }}>Tagline</Label>
+                  <Label className="text-xs" style={{ color: "#374151" }}>{t("builder.tagline")}</Label>
                   <Input
                     placeholder={company.tagline || "{{company_tagline}}"}
                     value={builder.companyTaglineOverride}
@@ -292,7 +300,7 @@ export function InvoiceBuilder({
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-xs" style={{ color: "#374151" }}>Address</Label>
+                  <Label className="text-xs" style={{ color: "#374151" }}>{t("builder.address")}</Label>
                   <Input
                     placeholder="{{company_address}}"
                     value={builder.companyAddressOverride}
@@ -301,7 +309,7 @@ export function InvoiceBuilder({
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-xs" style={{ color: "#374151" }}>Phone & email</Label>
+                  <Label className="text-xs" style={{ color: "#374151" }}>{t("builder.phoneEmail")}</Label>
                   <Input
                     placeholder="{{company_contact}}"
                     value={builder.companyContactOverride}
@@ -310,7 +318,7 @@ export function InvoiceBuilder({
                   />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <Label className="text-xs" style={{ color: "#374151" }}>Logo</Label>
+                  <Label className="text-xs" style={{ color: "#374151" }}>{t("builder.logo")}</Label>
                   <input
                     ref={logoInputRef}
                     type="file"
@@ -327,7 +335,7 @@ export function InvoiceBuilder({
                       onClick={() => logoInputRef.current?.click()}
                     >
                       <IconPhoto className="size-4" />
-                      Upload logo
+                      {t("builder.uploadLogo")}
                     </Button>
                     <Button
                       type="button"
@@ -336,7 +344,7 @@ export function InvoiceBuilder({
                       className="bg-white"
                       onClick={() => patchBuilder({ logoUrlOverride: "" })}
                     >
-                      Use company logo
+                      {t("builder.useCompanyLogo")}
                     </Button>
                   </div>
                 </div>
@@ -344,15 +352,15 @@ export function InvoiceBuilder({
 
               <TabsContent value="colors" className="mt-0 space-y-4">
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-xs" style={{ color: "#374151" }}>Base layout</Label>
+                  <Label className="text-xs" style={{ color: "#374151" }}>{t("builder.baseLayout")}</Label>
                   <Select value={baseLayout} onValueChange={(v) => onBaseLayoutChange(v as InvoiceTemplateId)}>
                     <SelectTrigger className="bg-white">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {INVOICE_TEMPLATES.map((t) => (
-                        <SelectItem key={t.id} value={t.id}>
-                          {t.name}
+                      {INVOICE_TEMPLATES.map((layout) => (
+                        <SelectItem key={layout.id} value={layout.id}>
+                          {t(`presets.${layout.id}.name`)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -360,15 +368,16 @@ export function InvoiceBuilder({
                 </div>
                 <div className="flex items-center justify-between">
                   <p className="text-xs font-medium uppercase tracking-wide" style={{ color: "#374151" }}>
-                    Template colors
+                    {t("builder.templateColors")}
                   </p>
                   <Button type="button" variant="outline" size="sm" className="bg-white" onClick={handleResetColors}>
-                    Reset colors
+                    {t("builder.resetColors")}
                   </Button>
                 </div>
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  {INVOICE_COLOR_FIELDS.map(({ key, label }) => {
+                  {INVOICE_COLOR_FIELDS.map(({ key }) => {
                     const value = colors[key] ?? getDefaultColorsForTemplate(baseLayout)[key] ?? "#000000"
+                    const colorLabel = t(`colors.${key}`)
                     return (
                       <div
                         key={key}
@@ -380,11 +389,11 @@ export function InvoiceBuilder({
                           value={value}
                           onChange={(e) => onColorsChange({ ...colors, [key]: e.target.value })}
                           className="size-8 shrink-0 cursor-pointer rounded border-0 bg-transparent p-0"
-                          aria-label={label}
+                          aria-label={colorLabel}
                         />
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-[11px] font-medium" style={{ color: "#111827" }}>
-                            {label}
+                            {colorLabel}
                           </p>
                           <p className="font-mono text-[10px] uppercase" style={{ color: "#6b7280" }}>
                             {value}
@@ -400,11 +409,11 @@ export function InvoiceBuilder({
             <div className="mt-6 space-y-3 border-t pt-4" style={{ borderColor: "#e5e7eb" }}>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="custom-template-name" className="text-xs" style={{ color: "#374151" }}>
-                  Template name
+                  {t("builder.templateName")}
                 </Label>
                 <Input
                   id="custom-template-name"
-                  placeholder="My branded invoice"
+                  placeholder={t("builder.namePlaceholder")}
                   value={templateName}
                   onChange={(e) => setTemplateName(e.target.value)}
                   className="bg-white"
@@ -412,7 +421,7 @@ export function InvoiceBuilder({
               </div>
               <Button type="button" className="w-full sm:w-auto" onClick={handleSaveCustom}>
                 <IconDeviceFloppy className="size-4" />
-                {editingCustom ? "Save changes" : "Save custom template"}
+                {editingCustom ? t("builder.saveChanges") : t("builder.saveCustom")}
               </Button>
             </div>
           </div>
@@ -422,7 +431,7 @@ export function InvoiceBuilder({
             style={{ backgroundColor: "#f3f4f6" }}
           >
             <p className="text-xs font-medium uppercase tracking-wide" style={{ color: "#374151" }}>
-              Live preview (portrait A4)
+              {t("builder.livePreview")}
             </p>
             <InvoiceTemplatePreview
               template={resolvedTemplate}

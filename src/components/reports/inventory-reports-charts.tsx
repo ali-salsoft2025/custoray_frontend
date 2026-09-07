@@ -30,6 +30,7 @@ import {
   inventoryTimelineBucketLabel,
 } from "@/lib/inventory-reports"
 import { cn } from "@/lib/utils"
+import { useTranslation } from "react-i18next"
 
 const panelClass =
   "rounded-2xl bg-card shadow-sm shadow-black/[0.03] ring-1 ring-border/50"
@@ -99,16 +100,17 @@ function truncate(value: string, max = 22): string {
   return value.length > max ? `${value.slice(0, max - 2)}…` : value
 }
 
+function agingBucketKey(bucket: string): "d0_30" | "d31_60" | "d61_90" | "d90plus" {
+  if (bucket.startsWith("0-30")) return "d0_30"
+  if (bucket.startsWith("31-60")) return "d31_60"
+  if (bucket.startsWith("61-90")) return "d61_90"
+  return "d90plus"
+}
+
 function shortTickLabel(label: string, bucket: InventoryTimelineBucket): string {
   if (bucket === "month") return label.replace(/ (\d{2})(\d{2})$/, " ’$2")
   return label.replace(/,\s*\d{4}$/, "")
 }
-
-const movementChartConfig = {
-  received: { label: "Received", color: COLORS.received },
-  issued: { label: "Issued", color: COLORS.issued },
-  balance: { label: "On hand", color: COLORS.balance },
-} satisfies ChartConfig
 
 export function StockMovementChart({
   data,
@@ -117,9 +119,15 @@ export function StockMovementChart({
   data: InventoryMovementBucketRow[]
   bucket?: InventoryTimelineBucket
 }) {
+  const { t } = useTranslation("reports")
   const receivedFillId = useChartGradientId("mv-received")
   const issuedFillId = useChartGradientId("mv-issued")
-  const grain = inventoryTimelineBucketLabel(bucket).toLowerCase()
+  const grain = inventoryTimelineBucketLabel(bucket)
+  const movementChartConfig = {
+    received: { label: t("inventoryPage.chartReceived"), color: COLORS.received },
+    issued: { label: t("inventoryPage.chartIssued"), color: COLORS.issued },
+    balance: { label: t("inventoryPage.chartOnHand"), color: COLORS.balance },
+  } satisfies ChartConfig
 
   const chartData = React.useMemo(
     () =>
@@ -144,18 +152,22 @@ export function StockMovementChart({
   if (!hasActivity) {
     return (
       <ChartPanel
-        title="Stock movement"
-        description={`${inventoryTimelineBucketLabel(bucket)} goods received against units issued`}
+        title={t("inventoryPage.stockMovement")}
+        description={t("inventoryPage.movementHint", {
+          bucket: inventoryTimelineBucketLabel(bucket),
+        })}
       >
-        <ChartEmpty message="No stock movement in this period." />
+        <ChartEmpty message={t("inventoryPage.noMovement")} />
       </ChartPanel>
     )
   }
 
   return (
     <ChartPanel
-      title="Stock movement"
-      description={`${inventoryTimelineBucketLabel(bucket)} goods received against units issued`}
+      title={t("inventoryPage.stockMovement")}
+      description={t("inventoryPage.movementHint", {
+        bucket: inventoryTimelineBucketLabel(bucket),
+      })}
       action={
         <div className="flex flex-wrap items-center justify-end gap-1.5">
           <span className="rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium capitalize">
@@ -169,8 +181,10 @@ export function StockMovementChart({
                 : "bg-rose-500/15 text-rose-700 dark:text-rose-400"
             )}
           >
-            Net {net >= 0 ? "+" : ""}
-            {net} units
+            {t("inventoryPage.netUnitsBadge", {
+              sign: net >= 0 ? "+" : "",
+              count: net,
+            })}
           </span>
         </div>
       }
@@ -241,8 +255,9 @@ export function StockMovementChart({
                 }}
                 formatter={(value, name) => (
                   <span className="font-medium tabular-nums">
-                    {Number(value)} units
-                    {String(name) === "balance" ? " on hand" : ""}
+                    {String(name) === "balance"
+                      ? t("inventoryPage.unitsOnHand", { count: Number(value) })
+                      : t("inventoryPage.unitsCount", { count: Number(value) })}
                   </span>
                 )}
               />
@@ -278,21 +293,22 @@ export function StockMovementChart({
   )
 }
 
-const agingChartConfig = {
-  stockValue: { label: "Stock value", color: AGING_COLORS[0] },
-} satisfies ChartConfig
-
 export function StockAgingChart({ data }: { data: InventoryAgingRow[] }) {
+  const { t } = useTranslation("reports")
+  const agingChartConfig = {
+    stockValue: { label: t("inventoryPage.chartStockValue"), color: AGING_COLORS[0] },
+  } satisfies ChartConfig
   const chartData = React.useMemo(
     () =>
       data.map((row) => ({
-        label: row.bucket,
+        label: t(`aging.${agingBucketKey(row.bucket)}`),
+        bucket: row.bucket,
         stockValue: Number(row.stockValue),
         skuCount: row.skuCount,
         units: row.units,
         share: row.share,
       })),
-    [data]
+    [data, t]
   )
 
   const hasActivity = chartData.some((row) => row.stockValue > 0)
@@ -303,18 +319,18 @@ export function StockAgingChart({ data }: { data: InventoryAgingRow[] }) {
   if (!hasActivity) {
     return (
       <ChartPanel
-        title="Stock aging"
-        description="Value held by time since last sale"
+        title={t("inventoryPage.stockAging")}
+        description={t("inventoryPage.agingHint")}
       >
-        <ChartEmpty message="No stock on hand to age." />
+        <ChartEmpty message={t("inventoryPage.noStockToAge")} />
       </ChartPanel>
     )
   }
 
   return (
     <ChartPanel
-      title="Stock aging"
-      description="Value held by time since last sale"
+      title={t("inventoryPage.stockAging")}
+      description={t("inventoryPage.agingHint")}
       action={
         <span
           className={cn(
@@ -324,7 +340,7 @@ export function StockAgingChart({ data }: { data: InventoryAgingRow[] }) {
               : "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
           )}
         >
-          {stale.toFixed(0)}% stale
+          {t("inventoryPage.percentStale", { rate: stale.toFixed(0) })}
         </span>
       }
     >
@@ -365,8 +381,11 @@ export function StockAgingChart({ data }: { data: InventoryAgingRow[] }) {
                 indicator="dot"
                 formatter={(value, _name, item) => (
                   <span className="tabular-nums">
-                    {formatInventoryReportMoney(String(value))} ·{" "}
-                    {item.payload?.skuCount} SKUs · {item.payload?.units} units
+                    {t("inventoryPage.agingTooltip", {
+                      amount: formatInventoryReportMoney(String(value)),
+                      skuCount: item.payload?.skuCount,
+                      units: item.payload?.units,
+                    })}
                   </span>
                 )}
               />
@@ -383,16 +402,16 @@ export function StockAgingChart({ data }: { data: InventoryAgingRow[] }) {
   )
 }
 
-const moversConfig = {
-  issued: { label: "Units issued", color: COLORS.movers },
-} satisfies ChartConfig
-
 export function FastestMoversChart({
   data,
 }: {
   data: { sku: string; productName: string; issued: number; value: string }[]
 }) {
+  const { t } = useTranslation("reports")
   const barFillId = useChartGradientId("movers")
+  const moversConfig = {
+    issued: { label: t("inventoryPage.unitsIssued"), color: COLORS.movers },
+  } satisfies ChartConfig
 
   const chartData = React.useMemo(
     () =>
@@ -413,18 +432,18 @@ export function FastestMoversChart({
   if (!hasActivity) {
     return (
       <ChartPanel
-        title="Fastest movers"
-        description="Units issued in the selected period"
+        title={t("inventoryPage.fastestMovers")}
+        description={t("inventoryPage.moversHint")}
       >
-        <ChartEmpty message="Nothing moved in this period." />
+        <ChartEmpty message={t("inventoryPage.nothingMoved")} />
       </ChartPanel>
     )
   }
 
   return (
     <ChartPanel
-      title="Fastest movers"
-      description="Units issued in the selected period"
+      title={t("inventoryPage.fastestMovers")}
+      description={t("inventoryPage.moversHint")}
       action={
         leader ? (
           <span className="rounded-full bg-primary/15 px-2.5 py-1 text-[11px] font-medium text-primary">
@@ -482,8 +501,12 @@ export function FastestMoversChart({
                 }}
                 formatter={(value, _name, item) => (
                   <span className="tabular-nums">
-                    {Number(value)} units ·{" "}
-                    {formatInventoryReportMoney(String(item.payload?.value ?? 0))}
+                    {t("inventoryPage.moverTooltip", {
+                      count: Number(value),
+                      amount: formatInventoryReportMoney(
+                        String(item.payload?.value ?? 0)
+                      ),
+                    })}
                   </span>
                 )}
               />

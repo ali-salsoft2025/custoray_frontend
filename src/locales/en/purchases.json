@@ -1,0 +1,78 @@
+{
+  "title": "Purchases",
+  "add": "New purchase",
+  "addButton": "New Purchase",
+  "search": {
+    "bills": "Search purchases by invoice, vendor…",
+    "items": "Search purchases by item, vendor, invoice…"
+  },
+  "tabs": {
+    "all": "All",
+    "pending": "Pending",
+    "completed": "Completed",
+    "cancelled": "Cancelled"
+  },
+  "status": {
+    "pending": "Pending",
+    "completed": "Completed",
+    "cancelled": "Cancelled"
+  },
+  "viewMode": {
+    "aria": "Purchase view mode",
+    "billDescription": "Bill wise — one row per invoice",
+    "itemDescription": "Item wise — one row per purchased line item"
+  },
+  "columns": {
+    "srNo": "Sr No",
+    "invoiceNumber": "Invoice #",
+    "poNumber": "PO #",
+    "vendor": "Vendor",
+    "date": "Date",
+    "totalAmount": "Total amount",
+    "paidAmount": "Paid amount",
+    "balance": "Balance",
+    "status": "Status",
+    "item": "Item",
+    "qty": "Qty",
+    "unitPrice": "Unit price",
+    "lineTotal": "Line total",
+    "items": "Items"
+  },
+  "actions": {
+    "view": "View",
+    "edit": "Edit",
+    "duplicate": "Duplicate",
+    "return": "Return",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "openMenu": "Open menu",
+    "deleteSelected": "Delete selected",
+    "openPurchase": "Open purchase"
+  },
+  "sheet": {
+    "create": "Create purchase order",
+    "edit": "Edit purchase order",
+    "addDescription": "Add purchase header and line items. Saving is demo only.",
+    "createButton": "Create purchase",
+    "saveButton": "Save purchase"
+  },
+  "toasts": {
+    "removedNamed": "Removed {{name}} (demo).",
+    "duplicatedNamed": "Duplicated {{name}} (demo).",
+    "removedLines": "Removed {{count}} line item(s) (demo).",
+    "removedPurchases": "Removed {{count}} purchase order(s) (demo).",
+    "onlyCompletedPaid": "Only completed paid purchases can be returned.",
+    "sourceNotFound": "Source purchase not found.",
+    "cancelled": "{{name}} cancelled.",
+    "onlyPendingUnpaid": "Only pending unpaid purchases can be cancelled.",
+    "vendorRequired": "Vendor name is required.",
+    "lineRequired": "Add at least one line item with a product name.",
+    "created": "Purchase order created (demo).",
+    "saved": "Purchase order saved (demo)."
+  },
+  "entity": {
+    "purchase": "purchase",
+    "purchaseOrder": "purchase order",
+    "purchaseLineItem": "purchase line item"
+  }
+}

@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { IconSearch } from "@tabler/icons-react"
+import { useTranslation } from "react-i18next"
 
 import { Badge } from "@/components/ui/badge"
 import { SearchInput } from "@/components/ui/search-input"
@@ -26,6 +27,7 @@ function returnItemCount(row: ReturnRow): number {
 }
 
 export function PosReturnsHistory() {
+  const { t } = useTranslation("pos")
   const { returns } = useReturns()
   const [search, setSearch] = React.useState("")
 
@@ -61,21 +63,21 @@ export function PosReturnsHistory() {
   return (
     <div className="flex flex-col gap-5">
       <div>
-        <h2 className="text-xl font-semibold tracking-tight">Returns history</h2>
-        <p className="text-muted-foreground mt-1 text-sm">
-          Walk-in register returns processed from the POS Returns tab.
-        </p>
+        <h2 className="text-xl font-semibold tracking-tight">{t("returnsHistory.title")}</h2>
+        <p className="text-muted-foreground mt-1 text-sm">{t("returnsHistory.hint")}</p>
       </div>
 
       <div className={cn(panelClass, "overflow-hidden")}>
         <div className="border-border/40 border-b px-4 py-4">
           <p className="text-muted-foreground text-sm">
-            {posReturns.length} return{posReturns.length === 1 ? "" : "s"} ·{" "}
-            {formatPosMoney(totalRefunded)} refunded
+            {t("returnsHistory.countRefunded", {
+              count: posReturns.length,
+              amount: formatPosMoney(totalRefunded),
+            })}
           </p>
           <div className="mt-3 sm:max-w-md">
             <SearchInput
-              placeholder="Search by return #, customer…"
+              placeholder={t("returnsHistory.searchPlaceholder")}
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               icon={<IconSearch className="size-4" />}
@@ -87,19 +89,19 @@ export function PosReturnsHistory() {
         <div className="p-4">
           {posReturns.length === 0 ? (
             <p className="text-muted-foreground py-12 text-center text-sm">
-              No POS returns yet. Process a return from the register.
+              {t("returnsHistory.empty")}
             </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[720px] text-sm">
                 <thead>
                   <tr className="text-muted-foreground border-border/40 border-b text-left text-xs tracking-wide uppercase">
-                    <th className="pb-3 pr-4 font-medium">Return #</th>
-                    <th className="pb-3 pr-4 font-medium">Date</th>
-                    <th className="pb-3 pr-4 font-medium">Customer</th>
-                    <th className="pb-3 pr-4 font-medium">Items</th>
-                    <th className="pb-3 pr-4 font-medium">Status</th>
-                    <th className="pb-3 text-right font-medium">Refund</th>
+                    <th className="pb-3 pr-4 font-medium">{t("returnsHistory.returnNumber")}</th>
+                    <th className="pb-3 pr-4 font-medium">{t("returnsHistory.date")}</th>
+                    <th className="pb-3 pr-4 font-medium">{t("returnsHistory.customer")}</th>
+                    <th className="pb-3 pr-4 font-medium">{t("returnsHistory.items")}</th>
+                    <th className="pb-3 pr-4 font-medium">{t("returnsHistory.status")}</th>
+                    <th className="pb-3 text-right font-medium">{t("returnsHistory.refund")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -123,12 +125,12 @@ export function PosReturnsHistory() {
                       <td className="py-3.5 pr-4">
                         <Badge
                           variant="outline"
-                          className={statusBadgeClass(row.status)}
+                          className={cn("h-5 px-1.5 text-[10px]", statusBadgeClass(row.status))}
                         >
                           {statusLabel(row.status)}
                         </Badge>
                       </td>
-                      <td className="py-3.5 text-right font-medium tabular-nums">
+                      <td className="py-3.5 text-right font-semibold tabular-nums">
                         {formatPosMoney(row.totalAmount)}
                       </td>
                     </tr>

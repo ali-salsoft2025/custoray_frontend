@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useParams } from "next/navigation"
 import { IconArrowLeft, IconCheck, IconPencil } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 import { InvoiceTemplatePreview } from "@/components/invoices/invoice-template-preview"
 import { Badge } from "@/components/ui/badge"
@@ -12,7 +13,6 @@ import { Button } from "@/components/ui/button"
 import { confirmSelectInvoiceTemplateAction } from "@/lib/confirm-action"
 import { loadCompanySettings } from "@/lib/company-settings"
 import {
-  INVOICE_TEMPLATES,
   invoiceTemplateIdSchema,
   loadActiveInvoiceTemplateRef,
   loadCustomInvoiceTemplates,
@@ -24,6 +24,7 @@ import {
   type InvoiceTemplateId,
 } from "@/lib/invoice-templates"
 import { cn } from "@/lib/utils"
+import i18n from "@/i18n"
 
 type PreviewData =
   | {
@@ -42,23 +43,24 @@ type PreviewData =
 function resolvePreviewData(slug: string): PreviewData | null {
   const preset = invoiceTemplateIdSchema.safeParse(slug)
   if (preset.success) {
-    const meta = INVOICE_TEMPLATES.find((t) => t.id === preset.data)
     return {
       kind: "preset",
       id: preset.data,
-      name: meta?.name ?? preset.data,
-      description: meta?.description ?? "",
+      name: i18n.t(`presets.${preset.data}.name`, { ns: "documents" }),
+      description: i18n.t(`presets.${preset.data}.description`, { ns: "documents" }),
     }
   }
 
   const custom = loadCustomInvoiceTemplates().find((t) => t.id === slug)
   if (custom) {
-    const baseName = INVOICE_TEMPLATES.find((t) => t.id === custom.baseLayout)?.name ?? custom.baseLayout
     return {
       kind: "custom",
       template: custom,
       name: custom.name,
-      description: `Custom template based on ${baseName}.`,
+      description: i18n.t("templatesPage.customBasedOn", {
+        ns: "documents",
+        name: i18n.t(`presets.${custom.baseLayout}.name`, { ns: "documents" }),
+      }),
     }
   }
 
@@ -66,6 +68,8 @@ function resolvePreviewData(slug: string): PreviewData | null {
 }
 
 export default function InvoiceTemplatePreviewPage() {
+  const { t } = useTranslation("documents")
+  const { t: tc } = useTranslation("common")
   const params = useParams<{ slug: string }>()
   const slug = params.slug
 
@@ -95,12 +99,12 @@ export default function InvoiceTemplatePreviewPage() {
       const ref: ActiveInvoiceTemplateRef = { kind: "preset", id: preview.id }
       saveActiveInvoiceTemplateRef(ref)
       setActiveRef(ref)
-      toast.success(`${preview.name} is now the active invoice template.`)
+      toast.success(t("toasts.activeNow", { name: preview.name }))
     } else {
       const ref: ActiveInvoiceTemplateRef = { kind: "custom", id: preview.template.id }
       saveActiveInvoiceTemplateRef(ref)
       setActiveRef(ref)
-      toast.success(`${preview.name} is now the active invoice template.`)
+      toast.success(t("toasts.activeNow", { name: preview.name }))
     }
   }
 
@@ -110,12 +114,12 @@ export default function InvoiceTemplatePreviewPage() {
     return (
       <div className="flex flex-col items-center justify-center gap-4 p-8">
         <p className="text-sm" style={{ color: "#6b7280" }}>
-          Template not found.
+          {t("templatesPage.notFound")}
         </p>
         <Button type="button" variant="outline" asChild>
           <Link href="/documents/invoice-templates">
             <IconArrowLeft className="size-4" />
-            Back to templates
+            {t("templatesPage.backToTemplates")}
           </Link>
         </Button>
       </div>
@@ -151,7 +155,7 @@ export default function InvoiceTemplatePreviewPage() {
             <Button type="button" variant="outline" size="sm" className="bg-white" asChild>
               <Link href="/documents/invoice-templates">
                 <IconArrowLeft className="size-4" />
-                Templates
+                {t("templatesPage.templates")}
               </Link>
             </Button>
             <div className="min-w-0">
@@ -161,7 +165,7 @@ export default function InvoiceTemplatePreviewPage() {
                 </h1>
                 {preview.kind === "custom" ? (
                   <Badge variant="outline" className="bg-white" style={{ color: "#374151" }}>
-                    Custom
+                    {t("templatesPage.custom")}
                   </Badge>
                 ) : null}
                 {isActive ? (
@@ -171,7 +175,7 @@ export default function InvoiceTemplatePreviewPage() {
                     style={{ color: "#3f6212" }}
                   >
                     <IconCheck className="size-3" />
-                    Active
+                    {t("templatesPage.active")}
                   </Badge>
                 ) : null}
               </div>
@@ -185,7 +189,7 @@ export default function InvoiceTemplatePreviewPage() {
             <Button type="button" variant="outline" size="sm" className="bg-white" asChild>
               <Link href={customizeHref}>
                 <IconPencil className="size-4" />
-                {preview.kind === "preset" ? "Customize" : "Edit"}
+                {preview.kind === "preset" ? t("templatesPage.customize") : tc("actions.edit")}
               </Link>
             </Button>
           </div>
@@ -210,12 +214,12 @@ export default function InvoiceTemplatePreviewPage() {
         >
           <div className="mb-4 text-center">
             <p className="text-xs font-medium uppercase tracking-widest" style={{ color: "#9ca3af" }}>
-              Portrait A4 preview
+              {t("templatesPage.portraitPreview")}
             </p>
             <p className="mt-1 text-sm" style={{ color: "#6b7280" }}>
               {isActive
-                ? "This is your active invoice template"
-                : "Click preview to select this template"}
+                ? t("templatesPage.activeHint")
+                : t("templatesPage.clickToSelect")}
             </p>
           </div>
 

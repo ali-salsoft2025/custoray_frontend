@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/table"
 import { useZakat } from "@/context/zakat-context"
 import { formatZakatMoney } from "@/lib/zakat"
+import { useTranslation } from "react-i18next"
 
 function AssetRow({
   icon,
@@ -61,6 +62,7 @@ function AssetRow({
 }
 
 export function ZakatAssetsPanel() {
+  const { t } = useTranslation("zakat")
   const { calculation, settings } = useZakat()
   const [search, setSearch] = React.useState("")
   const query = search.trim().toLowerCase()
@@ -75,56 +77,60 @@ export function ZakatAssetsPanel() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h2 className="text-xl font-semibold tracking-tight">Business assets</h2>
+        <h2 className="text-xl font-semibold tracking-tight">{t("assetsPage.title")}</h2>
         <p className="text-muted-foreground mt-1 text-sm">
-          Every value shows its source so incorrect data can be fixed in the right
-          ERP module.
+          {t("assetsPage.hint")}
         </p>
       </div>
 
       <section className="overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm">
         <AssetRow
           icon={<IconCash className="size-4" />}
-          label="Cash accounts"
-          hint="Temporary balance maintained in Zakat settings"
+          label={t("assetsPage.cashAccounts")}
+          hint={t("assetsPage.cashHint")}
           value={calculation.assets.cash}
           href="/zakat/settings"
-          action="Settings"
+          action={t("assetsPage.settings")}
         />
         <AssetRow
           icon={<IconBuildingBank className="size-4" />}
-          label="Bank accounts"
-          hint="Temporary balance maintained in Zakat settings"
+          label={t("assetsPage.bankAccounts")}
+          hint={t("assetsPage.bankHint")}
           value={calculation.assets.bank}
           href="/zakat/settings"
-          action="Settings"
+          action={t("assetsPage.settings")}
         />
         <AssetRow
           icon={<IconPackage className="size-4" />}
-          label="Inventory"
-          hint={`Static Products-page data · ${settings.inventoryValuation === "cost" ? "Cost" : "Selling"} value`}
+          label={t("assetsPage.inventory")}
+          hint={t("assetsPage.inventoryHint", {
+            method:
+              settings.inventoryValuation === "cost"
+                ? t("assetsPage.cost")
+                : t("assetsPage.selling"),
+          })}
           value={calculation.assets.inventory}
           href="/inventory/products"
-          action="Inventory"
+          action={t("assetsPage.inventory")}
         />
         <AssetRow
           icon={<IconReceipt className="size-4" />}
-          label="Customer receivables"
-          hint="Positive customer balances"
+          label={t("assetsPage.receivables")}
+          hint={t("assetsPage.receivablesHint")}
           value={calculation.assets.receivables}
           href="/customers"
-          action="Customers"
+          action={t("assetsPage.customers")}
         />
         <AssetRow
           icon={<IconSettings className="size-4" />}
-          label="Manual adjustment"
-          hint="Additional zakatable business assets"
+          label={t("assetsPage.manualAdjustment")}
+          hint={t("assetsPage.manualHint")}
           value={calculation.assets.manualAdjustment}
           href="/zakat/settings"
-          action="Settings"
+          action={t("assetsPage.settings")}
         />
         <div className="flex items-center justify-between gap-4 bg-muted/20 px-5 py-4">
-          <p className="text-sm font-semibold">Total assets</p>
+          <p className="text-sm font-semibold">{t("assetsPage.totalAssets")}</p>
           <p className="text-lg font-semibold tabular-nums">
             {formatZakatMoney(calculation.assets.total)}
           </p>
@@ -134,16 +140,18 @@ export function ZakatAssetsPanel() {
       <section className="overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm">
         <div className="flex flex-col gap-3 border-b px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h3 className="text-sm font-semibold">Inventory contribution</h3>
+            <h3 className="text-sm font-semibold">{t("assetsPage.inventoryContribution")}</h3>
             <p className="text-muted-foreground mt-0.5 text-xs">
-              {calculation.inventoryLines.length} products ·{" "}
-              {calculation.inventoryUnits.toLocaleString()} units
+              {t("assetsPage.productsUnits", {
+                products: calculation.inventoryLines.length,
+                units: calculation.inventoryUnits.toLocaleString(),
+              })}
             </p>
           </div>
           <SearchInput
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search inventory..."
+            placeholder={t("assetsPage.searchPlaceholder")}
             icon={<IconSearch className="size-4" />}
             className="rounded-full sm:max-w-sm"
           />
@@ -152,18 +160,18 @@ export function ZakatAssetsPanel() {
           <Table>
             <TableHeader className="sticky top-0 z-10 bg-background">
               <TableRow>
-                <TableHead>Product</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead className="text-center">Quantity</TableHead>
-                <TableHead className="text-right">Unit value</TableHead>
-                <TableHead className="text-right">Total</TableHead>
+                <TableHead>{t("assetsPage.product")}</TableHead>
+                <TableHead>{t("assetsPage.category")}</TableHead>
+                <TableHead className="text-center">{t("assetsPage.quantity")}</TableHead>
+                <TableHead className="text-right">{t("assetsPage.unitValue")}</TableHead>
+                <TableHead className="text-right">{t("assetsPage.total")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {visibleLines.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                    No inventory matches your search.
+                    {t("assetsPage.noMatches")}
                   </TableCell>
                 </TableRow>
               ) : (

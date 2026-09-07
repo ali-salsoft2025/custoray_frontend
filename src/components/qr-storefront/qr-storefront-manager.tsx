@@ -11,6 +11,7 @@ import {
   IconUser,
 } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 import {
   downloadStorefrontQr,
@@ -81,6 +82,8 @@ function samePrefill(a: StorefrontPrefill, b: StorefrontPrefill) {
 }
 
 export function QrStorefrontManager() {
+  const { t } = useTranslation("storefront")
+  const { t: tc } = useTranslation("common")
   const { orders } = useOrders()
   const { products } = useProducts()
   const { customers } = useCustomers()
@@ -135,7 +138,7 @@ export function QrStorefrontManager() {
   const publicUrl =
     settings && origin ? storefrontUrl(origin, settings.storeId, livePrefill) : ""
   const previewHref = settings ? storefrontHref(settings.storeId, livePrefill) : "#"
-  const qrLabel = summary.join(" · ") || "Open store"
+  const qrLabel = summary.join(" · ") || t("openStore")
 
   const matchedPreset = React.useMemo(
     () =>
@@ -159,19 +162,19 @@ export function QrStorefrontManager() {
     if (!publicUrl) return
     try {
       await copyText(publicUrl)
-      toast.success("Link copied.")
+      toast.success(t("linkCopied"))
     } catch {
-      toast.error("Could not copy the link.")
+      toast.error(t("copyFailed"))
     }
   }
 
   const handleSave = () => {
     if (!settings || !hasStorefrontPrefill(prefill)) {
-      toast.error("Choose a customer or filter first.")
+      toast.error(t("chooseFirst"))
       return
     }
     if (matchedPreset) {
-      toast.message("This QR is already saved.")
+      toast.message(t("alreadySaved"))
       return
     }
     const preset: StorefrontQrPreset = {
@@ -181,7 +184,7 @@ export function QrStorefrontManager() {
       createdAt: new Date().toISOString(),
     }
     persist({ ...settings, presets: [preset, ...(settings.presets ?? [])] })
-    toast.success("Saved.")
+    toast.success(t("saved"))
   }
 
   const handleDelete = async (preset: StorefrontQrPreset) => {
@@ -192,7 +195,7 @@ export function QrStorefrontManager() {
     )
     const confirmed = await confirmDeleteAction({
       itemName: label,
-      entityLabel: "QR code",
+      entityLabel: t("qrEntity"),
     })
     if (!confirmed) return
     persist({
@@ -202,28 +205,28 @@ export function QrStorefrontManager() {
   }
 
   if (!hydrated || !settings) {
-    return <PageLoader message="Loading storefront…" />
+    return <PageLoader message={t("loading")} />
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4 print:hidden">
         <div>
-          <h2 className="text-xl font-semibold tracking-tight">QR Storefront</h2>
+          <h2 className="text-xl font-semibold tracking-tight">{t("title")}</h2>
           <p className="text-muted-foreground mt-0.5 text-sm">
-            The code updates as you choose a customer or brand.
+            {t("hint")}
           </p>
         </div>
         <label className="flex min-h-11 items-center gap-3 text-base">
           <span className="text-muted-foreground font-medium">
-            {settings.enabled ? "Open" : "Closed"}
+            {settings.enabled ? t("open") : t("closed")}
           </span>
           <Switch
             className="scale-110"
             checked={settings.enabled}
             onCheckedChange={(enabled) => {
               persist({ ...settings, enabled })
-              toast.success(enabled ? "Storefront is open." : "Storefront is closed.")
+              toast.success(enabled ? t("openToast") : t("closedToast"))
             }}
           />
         </label>
@@ -239,12 +242,12 @@ export function QrStorefrontManager() {
           <div className="mt-5 grid grid-cols-2 gap-2.5 print:hidden">
             <Button type="button" className={sfBtn} onClick={handleCopy}>
               <IconCopy className="size-4" />
-              Copy
+              {t("copy")}
             </Button>
             <Button type="button" variant="outline" className={sfBtn} asChild>
               <Link href={previewHref} target="_blank" rel="noreferrer">
                 <IconExternalLink className="size-4" />
-                Preview
+                {t("preview")}
               </Link>
             </Button>
             <Button
@@ -254,11 +257,11 @@ export function QrStorefrontManager() {
               onClick={() => downloadStorefrontQr(publicUrl, `${companyName} ${qrLabel}`)}
             >
               <IconDownload className="size-4" />
-              Download
+              {tc("actions.download")}
             </Button>
             <Button type="button" variant="outline" className={sfBtn} onClick={() => window.print()}>
               <IconPrinter className="size-4" />
-              Print
+              {t("print")}
             </Button>
           </div>
         </div>
@@ -266,7 +269,7 @@ export function QrStorefrontManager() {
         <div className={`${sfPanel} print:hidden space-y-6 p-6`}>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2 sm:col-span-2">
-              <Label className={sfLabel}>Customer</Label>
+              <Label className={sfLabel}>{t("customer")}</Label>
               <InfiniteScrollSelect
                 id="qr-live-customer"
                 value={prefill.customerId}
@@ -274,7 +277,7 @@ export function QrStorefrontManager() {
                   setPrefill((prev) => ({ ...prev, customerId }))
                 }
                 options={[
-                  { value: "", label: "Any customer" },
+                  { value: "", label: t("anyCustomer") },
                   ...activeCustomers.map((customer) => ({
                     value: String(customer.id),
                     label: customer.name,
@@ -282,33 +285,33 @@ export function QrStorefrontManager() {
                       customer.phone !== "—" ? customer.phone : customer.description,
                   })),
                 ]}
-                placeholder="Any customer"
-                searchPlaceholder="Search customers…"
-                emptyMessage="No customers."
+                placeholder={t("anyCustomer")}
+                searchPlaceholder={t("searchCustomers")}
+                emptyMessage={t("noCustomers")}
                 pageSize={8}
                 leadingIcon={<IconUser className="size-5" stroke={1.75} />}
                 className="h-12 w-full rounded-xl px-4 text-base"
               />
             </div>
             <FacetField
-              label="Brand"
+              label={t("brand")}
               value={prefill.brand}
               options={facets.brands}
-              placeholder="Any brand"
+              placeholder={t("anyBrand")}
               onChange={(brand) => setPrefill((prev) => ({ ...prev, brand }))}
             />
             <FacetField
-              label="Category"
+              label={t("category")}
               value={prefill.category}
               options={facets.categories}
-              placeholder="Any category"
+              placeholder={t("anyCategory")}
               onChange={(category) => setPrefill((prev) => ({ ...prev, category }))}
             />
             <FacetField
-              label="Variant"
+              label={t("variant")}
               value={prefill.variant}
               options={facets.variants}
-              placeholder="Any variant"
+              placeholder={t("anyVariant")}
               onChange={(variant) => setPrefill((prev) => ({ ...prev, variant }))}
             />
           </div>
@@ -322,7 +325,7 @@ export function QrStorefrontManager() {
                   setPrefill((prev) => ({ ...prev, lock: checked === true }))
                 }
               />
-              Customer can’t change these
+              {t("lockFilters")}
             </label>
             <div className="flex gap-2">
               {hasStorefrontPrefill(prefill) ? (
@@ -332,7 +335,7 @@ export function QrStorefrontManager() {
                   className={sfBtn}
                   onClick={() => setPrefill(EMPTY_STOREFRONT_PREFILL)}
                 >
-                  Clear
+                  {t("clear")}
                 </Button>
               ) : null}
               <Button
@@ -341,7 +344,7 @@ export function QrStorefrontManager() {
                 disabled={!hasStorefrontPrefill(prefill) || Boolean(matchedPreset)}
                 onClick={handleSave}
               >
-                Save QR
+                {t("saveQr")}
               </Button>
             </div>
           </div>
@@ -349,7 +352,7 @@ export function QrStorefrontManager() {
           {(settings.presets ?? []).length > 0 ? (
             <div>
               <p className="text-muted-foreground mb-3 text-xs font-medium tracking-wide uppercase">
-                Saved
+                {t("savedSection")}
               </p>
               <ul className="space-y-1.5">
                 <li>
@@ -361,7 +364,7 @@ export function QrStorefrontManager() {
                     )}
                     onClick={() => setPrefill(EMPTY_STOREFRONT_PREFILL)}
                   >
-                    Open store
+                    {t("openStore")}
                   </button>
                 </li>
                 {settings.presets.map((preset) => {
@@ -390,7 +393,7 @@ export function QrStorefrontManager() {
                         size="icon"
                         className="text-muted-foreground hover:text-destructive size-10 shrink-0"
                         onClick={() => handleDelete(preset)}
-                        aria-label="Delete"
+                        aria-label={tc("actions.delete")}
                       >
                         <IconTrash className="size-4" />
                       </Button>
@@ -405,14 +408,14 @@ export function QrStorefrontManager() {
 
       <div className={`${sfPanel} print:hidden p-6`}>
         <div className="mb-4 flex items-center justify-between">
-          <p className="text-base font-semibold">Orders</p>
+          <p className="text-base font-semibold">{t("orders")}</p>
           <Button asChild variant="ghost" className={sfBtn}>
-            <Link href="/sales">Sales</Link>
+            <Link href="/sales">{t("sales")}</Link>
           </Button>
         </div>
         {recentQrOrders.length === 0 ? (
           <p className="text-muted-foreground text-base">
-            None yet — preview the QR to place a test order.
+            {t("noneYet")}
           </p>
         ) : (
           <ul className="divide-border/50 divide-y">

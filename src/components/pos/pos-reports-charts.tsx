@@ -32,6 +32,7 @@ import type {
 } from "@/lib/pos-reports"
 import { formatPosReportMoney } from "@/lib/pos-reports"
 import { cn } from "@/lib/utils"
+import { useTranslation } from "react-i18next"
 
 const panelClass =
   "rounded-xl bg-card shadow-sm shadow-black/[0.04] ring-1 ring-border/40"
@@ -76,33 +77,33 @@ function useChartGradientId(prefix: string) {
   return `${prefix}-${id}`
 }
 
-const dailyChartConfig = {
-  sales: {
-    label: "Sales",
-    theme: {
-      light: "oklch(0.72 0.17 128)",
-      dark: "oklch(0.78 0.14 128)",
-    },
-  },
-  returns: {
-    label: "Returns",
-    theme: {
-      light: "oklch(0.65 0.2 25)",
-      dark: "oklch(0.72 0.18 25)",
-    },
-  },
-  net: {
-    label: "Net",
-    theme: {
-      light: "oklch(0.55 0.14 250)",
-      dark: "oklch(0.72 0.12 250)",
-    },
-  },
-} satisfies ChartConfig
-
 export function PosDailyTrendChart({ data }: { data: PosDailyTotalRow[] }) {
+  const { t } = useTranslation("pos")
   const salesFillId = useChartGradientId("pos-sales")
   const netFillId = useChartGradientId("pos-net")
+  const dailyChartConfig = {
+    sales: {
+      label: t("charts.sales"),
+      theme: {
+        light: "oklch(0.72 0.17 128)",
+        dark: "oklch(0.78 0.14 128)",
+      },
+    },
+    returns: {
+      label: t("charts.returns"),
+      theme: {
+        light: "oklch(0.65 0.2 25)",
+        dark: "oklch(0.72 0.18 25)",
+      },
+    },
+    net: {
+      label: t("charts.net"),
+      theme: {
+        light: "oklch(0.55 0.14 250)",
+        dark: "oklch(0.72 0.12 250)",
+      },
+    },
+  } satisfies ChartConfig
 
   const chartData = React.useMemo(
     () =>
@@ -117,14 +118,14 @@ export function PosDailyTrendChart({ data }: { data: PosDailyTotalRow[] }) {
 
   if (chartData.length === 0) {
     return (
-      <ChartPanel title="Daily trend" description="Sales, returns, and net by day">
-        <ChartEmpty message="No register activity in this period." />
+      <ChartPanel title={t("charts.dailyTrend")} description={t("charts.dailyTrendHint")}>
+        <ChartEmpty message={t("reportsPage.noActivity")} />
       </ChartPanel>
     )
   }
 
   return (
-    <ChartPanel title="Daily trend" description="Sales, returns, and net by day">
+    <ChartPanel title={t("charts.dailyTrend")} description={t("charts.dailyTrendHint")}>
       <ChartContainer config={dailyChartConfig} className="aspect-auto h-[300px] w-full">
         <AreaChart
           accessibilityLayer
@@ -210,32 +211,6 @@ export function PosDailyTrendChart({ data }: { data: PosDailyTotalRow[] }) {
   )
 }
 
-const PAYMENT_CHART_KEYS: Record<PosPaymentBreakdownRow["method"], string> = {
-  Cash: "cash",
-  "Bank transfer": "bank",
-  Card: "card",
-  Credit: "credit",
-}
-
-const paymentChartConfig: ChartConfig = {
-  cash: {
-    label: "Cash",
-    theme: { light: "oklch(0.72 0.17 128)", dark: "oklch(0.78 0.14 128)" },
-  },
-  bank: {
-    label: "Bank transfer",
-    theme: { light: "oklch(0.55 0.14 250)", dark: "oklch(0.72 0.12 250)" },
-  },
-  card: {
-    label: "Card",
-    theme: { light: "oklch(0.62 0.16 200)", dark: "oklch(0.75 0.13 200)" },
-  },
-  credit: {
-    label: "Credit",
-    theme: { light: "oklch(0.68 0.18 55)", dark: "oklch(0.78 0.15 55)" },
-  },
-}
-
 function DonutCenterLabel({
   viewBox,
   primary,
@@ -258,7 +233,34 @@ function DonutCenterLabel({
   )
 }
 
+const PAYMENT_CHART_KEYS: Record<PosPaymentBreakdownRow["method"], string> = {
+  Cash: "cash",
+  "Bank transfer": "bank",
+  Card: "card",
+  Credit: "credit",
+}
+
 export function PosPaymentChart({ data }: { data: PosPaymentBreakdownRow[] }) {
+  const { t } = useTranslation("pos")
+  const paymentChartConfig: ChartConfig = {
+    cash: {
+      label: t("charts.cash"),
+      theme: { light: "oklch(0.72 0.17 128)", dark: "oklch(0.78 0.14 128)" },
+    },
+    bank: {
+      label: t("charts.bankTransfer"),
+      theme: { light: "oklch(0.55 0.14 250)", dark: "oklch(0.72 0.12 250)" },
+    },
+    card: {
+      label: t("charts.card"),
+      theme: { light: "oklch(0.62 0.16 200)", dark: "oklch(0.75 0.13 200)" },
+    },
+    credit: {
+      label: t("charts.credit"),
+      theme: { light: "oklch(0.68 0.18 55)", dark: "oklch(0.78 0.15 55)" },
+    },
+  }
+
   const chartData = React.useMemo(
     () =>
       data.map((row) => {
@@ -278,14 +280,14 @@ export function PosPaymentChart({ data }: { data: PosPaymentBreakdownRow[] }) {
 
   if (chartData.length === 0) {
     return (
-      <ChartPanel title="Payment methods" description="Share of completed sales">
-        <ChartEmpty message="No completed sales in this period." />
+      <ChartPanel title={t("charts.paymentMethods")} description={t("charts.paymentMethodsHint")}>
+        <ChartEmpty message={t("charts.noCompletedSales")} />
       </ChartPanel>
     )
   }
 
   return (
-    <ChartPanel title="Payment methods" description="Share of completed sales">
+    <ChartPanel title={t("charts.paymentMethods")} description={t("charts.paymentMethodsHint")}>
       <div className="flex flex-col items-center gap-4 lg:flex-row lg:items-center lg:justify-center lg:gap-8">
         <ChartContainer
           config={paymentChartConfig}
@@ -324,7 +326,7 @@ export function PosPaymentChart({ data }: { data: PosPaymentBreakdownRow[] }) {
                   <DonutCenterLabel
                     viewBox={viewBox as { cx?: number; cy?: number }}
                     primary={formatPosReportMoney(total.toFixed(2))}
-                    secondary="Total sales"
+                    secondary={t("charts.totalSales")}
                   />
                 )}
               />
@@ -343,7 +345,11 @@ export function PosPaymentChart({ data }: { data: PosPaymentBreakdownRow[] }) {
                 style={{ backgroundColor: row.fill }}
               />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-medium">{row.method}</p>
+                <p className="truncate text-xs font-medium">
+                  {row.key === "bank"
+                    ? t("charts.bankTransfer")
+                    : t(`charts.${row.key}`)}
+                </p>
                 <p className="text-muted-foreground text-[11px] tabular-nums">
                   {row.share.toFixed(1)}% · {formatPosReportMoney(row.value.toFixed(2))}
                 </p>
@@ -356,22 +362,22 @@ export function PosPaymentChart({ data }: { data: PosPaymentBreakdownRow[] }) {
   )
 }
 
-const statusChartConfig: ChartConfig = {
-  completed: {
-    label: "Completed",
-    theme: { light: "oklch(0.72 0.17 128)", dark: "oklch(0.78 0.14 128)" },
-  },
-  pending: {
-    label: "Pending",
-    theme: { light: "oklch(0.68 0.18 55)", dark: "oklch(0.78 0.15 55)" },
-  },
-  cancelled: {
-    label: "Cancelled",
-    theme: { light: "oklch(0.65 0.2 25)", dark: "oklch(0.72 0.18 25)" },
-  },
-}
-
 export function PosStatusChart({ data }: { data: PosStatusBreakdownRow[] }) {
+  const { t } = useTranslation("pos")
+  const statusChartConfig: ChartConfig = {
+    completed: {
+      label: t("charts.completed"),
+      theme: { light: "oklch(0.72 0.17 128)", dark: "oklch(0.78 0.14 128)" },
+    },
+    pending: {
+      label: t("charts.pending"),
+      theme: { light: "oklch(0.68 0.18 55)", dark: "oklch(0.78 0.15 55)" },
+    },
+    cancelled: {
+      label: t("charts.cancelled"),
+      theme: { light: "oklch(0.65 0.2 25)", dark: "oklch(0.72 0.18 25)" },
+    },
+  }
   const chartData = React.useMemo(
     () => {
       const total = data.reduce((sum, row) => sum + Number(row.total), 0)
@@ -391,14 +397,14 @@ export function PosStatusChart({ data }: { data: PosStatusBreakdownRow[] }) {
 
   if (chartData.length === 0) {
     return (
-      <ChartPanel title="Sale status" description="Receipts by status">
-        <ChartEmpty message="No sales in this period." />
+      <ChartPanel title={t("charts.saleStatus")} description={t("charts.saleStatusHint")}>
+        <ChartEmpty message={t("charts.noSales")} />
       </ChartPanel>
     )
   }
 
   return (
-    <ChartPanel title="Sale status" description="Receipts by status">
+    <ChartPanel title={t("charts.saleStatus")} description={t("charts.saleStatusHint")}>
       <div className="flex flex-col items-center gap-4 lg:flex-row lg:items-center lg:justify-center lg:gap-8">
         <ChartContainer
           config={statusChartConfig}
@@ -411,7 +417,8 @@ export function PosStatusChart({ data }: { data: PosStatusBreakdownRow[] }) {
                   hideLabel
                   formatter={(value, _name, item) => (
                     <span className="tabular-nums">
-                      {formatPosReportMoney(String(value))} · {item.payload?.count} receipts
+                      {formatPosReportMoney(String(value))} ·{" "}
+                      {t("charts.receiptCount", { count: item.payload?.count })}
                     </span>
                   )}
                 />
@@ -436,7 +443,7 @@ export function PosStatusChart({ data }: { data: PosStatusBreakdownRow[] }) {
                   <DonutCenterLabel
                     viewBox={viewBox as { cx?: number; cy?: number }}
                     primary={String(receiptTotal)}
-                    secondary="Receipts"
+                    secondary={t("charts.receipts")}
                   />
                 )}
               />
@@ -468,22 +475,22 @@ export function PosStatusChart({ data }: { data: PosStatusBreakdownRow[] }) {
   )
 }
 
-const topProductsChartConfig = {
-  revenue: {
-    label: "Revenue",
-    theme: {
-      light: "oklch(0.72 0.17 128)",
-      dark: "oklch(0.78 0.14 128)",
-    },
-  },
-} satisfies ChartConfig
-
 function truncateLabel(value: string, max = 24): string {
   return value.length > max ? `${value.slice(0, max - 1)}…` : value
 }
 
 export function PosTopProductsChart({ data }: { data: PosTopProductRow[] }) {
+  const { t } = useTranslation("pos")
   const barFillId = useChartGradientId("pos-products")
+  const topProductsChartConfig = {
+    revenue: {
+      label: t("charts.revenue"),
+      theme: {
+        light: "oklch(0.72 0.17 128)",
+        dark: "oklch(0.78 0.14 128)",
+      },
+    },
+  } satisfies ChartConfig
 
   const chartData = React.useMemo(
     () =>
@@ -498,14 +505,14 @@ export function PosTopProductsChart({ data }: { data: PosTopProductRow[] }) {
 
   if (chartData.length === 0) {
     return (
-      <ChartPanel title="Top products" description="Best sellers by revenue">
-        <ChartEmpty message="No product sales in this period." />
+      <ChartPanel title={t("charts.topProducts")} description={t("charts.topProductsHint")}>
+        <ChartEmpty message={t("charts.noProductSales")} />
       </ChartPanel>
     )
   }
 
   return (
-    <ChartPanel title="Top products" description="Best sellers by revenue">
+    <ChartPanel title={t("charts.topProducts")} description={t("charts.topProductsHint")}>
       <ChartContainer config={topProductsChartConfig} className="aspect-auto h-[300px] w-full">
         <BarChart
           accessibilityLayer
@@ -549,7 +556,8 @@ export function PosTopProductsChart({ data }: { data: PosTopProductRow[] }) {
                       {item.payload?.fullName}
                     </span>
                     <span className="text-muted-foreground tabular-nums">
-                      {formatPosReportMoney(String(value))} · {item.payload?.quantity} sold
+                      {formatPosReportMoney(String(value))} ·{" "}
+                      {t("charts.soldCount", { count: item.payload?.quantity })}
                     </span>
                   </div>
                 )}

@@ -1,10 +1,13 @@
 "use client"
 
 import { IconCircleCheck, IconTrash } from "@tabler/icons-react"
+import { useMemo } from "react"
+import { useTranslation } from "react-i18next"
+
 import { ChartAreaInteractive } from "@/components/chart-area-interactive"
 import {
   DataTable,
-  defaultColumns,
+  getDefaultColumns,
   type DataTableTab,
   schema,
 } from "@/components/data-table"
@@ -16,24 +19,31 @@ import type { z } from "zod"
 
 type DocRow = z.infer<typeof schema>
 
-const sectionTabs: DataTableTab[] = [
-  { value: "active", label: "Active" },
-  { value: "archived", label: "Archived" },
-]
-
 function sectionTabFilter(row: DocRow, tab: string) {
   if (tab === "archived") return row.lifecycle === "archived"
   return row.lifecycle !== "archived"
 }
 
 export default function DashboardPage() {
+  const { t, i18n } = useTranslation("common")
+
+  const sectionTabs: DataTableTab[] = useMemo(
+    () => [
+      { value: "active", label: t("tabs.active") },
+      { value: "archived", label: t("tabs.archived") },
+    ],
+    [t]
+  )
+
+  const columns = useMemo(() => getDefaultColumns(), [i18n.language])
+
   return (
-    <>
+    <div key={i18n.language} className="flex flex-col gap-4">
       <SectionCards />
       <ChartAreaInteractive />
       <DataTable
         data={data}
-        columns={defaultColumns}
+        columns={columns}
         showSearch={false}
         showFilters={false}
         showImportButton={false}
@@ -42,27 +52,27 @@ export default function DashboardPage() {
         bulkActions={[
           {
             id: "approve",
-            label: "Approve selected",
+            label: t("actions.approveSelected"),
             icon: <IconCircleCheck className="size-4" />,
             onClick: (selected) => {
-              toast.message(`Approved ${selected.length} section(s) (demo).`)
+              toast.message(t("toast.approvedCount", { count: selected.length }))
             },
           },
           {
             id: "delete",
-            label: "Delete selected",
+            label: t("actions.deleteSelected"),
             icon: <IconTrash className="size-4" />,
             variant: "destructive",
             onClick: async (selected) => {
               if (
                 !(await confirmDeleteAction({
                   count: selected.length,
-                  entityLabel: "section",
+                  entityLabel: t("entity.section"),
                 }))
               ) {
                 return
               }
-              toast.message(`Would delete ${selected.length} section(s).`)
+              toast.message(t("toast.wouldDeleteCount", { count: selected.length }))
             },
           },
         ]}
@@ -70,6 +80,6 @@ export default function DashboardPage() {
         defaultTab="active"
         tabFilter={sectionTabFilter}
       />
-    </>
+    </div>
   )
 }

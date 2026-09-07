@@ -3,6 +3,11 @@ import path from "path"
 
 import type { CompanySettings } from "@/lib/company-settings"
 import {
+  DEFAULT_DOCUMENT_DISPLAY_FLAGS,
+  filterDocumentLines,
+  type DocumentDisplayFlags,
+} from "@/lib/document-display-settings"
+import {
   defaultInvoiceBuilderConfig,
   resolveInvoiceTemplate,
   type InvoiceBuilderConfig,
@@ -18,6 +23,11 @@ import {
   statusLabel,
   type OrderRow,
 } from "@/lib/orders"
+
+export type InvoicePdfDisplayOptions = {
+  display?: DocumentDisplayFlags
+  customerBalance?: string
+}
 
 function escapeHtml(value: string): string {
   return value
@@ -294,22 +304,31 @@ export function buildInvoicePdfHtml(
   templateId: InvoiceTemplateId = "classic",
   _copy?: InvoiceTemplateCopy,
   colorOverrides?: InvoiceTemplateColorOverrides,
-  builder?: InvoiceBuilderConfig
+  builder?: InvoiceBuilderConfig,
+  options?: InvoicePdfDisplayOptions
 ): string {
+  const display = options?.display ?? DEFAULT_DOCUMENT_DISPLAY_FLAGS
+  const visibleOrder: OrderRow = {
+    ...order,
+    lines: filterDocumentLines(order.lines, display),
+  }
   const balance = computeBalance(order)
   const status = statusLabel(order.status)
   const template = resolveInvoiceTemplate(templateId, colorOverrides)
   const config = builder ?? defaultInvoiceBuilderConfig()
   const labels = config.labels
   const show = (id: keyof InvoiceBuilderConfig["fields"]) => config.fields[id]
+  const showCustomerBalance =
+    display.showCustomerBalance && options?.customerBalance !== undefined
   const showLineTable =
     show("line_items") &&
+    visibleOrder.lines.length > 0 &&
     (show("line_row_number") ||
       show("line_description") ||
       show("line_qty") ||
       show("line_unit_price") ||
       show("line_amount"))
-  const lineTableHtml = showLineTable ? lineRows(order, show, labels) : ""
+  const lineTableHtml = showLineTable ? lineRows(visibleOrder, show, labels) : ""
 
   const companyName = config.companyNameOverride.trim() || company.name
   const companyTagline = config.companyTaglineOverride.trim() || company.tagline
@@ -382,7 +401,12 @@ export function buildInvoicePdfHtml(
     }
 
     ${
-      showLineTable || show("subtotal") || show("paid") || show("balance_due") || show("total")
+      showLineTable ||
+      show("subtotal") ||
+      show("paid") ||
+      show("balance_due") ||
+      show("total") ||
+      showCustomerBalance
         ? `<div class="section">
       ${
         showLineTable
@@ -395,6 +419,7 @@ export function buildInvoicePdfHtml(
           ${show("subtotal") ? `<div class="total-row"><span>${escapeHtml(labels.subtotalLabel)}</span><span>${escapeHtml(formatMoney(order.totalAmount))}</span></div>` : ""}
           ${show("paid") ? `<div class="total-row"><span>${escapeHtml(labels.paidLabel)}</span><span>${escapeHtml(formatMoney(order.paidAmount))}</span></div>` : ""}
           ${show("balance_due") ? `<div class="total-row balance-due"><span>${escapeHtml(labels.balanceLabel)}</span><span>${escapeHtml(formatMoney(balance))}</span></div>` : ""}
+          ${showCustomerBalance ? `<div class="total-row"><span>Customer balance</span><span>${escapeHtml(formatMoney(options?.customerBalance ?? "0"))}</span></div>` : ""}
           ${show("total") ? `<div class="total-row grand"><span>${escapeHtml(labels.totalLabel)}</span><span>${escapeHtml(formatMoney(order.totalAmount))}</span></div>` : ""}
         </div>
       </div>

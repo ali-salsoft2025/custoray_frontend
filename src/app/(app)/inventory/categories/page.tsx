@@ -12,6 +12,9 @@ import {
   IconTrash,
 } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
+import type { TFunction } from "i18next"
+import i18n from "@/i18n"
 import { z } from "zod"
 
 import { DataTableColumnHeader } from "@/components/data-table-column-header"
@@ -79,11 +82,7 @@ const initialCategories: CategoryRow[] = [
   },
 ]
 
-const categoryTabs: DataTableTab[] = [
-  { value: "all", label: "All" },
-  { value: "active", label: "Active" },
-  { value: "inactive", label: "Inactive" },
-]
+const categoryTabValues = ["all", "active", "inactive"] as const
 
 function categoryTabFilter(row: CategoryRow, tab: string) {
   if (tab === "all") return true
@@ -107,7 +106,7 @@ function mapImportedCategory(
   return {
     id: finalId,
     name,
-    description: (row.description ?? "").trim() || "No description",
+    description: (row.description ?? "").trim() || i18n.t("noDescription", { ns: "inventory" }),
     products: Number(row.products) || 0,
     status,
   }
@@ -128,6 +127,7 @@ type CategorySidebar =
   | null
 
 function getCategoryColumns(
+  t: TFunction<"inventory">,
   openSidebar: (row: CategoryRow, mode: "view" | "edit") => void,
   onDelete: (row: CategoryRow) => void,
   onDuplicate: (row: CategoryRow) => void
@@ -143,7 +143,7 @@ function getCategoryColumns(
               (table.getIsSomePageRowsSelected() && "indeterminate")
             }
             onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-            aria-label="Select all"
+            aria-label={t("table.selectAll", { ns: "common" })}
           />
         </div>
       ),
@@ -152,7 +152,7 @@ function getCategoryColumns(
           <Checkbox
             checked={row.getIsSelected()}
             onCheckedChange={(value) => row.toggleSelected(!!value)}
-            aria-label="Select row"
+            aria-label={t("table.selectRow", { ns: "common" })}
           />
         </div>
       ),
@@ -161,7 +161,9 @@ function getCategoryColumns(
     },
     {
       accessorKey: "id",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="ID" />,
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t("columns.id")} />
+      ),
       cell: ({ row }) => (
         <span className="text-muted-foreground font-mono tabular-nums">
           {row.original.id}
@@ -172,7 +174,7 @@ function getCategoryColumns(
     {
       accessorKey: "name",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Category" />
+        <DataTableColumnHeader column={column} title={t("columns.category")} />
       ),
       cell: ({ row }) => (
         <span className="text-foreground font-medium">{row.original.name}</span>
@@ -183,7 +185,7 @@ function getCategoryColumns(
     {
       accessorKey: "description",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Description" />
+        <DataTableColumnHeader column={column} title={t("columns.description")} />
       ),
       cell: ({ row }) => (
         <span className="text-muted-foreground max-w-[14rem] truncate">
@@ -195,7 +197,7 @@ function getCategoryColumns(
     {
       accessorKey: "products",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Products" align="center" />
+        <DataTableColumnHeader column={column} title={t("columns.products")} align="center" />
       ),
       cell: ({ row }) => (
         <div className="flex justify-center">
@@ -207,7 +209,7 @@ function getCategoryColumns(
     {
       accessorKey: "status",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Status" />
+        <DataTableColumnHeader column={column} title={t("columns.status")} />
       ),
       cell: ({ row }) => (
         <Badge
@@ -218,7 +220,9 @@ function getCategoryColumns(
               : "border-border px-1.5 text-muted-foreground"
           }
         >
-          {row.original.status === "active" ? "Active" : "Inactive"}
+          {row.original.status === "active"
+            ? t("tabs.active")
+            : t("tabs.inactive")}
         </Badge>
       ),
       meta: { dataTableFilter: false },
@@ -235,21 +239,21 @@ function getCategoryColumns(
               size="icon"
             >
               <IconDotsVertical />
-              <span className="sr-only">Open menu</span>
+              <span className="sr-only">{t("actions.openMenu")}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40">
             <DropdownMenuItem onClick={() => openSidebar(row.original, "view")}>
               <IconEye />
-              View
+              {t("actions.view")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => openSidebar(row.original, "edit")}>
               <IconPencil />
-              Edit
+              {t("actions.edit")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onDuplicate(row.original)}>
               <IconCopy />
-              Duplicate
+              {t("actions.duplicate")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
@@ -257,7 +261,7 @@ function getCategoryColumns(
               onClick={() => onDelete(row.original)}
             >
               <IconTrash />
-              Delete
+              {t("actions.delete")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -267,6 +271,7 @@ function getCategoryColumns(
 }
 
 export default function CategoriesPage() {
+  const { t } = useTranslation("inventory")
   const [rows, setRows] = useState<CategoryRow[]>(() => [...initialCategories])
   const [sidebar, setSidebar] = useState<CategorySidebar>(null)
   const [formKey, setFormKey] = useState(0)
@@ -276,8 +281,8 @@ export default function CategoriesPage() {
   const handleDelete = useCallback((category: CategoryRow) => {
     setRows((prev) => prev.filter((r) => r.id !== category.id))
     setSidebar((s) => (s && "category" in s && s.category.id === category.id ? null : s))
-    toast.message(`Deleted ${category.name} (demo).`)
-  }, [])
+    toast.message(t("toasts.deletedNamed", { name: category.name }))
+  }, [t])
 
   const handleDuplicate = useCallback((category: CategoryRow) => {
     setRows((prev) => {
@@ -293,17 +298,22 @@ export default function CategoriesPage() {
         },
       ]
     })
-    toast.success(`Duplicated ${category.name} (demo).`)
-  }, [])
+    toast.success(t("toasts.duplicatedNamed", { name: category.name }))
+  }, [t])
 
   const openSidebar = useCallback((category: CategoryRow, mode: "view" | "edit") => {
     setSidebar({ mode, category })
   }, [])
 
   const columns = useMemo(
-    () => getCategoryColumns(openSidebar, handleDelete, handleDuplicate),
-    [openSidebar, handleDelete, handleDuplicate]
+    () => getCategoryColumns(t, openSidebar, handleDelete, handleDuplicate),
+    [t, openSidebar, handleDelete, handleDuplicate]
   )
+
+  const categoryTabs: DataTableTab[] = categoryTabValues.map((value) => ({
+    value,
+    label: t(`tabs.${value}`),
+  }))
 
   const sheetCategory =
     sidebar && sidebar.mode !== "add" ? sidebar.category : null
@@ -320,7 +330,7 @@ export default function CategoriesPage() {
     const fd = new FormData(e.currentTarget)
     const name = String(fd.get("name") ?? "").trim()
     if (!name) {
-      toast.error("Name is required.")
+      toast.error(t("toasts.categoryNameRequired"))
       return
     }
     setRows((prev) => {
@@ -330,13 +340,13 @@ export default function CategoriesPage() {
         {
           id: maxId + 1,
           name,
-          description: String(fd.get("description") ?? "").trim() || "No description",
+          description: String(fd.get("description") ?? "").trim() || t("noDescription"),
           products: 0,
           status: (fd.get("status") as string) === "inactive" ? "inactive" : "active",
         },
       ]
     })
-    toast.success("Category created (demo).")
+    toast.success(t("toasts.categoryCreated"))
     closeSidebar()
     setFormKey((k) => k + 1)
   }
@@ -347,7 +357,7 @@ export default function CategoriesPage() {
     const fd = new FormData(e.currentTarget)
     const name = String(fd.get("name") ?? "").trim()
     if (!name) {
-      toast.error("Name is required.")
+      toast.error(t("toasts.categoryNameRequired"))
       return
     }
     setRows((prev) =>
@@ -356,13 +366,13 @@ export default function CategoriesPage() {
           ? {
               ...r,
               name,
-              description: String(fd.get("description") ?? "").trim() || "No description",
+              description: String(fd.get("description") ?? "").trim() || t("noDescription"),
               status: (fd.get("status") as string) === "inactive" ? "inactive" : "active",
             }
           : r
       )
     )
-    toast.success("Category saved (demo).")
+    toast.success(t("toasts.categorySaved"))
     closeSidebar()
   }
 
@@ -383,20 +393,20 @@ export default function CategoriesPage() {
               <SheetHeader className="border-border/60 space-y-1 border-b px-6 py-5 text-left">
                 <SheetTitle className="text-lg leading-tight">
                   {sidebar.mode === "add"
-                    ? "Add category"
+                    ? t("categoryPage.add")
                     : sidebar.mode === "edit"
-                      ? "Edit category"
-                      : "Category details"}
+                      ? t("categoryPage.edit")
+                      : t("categoryPage.details")}
                 </SheetTitle>
                 <SheetDescription>
                   {sidebar.mode === "add"
-                    ? "Create a new category. Product count is set automatically from inventory."
+                    ? t("categoryPage.addDescription")
                     : sheetCategory ? (
                       <>
                         {sheetCategory.name}
                         <span className="text-muted-foreground">
                           {" "}
-                          · ID {sheetCategory.id}
+                          · {t("categoryPage.idLine", { id: sheetCategory.id })}
                         </span>
                       </>
                     ) : null}
@@ -413,24 +423,24 @@ export default function CategoriesPage() {
                 {sidebar.mode === "view" && sheetCategory ? (
                   <dl className="space-y-3 text-sm">
                     <div className="grid grid-cols-[7rem_1fr] gap-2">
-                      <dt className="text-muted-foreground">ID</dt>
+                      <dt className="text-muted-foreground">{t("fields.id")}</dt>
                       <dd className="font-medium">{sheetCategory.id}</dd>
                     </div>
                     <div className="grid grid-cols-[7rem_1fr] gap-2">
-                      <dt className="text-muted-foreground">Category</dt>
+                      <dt className="text-muted-foreground">{t("fields.category")}</dt>
                       <dd className="font-medium">{sheetCategory.name}</dd>
                     </div>
                     <div className="grid grid-cols-[7rem_1fr] gap-2">
-                      <dt className="text-muted-foreground">Description</dt>
+                      <dt className="text-muted-foreground">{t("fields.description")}</dt>
                       <dd>{sheetCategory.description}</dd>
                     </div>
                     <div className="grid grid-cols-[7rem_1fr] gap-2">
-                      <dt className="text-muted-foreground">Products</dt>
+                      <dt className="text-muted-foreground">{t("fields.products")}</dt>
                       <dd className="font-medium tabular-nums">{sheetCategory.products}</dd>
                     </div>
                     <div className="grid grid-cols-[7rem_1fr] gap-2">
-                      <dt className="text-muted-foreground">Status</dt>
-                      <dd className="capitalize">{sheetCategory.status}</dd>
+                      <dt className="text-muted-foreground">{t("fields.status")}</dt>
+                      <dd>{t(`tabs.${sheetCategory.status}`)}</dd>
                     </div>
                   </dl>
                 ) : (
@@ -440,40 +450,41 @@ export default function CategoriesPage() {
                     onSubmit={sidebar.mode === "add" ? submitAdd : submitEdit}
                   >
                     <div className="flex flex-col gap-2">
-                      <Label htmlFor={`${formId}-name`}>Name</Label>
+                      <Label htmlFor={`${formId}-name`}>{t("fields.name")}</Label>
                       <Input
                         id={`${formId}-name`}
                         name="name"
                         required
                         defaultValue={formCategory.name}
-                        placeholder="Category name"
+                        placeholder={t("categoryPage.namePlaceholder")}
                       />
                     </div>
                     <div className="flex flex-col gap-2">
-                      <Label htmlFor={`${formId}-description`}>Description</Label>
+                      <Label htmlFor={`${formId}-description`}>{t("fields.description")}</Label>
                       <Input
                         id={`${formId}-description`}
                         name="description"
                         defaultValue={formCategory.description}
-                        placeholder="Short description"
+                        placeholder={t("categoryPage.descriptionPlaceholder")}
                       />
                     </div>
                     {sidebar.mode === "edit" ? (
                       <p className="text-muted-foreground text-xs">
-                        Product count ({sheetCategory?.products ?? 0}) updates automatically from
-                        inventory.
+                        {t("categoryPage.productCountHint", {
+                          count: sheetCategory?.products ?? 0,
+                        })}
                       </p>
                     ) : null}
                     <div className="flex flex-col gap-2">
-                      <Label htmlFor={`${formId}-status`}>Status</Label>
+                      <Label htmlFor={`${formId}-status`}>{t("fields.status")}</Label>
                       <select
                         id={`${formId}-status`}
                         name="status"
                         defaultValue={formCategory.status}
                         className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm shadow-xs outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px]"
                       >
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
+                        <option value="active">{t("tabs.active")}</option>
+                        <option value="inactive">{t("tabs.inactive")}</option>
                       </select>
                     </div>
                   </form>
@@ -483,18 +494,20 @@ export default function CategoriesPage() {
                 {sidebar.mode === "view" ? (
                   <SheetClose asChild>
                     <Button variant="outline" className="w-full sm:w-auto">
-                      Close
+                      {t("actions.close", { ns: "common" })}
                     </Button>
                   </SheetClose>
                 ) : (
                   <>
                     <SheetClose asChild>
                       <Button variant="outline" type="button">
-                        Cancel
+                        {t("actions.cancel", { ns: "common" })}
                       </Button>
                     </SheetClose>
                     <Button type="submit" form={formId}>
-                      {sidebar.mode === "add" ? "Create category" : "Save category"}
+                      {sidebar.mode === "add"
+                        ? t("categoryPage.create")
+                        : t("categoryPage.save")}
                     </Button>
                   </>
                 )}
@@ -506,8 +519,8 @@ export default function CategoriesPage() {
       <DataTable
         data={rows}
         columns={columns}
-        addButtonLabel="New Category"
-        searchPlaceholder="Search categories..."
+        addButtonLabel={t("categoryPage.addButton")}
+        searchPlaceholder={t("categoryPage.search")}
         importRowMapper={mapImportedCategory}
         importSampleFilename="categories-sample.csv"
         exportFilename="categories-export.csv"
@@ -518,37 +531,37 @@ export default function CategoriesPage() {
         bulkActions={[
           {
             id: "active",
-            label: "Set active",
+            label: t("actions.setActive"),
             icon: <IconCircleCheck className="size-4" />,
             onClick: (selected) => {
               const ids = new Set(selected.map((c) => c.id))
               setRows((prev) =>
                 prev.map((r) => (ids.has(r.id) ? { ...r, status: "active" as const } : r))
               )
-              toast.message(`Set ${selected.length} categor${selected.length === 1 ? "y" : "ies"} to active (demo).`)
+              toast.message(t("toasts.setActiveCount", { count: selected.length }))
             },
           },
           {
             id: "inactive",
-            label: "Set inactive",
+            label: t("actions.setInactive"),
             icon: <IconBan className="size-4" />,
             onClick: (selected) => {
               const ids = new Set(selected.map((c) => c.id))
               setRows((prev) =>
                 prev.map((r) => (ids.has(r.id) ? { ...r, status: "inactive" as const } : r))
               )
-              toast.message(`Set ${selected.length} categor${selected.length === 1 ? "y" : "ies"} to inactive (demo).`)
+              toast.message(t("toasts.setInactiveCount", { count: selected.length }))
             },
           },
           {
             id: "delete",
-            label: "Delete selected",
+            label: t("actions.deleteSelected"),
             icon: <IconTrash className="size-4" />,
             variant: "destructive",
             onClick: (selected) => {
               const ids = new Set(selected.map((c) => c.id))
               setRows((prev) => prev.filter((r) => !ids.has(r.id)))
-              toast.message(`Deleted ${selected.length} categor${selected.length === 1 ? "y" : "ies"} (demo).`)
+              toast.message(t("toasts.deletedCategories", { count: selected.length }))
             },
           },
         ]}

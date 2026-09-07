@@ -4,6 +4,7 @@ import * as React from "react"
 import { useSearchParams } from "next/navigation"
 import { IconArrowLeft, IconSearch, IconShoppingBag } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 import { StorefrontProductCard } from "@/components/qr-storefront/storefront-product-card"
 import {
@@ -49,6 +50,7 @@ type PlacedOrder = {
 }
 
 export function PublicStorefront({ storeId }: { storeId: string }) {
+  const { t } = useTranslation("storefront")
   const { products, getProduct, updateProduct } = useProducts()
   const { customers } = useCustomers()
   const { orders, addOrder } = useOrders()
@@ -126,7 +128,7 @@ export function PublicStorefront({ storeId }: { storeId: string }) {
 
   const addToCart = React.useCallback((product: ProductRow) => {
     if (product.stock <= 0) {
-      toast.error("Out of stock.")
+      toast.error(t("outOfStock"))
       return
     }
     setCart((prev) => {
@@ -169,7 +171,7 @@ export function PublicStorefront({ storeId }: { storeId: string }) {
     for (const line of cart) {
       const product = getProduct(line.productId)
       if (!product || product.stock < line.quantity) {
-        toast.error(`${line.productName} no longer has enough stock.`)
+        toast.error(t("notEnoughStock", { name: line.productName }))
         return
       }
     }
@@ -214,20 +216,22 @@ export function PublicStorefront({ storeId }: { storeId: string }) {
     updateProduct,
   ])
 
-  if (!hydrated) return <PageLoader fullScreen message="Opening store…" />
+  if (!hydrated) return <PageLoader fullScreen message={t("openingStore")} />
   if (!storeOk) {
     return (
       <div className="mx-auto flex min-h-svh max-w-sm flex-col justify-center px-4 text-center">
-        <h1 className="text-xl font-semibold tracking-tight">Store not found</h1>
-        <p className="text-muted-foreground mt-2 text-sm">Scan this store’s QR code.</p>
+        <h1 className="text-xl font-semibold tracking-tight">{t("storeNotFound")}</h1>
+        <p className="text-muted-foreground mt-2 text-sm">{t("scanQr")}</p>
       </div>
     )
   }
   if (!storeEnabled) {
     return (
       <div className="mx-auto flex min-h-svh max-w-sm flex-col justify-center px-4 text-center">
-        <h1 className="text-xl font-semibold tracking-tight">{company.name} is closed</h1>
-        <p className="text-muted-foreground mt-2 text-sm">Please try again later.</p>
+        <h1 className="text-xl font-semibold tracking-tight">
+          {t("isClosed", { name: company.name })}
+        </h1>
+        <p className="text-muted-foreground mt-2 text-sm">{t("tryLater")}</p>
       </div>
     )
   }
@@ -235,8 +239,8 @@ export function PublicStorefront({ storeId }: { storeId: string }) {
   if (placed) {
     return (
       <Centered
-        title="Order placed"
-        body={`Thanks, ${placed.customerName}.`}
+        title={t("orderPlaced")}
+        body={t("thanks", { name: placed.customerName })}
         extra={
           <>
             <p className="mt-5 text-base font-semibold tabular-nums">{placed.invoiceNumber}</p>
@@ -254,7 +258,7 @@ export function PublicStorefront({ storeId }: { storeId: string }) {
                 setStep(qrPrefill.customerId ? "shop" : "who")
               }}
             >
-              New order
+              {t("newOrder")}
             </Button>
           </>
         }
@@ -289,9 +293,9 @@ export function PublicStorefront({ storeId }: { storeId: string }) {
           <div className="min-w-0 flex-1">
             <p className="truncate text-base font-semibold">
               {step === "who"
-                ? "Who’s ordering?"
+                ? t("whosOrdering")
                 : step === "review"
-                  ? "Confirm order"
+                  ? t("confirmOrder")
                   : company.name}
             </p>
             {step === "shop" && selectedCustomer ? (
@@ -328,7 +332,7 @@ export function PublicStorefront({ storeId }: { storeId: string }) {
             onQuantityChange={setQuantity}
             onContinue={() => {
               if (itemCount === 0) {
-                toast.error("Add a product first.")
+                toast.error(t("addProductFirst"))
                 return
               }
               setStep("review")
@@ -361,11 +365,12 @@ function NameStep({
   customers: CustomerRow[]
   onPick: (id: string) => void
 }) {
+  const { t } = useTranslation("storefront")
   return (
     <div className="mx-auto max-w-lg px-4 py-6">
       <SearchInput
         icon={<IconSearch className="size-5" />}
-        placeholder="Search your name"
+        placeholder={t("searchName")}
         value={query}
         onChange={(event) => onQueryChange(event.target.value)}
         className={`${sfInputLg} pl-12`}
@@ -373,7 +378,7 @@ function NameStep({
       <div className={`${sfPanel} mt-5 overflow-hidden`}>
         {customers.length === 0 ? (
           <p className="text-muted-foreground px-5 py-14 text-center text-base">
-            No names found.
+            {t("noNames")}
           </p>
         ) : (
           <ul className="divide-y divide-border/50">
@@ -418,18 +423,19 @@ function ShopStep({
   onQuantityChange: (productId: number, quantity: number) => void
   onContinue: () => void
 }) {
+  const { t } = useTranslation("storefront")
   return (
     <div className="mx-auto max-w-lg px-4 py-6 pb-32">
       <SearchInput
         icon={<IconSearch className="size-5" />}
-        placeholder="Search products"
+        placeholder={t("searchProducts")}
         value={search}
         onChange={(event) => onSearchChange(event.target.value)}
         className={`${sfInputLg} pl-12`}
       />
       {products.length === 0 ? (
         <p className="text-muted-foreground py-20 text-center text-base">
-          {empty ? "Nothing in this store right now." : "No matching products."}
+          {empty ? t("nothingInStore") : t("noMatching")}
         </p>
       ) : (
         <div className="mt-5 grid grid-cols-2 gap-3.5">
@@ -453,8 +459,8 @@ function ShopStep({
           onClick={onContinue}
         >
           {itemCount === 0
-            ? "Add products"
-            : `Continue · ${itemCount} · ${formatStorefrontMoney(subtotal)}`}
+            ? t("addProducts")
+            : t("continueBar", { count: itemCount, amount: formatStorefrontMoney(subtotal) })}
         </Button>
       </BottomBar>
     </div>
@@ -474,10 +480,11 @@ function ReviewStep({
   processing: boolean
   onPlaceOrder: () => void
 }) {
+  const { t } = useTranslation("storefront")
   return (
     <div className="mx-auto max-w-lg px-4 py-6 pb-32">
       <div className={`${sfPanel} p-5`}>
-        <p className="text-muted-foreground text-sm">Ordering as</p>
+        <p className="text-muted-foreground text-sm">{t("orderingAs")}</p>
         <p className="mt-1 text-lg font-semibold">{customerName}</p>
       </div>
       <ul className={`${sfPanel} mt-4 divide-y divide-border/50 overflow-hidden`}>
@@ -494,7 +501,7 @@ function ReviewStep({
         ))}
       </ul>
       <div className="mt-5 flex items-center justify-between px-1 text-base">
-        <span className="text-muted-foreground">Total</span>
+        <span className="text-muted-foreground">{t("total")}</span>
         <span className="text-lg font-semibold tabular-nums">
           {formatStorefrontMoney(subtotal)}
         </span>
@@ -506,7 +513,7 @@ function ReviewStep({
           disabled={processing || cart.length === 0}
           onClick={onPlaceOrder}
         >
-          {processing ? "Placing…" : `Place order · ${formatStorefrontMoney(subtotal)}`}
+          {processing ? t("placing") : t("placeOrder", { amount: formatStorefrontMoney(subtotal) })}
         </Button>
       </BottomBar>
     </div>

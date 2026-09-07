@@ -3,6 +3,7 @@
 import { Mail } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useState, type FormEvent } from "react"
+import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 
 import {
@@ -19,6 +20,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { apiForgotPassword } from "@/lib/api/auth"
 
 export function EmailForm() {
+  const { t } = useTranslation("auth")
   const router = useRouter()
   const [sending, setSending] = useState(false)
 
@@ -27,17 +29,17 @@ export function EmailForm() {
     const fd = new FormData(event.currentTarget)
     const email = String(fd.get("email") ?? "").trim()
     if (!email) {
-      toast.error("Enter your email")
+      toast.error(t("forgotPassword.toastEnterEmail"))
       return
     }
 
     setSending(true)
     try {
       await apiForgotPassword(email)
-      toast.success("Enter the 6-digit code we sent to your email.")
+      toast.success(t("forgotPassword.toastSent"))
       router.push(`/resetCode?email=${encodeURIComponent(email)}`)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not send reset email")
+      toast.error(err instanceof Error ? err.message : t("forgotPassword.toastError"))
     } finally {
       setSending(false)
     }
@@ -46,19 +48,19 @@ export function EmailForm() {
   return (
     <AuthShell hero="reset_email">
       <AuthHeading
-        title="Forgot password"
+        title={t("forgotPassword.title")}
         accent="password"
-        subtitle="Enter your email and we’ll send reset instructions if an account exists."
+        subtitle={t("forgotPassword.subtitle")}
       />
       <form className="space-y-3.5" onSubmit={handleSubmit}>
         <div className="grid gap-1.5">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{t("forgotPassword.email")}</Label>
           <div className="relative">
             <Input
               id="email"
               name="email"
               type="email"
-              placeholder="you@company.com"
+              placeholder={t("forgotPassword.emailPlaceholder")}
               required
               autoComplete="email"
               className={`${AUTH_INPUT} pr-10`}
@@ -73,13 +75,17 @@ export function EmailForm() {
           {sending ? (
             <span className="flex items-center justify-center gap-2">
               <LoadingSpinner size="sm" />
-              Sending…
+              {t("forgotPassword.sending")}
             </span>
           ) : (
-            "Send reset email"
+            t("forgotPassword.submit")
           )}
         </Button>
-        <AuthSwitch prompt="Remembered it?" href="/" label="Sign in" />
+        <AuthSwitch
+          prompt={t("forgotPassword.remembered")}
+          href="/"
+          label={t("forgotPassword.signIn")}
+        />
       </form>
     </AuthShell>
   )

@@ -1,5 +1,7 @@
 "use client"
 
+import { useTranslation } from "react-i18next"
+
 import type { TaxReportLine } from "@/lib/tax-reports"
 import { cn } from "@/lib/utils"
 
@@ -62,10 +64,10 @@ export function TaxReportTable({
 }
 
 export function TaxReportFootnote() {
+  const { t } = useTranslation("tax")
   return (
     <p className="text-muted-foreground text-[11px] leading-relaxed">
-      Completed transactions only. Pending and cancelled documents are excluded from
-      revenue and expense totals but pending counts appear on the year summary.
+      {t("reportFootnote")}
     </p>
   )
 }

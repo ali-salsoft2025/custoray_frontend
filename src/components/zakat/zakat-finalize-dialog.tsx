@@ -22,6 +22,7 @@ import {
   formatZakatMoney,
   type ZakatHistoryRecord,
 } from "@/lib/zakat"
+import { useTranslation } from "react-i18next"
 
 export function ZakatFinalizeDialog({
   open,
@@ -30,6 +31,8 @@ export function ZakatFinalizeDialog({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
+  const { t } = useTranslation("zakat")
+  const { t: tc } = useTranslation("common")
   const { calculation, finalizeZakat } = useZakat()
   const [step, setStep] = React.useState(1)
   const [paymentDate, setPaymentDate] = React.useState("")
@@ -53,7 +56,7 @@ export function ZakatFinalizeDialog({
   const complete = () => {
     if (submitting || saved) return
     if (!paymentDate || Number(amountPaid) <= 0) {
-      toast.error("Enter a payment date and amount.")
+      toast.error(t("finalizeDialog.toastRequired"))
       return
     }
     setSubmitting(true)
@@ -66,7 +69,7 @@ export function ZakatFinalizeDialog({
     setSaved(record)
     setStep(3)
     setSubmitting(false)
-    toast.success("Zakat recorded.")
+    toast.success(t("finalizeDialog.toastRecorded"))
   }
 
   return (
@@ -75,18 +78,25 @@ export function ZakatFinalizeDialog({
         <DialogHeader>
           <DialogTitle>
             {step === 1
-              ? "Review calculation"
+              ? t("finalizeDialog.reviewTitle")
               : step === 2
-                ? "Record payment"
-                : "Zakat recorded"}
+                ? t("finalizeDialog.paymentTitle")
+                : t("finalizeDialog.recordedTitle")}
           </DialogTitle>
           <DialogDescription>
-            Step {step} of 3 ·{" "}
-            {step === 1 ? "Review" : step === 2 ? "Payment" : "Complete"}
+            {t("finalizeDialog.stepOf", {
+              step,
+              label:
+                step === 1
+                  ? t("finalizeDialog.stepReview")
+                  : step === 2
+                    ? t("finalizeDialog.stepPayment")
+                    : t("finalizeDialog.stepComplete"),
+            })}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-3 gap-2" aria-label="Finalize progress">
+        <div className="grid grid-cols-3 gap-2" aria-label={t("finalizeDialog.progressAria")}>
           {[1, 2, 3].map((item) => (
             <div
               key={item}
@@ -100,26 +110,28 @@ export function ZakatFinalizeDialog({
         {step === 1 ? (
           <div className="divide-y rounded-xl border">
             <div className="flex items-center justify-between gap-4 px-4 py-3">
-              <span className="text-muted-foreground text-sm">Assets</span>
+              <span className="text-muted-foreground text-sm">{t("finalizeDialog.assets")}</span>
               <span className="font-semibold tabular-nums">
                 {formatZakatMoney(calculation.assets.total)}
               </span>
             </div>
             <div className="flex items-center justify-between gap-4 px-4 py-3">
-              <span className="text-muted-foreground text-sm">Liabilities</span>
+              <span className="text-muted-foreground text-sm">{t("finalizeDialog.liabilities")}</span>
               <span className="font-semibold tabular-nums">
                 {formatZakatMoney(calculation.liabilities.total)}
               </span>
             </div>
             <div className="flex items-center justify-between gap-4 px-4 py-3">
-              <span className="text-muted-foreground text-sm">Net assets</span>
+              <span className="text-muted-foreground text-sm">{t("finalizeDialog.netAssets")}</span>
               <span className="font-semibold tabular-nums">
                 {formatZakatMoney(calculation.netAssets)}
               </span>
             </div>
             <div className="flex items-center justify-between gap-4 px-4 py-3">
               <span className="text-muted-foreground text-sm">
-                Zakat ({calculation.rate.toFixed(2)}%)
+                {t("finalizeDialog.zakatRate", {
+                  rate: calculation.rate.toFixed(2),
+                })}
               </span>
               <span className="text-lg font-semibold tabular-nums">
                 {formatZakatMoney(calculation.estimatedZakat)}
@@ -131,7 +143,7 @@ export function ZakatFinalizeDialog({
         {step === 2 ? (
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="zakat-payment-date">Payment date</Label>
+              <Label htmlFor="zakat-payment-date">{t("finalizeDialog.paymentDate")}</Label>
               <Input
                 id="zakat-payment-date"
                 type="date"
@@ -141,7 +153,7 @@ export function ZakatFinalizeDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="zakat-payment-amount">Amount paid</Label>
+              <Label htmlFor="zakat-payment-amount">{t("finalizeDialog.amountPaid")}</Label>
               <Input
                 id="zakat-payment-amount"
                 type="number"
@@ -153,21 +165,21 @@ export function ZakatFinalizeDialog({
               />
             </div>
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="zakat-payment-reference">Reference</Label>
+              <Label htmlFor="zakat-payment-reference">{t("reference")}</Label>
               <Input
                 id="zakat-payment-reference"
                 value={reference}
                 onChange={(event) => setReference(event.target.value)}
-                placeholder="Bank transfer, receipt number, or payment method"
+                placeholder={t("finalizeDialog.referencePlaceholder")}
               />
             </div>
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="zakat-payment-notes">Notes</Label>
+              <Label htmlFor="zakat-payment-notes">{t("notes")}</Label>
               <textarea
                 id="zakat-payment-notes"
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
-                placeholder="Optional notes"
+                placeholder={t("finalizeDialog.notesPlaceholder")}
                 className="border-input bg-background min-h-24 w-full rounded-md border px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
               />
             </div>
@@ -179,20 +191,22 @@ export function ZakatFinalizeDialog({
             <div className="bg-primary text-primary-foreground mx-auto flex size-12 items-center justify-center rounded-full">
               <IconCheck className="size-6" />
             </div>
-            <h3 className="mt-4 text-lg font-semibold">Zakat recorded</h3>
+            <h3 className="mt-4 text-lg font-semibold">{t("finalizeDialog.recordedTitle")}</h3>
             <p className="text-muted-foreground mt-1 text-sm">
-              Paid {formatZakatMoney(saved.amountPaid)} on{" "}
-              {formatZakatDate(saved.paymentDate)}.
+              {t("finalizeDialog.paidOn", {
+                amount: formatZakatMoney(saved.amountPaid),
+                date: formatZakatDate(saved.paymentDate),
+              })}
             </p>
             <div className="mx-auto mt-5 max-w-sm divide-y rounded-lg border text-left">
               <div className="flex justify-between gap-4 px-4 py-3 text-sm">
-                <span className="text-muted-foreground">Last paid date</span>
+                <span className="text-muted-foreground">{t("finalizeDialog.lastPaidDate")}</span>
                 <span className="font-medium">
                   {formatZakatDate(saved.paymentDate)}
                 </span>
               </div>
               <div className="flex justify-between gap-4 px-4 py-3 text-sm">
-                <span className="text-muted-foreground">Next due</span>
+                <span className="text-muted-foreground">{t("finalizeDialog.nextDue")}</span>
                 <span className="font-medium">
                   {formatZakatDate(addLunarYear(saved.paymentDate))}
                 </span>
@@ -209,10 +223,10 @@ export function ZakatFinalizeDialog({
                 variant="outline"
                 onClick={() => onOpenChange(false)}
               >
-                Cancel
+                {tc("actions.cancel")}
               </Button>
               <Button type="button" onClick={() => setStep(2)}>
-                Continue
+                {tc("actions.continue")}
                 <IconChevronRight className="size-4" />
               </Button>
             </>
@@ -220,15 +234,15 @@ export function ZakatFinalizeDialog({
             <>
               <Button type="button" variant="outline" onClick={() => setStep(1)}>
                 <IconChevronLeft className="size-4" />
-                Back
+                {tc("actions.back")}
               </Button>
               <Button type="button" disabled={submitting} onClick={complete}>
-                Finalize Zakat
+                {t("finalizeDialog.finalizeZakat")}
               </Button>
             </>
           ) : (
             <Button type="button" onClick={() => onOpenChange(false)}>
-              Done
+              {tc("actions.done")}
             </Button>
           )}
         </DialogFooter>

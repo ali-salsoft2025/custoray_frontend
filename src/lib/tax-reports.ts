@@ -9,6 +9,7 @@ import type { ReturnRow } from "@/lib/returns"
 import type { TaxManualEntry } from "@/lib/tax-settings"
 import { formatTaxMoney, type TaxMoneyProfile } from "@/lib/tax-region-config"
 import { computeBalance as computeVendorBalance, type VendorRow } from "@/lib/vendors"
+import i18n from "@/i18n"
 
 export type TaxDateRange = {
   start: string
@@ -511,79 +512,81 @@ export function profitAndLossToRows(
   salesTaxLabel: string,
   manualEntries: TaxManualEntry[] = []
 ): TaxReportLine[] {
+  const t = (key: string, options?: Record<string, unknown>) =>
+    i18n.t(key, { ns: "tax", ...options })
   const fmt = (value: number) => formatTaxMoney(value, profile)
   const rows: TaxReportLine[] = [
     {
-      section: "Money in",
-      line: "Sales (from your records)",
+      section: t("rows.moneyIn"),
+      line: t("rows.salesFromRecords"),
       amount: fmt(pl.grossRevenue),
-      note: "Completed sales in this period",
+      note: t("rows.completedSalesNote"),
     },
     {
-      section: "Money in",
-      line: "Sales returns",
+      section: t("rows.moneyIn"),
+      line: t("rows.salesReturns"),
       amount: fmt(-pl.salesReturns),
     },
   ]
 
   for (const entry of manualEntries.filter((e) => e.category === "extra_income")) {
     rows.push({
-      section: "Money in",
+      section: t("rows.moneyIn"),
       line: entry.label,
       amount: fmt(Number(entry.amount) || 0),
-      note: entry.note || "Added by you",
+      note: entry.note || t("rows.addedByYou"),
     })
   }
 
   rows.push({
-    section: "Money in",
-    line: "Total money in",
+    section: t("rows.moneyIn"),
+    line: t("rows.totalMoneyIn"),
     amount: fmt(pl.netRevenue),
   })
 
   rows.push(
     {
-      section: "Money out",
-      line: "Purchases (from your records)",
+      section: t("rows.moneyOut"),
+      line: t("rows.purchasesFromRecords"),
       amount: fmt(pl.purchases),
-      note: "Completed purchases in this period",
+      note: t("rows.completedPurchasesNote"),
     },
     {
-      section: "Money out",
-      line: "Purchase returns",
+      section: t("rows.moneyOut"),
+      line: t("rows.purchaseReturns"),
       amount: fmt(-pl.purchaseReturns),
     }
   )
 
   for (const entry of manualEntries.filter((e) => e.category === "extra_expense")) {
     rows.push({
-      section: "Money out",
+      section: t("rows.moneyOut"),
       line: entry.label,
       amount: fmt(Number(entry.amount) || 0),
-      note: entry.note || "Added by you",
+      note: entry.note || t("rows.addedByYou"),
     })
   }
 
   rows.push(
     {
-      section: "Money out",
-      line: "Total money out",
+      section: t("rows.moneyOut"),
+      line: t("rows.totalMoneyOut"),
       amount: fmt(pl.netPurchases),
     },
     {
-      section: "Bottom line",
-      line: "What you kept (estimate)",
+      section: t("rows.bottomLine"),
+      line: t("rows.whatYouKept"),
       amount: fmt(pl.grossProfitEstimate),
-      note: "Money in minus money out — share with your accountant",
+      note: t("rows.shareWithAccountant"),
     }
   )
 
   if (pl.showTaxEstimate) {
     rows.push({
-      section: "Bottom line",
-      line: `Rough ${salesTaxLabel} estimate`,
+      section: t("rows.bottomLine"),
+      line: t("rows.taxEstimate", { label: salesTaxLabel }),
       amount: fmt(pl.estimatedTax),
-      note: "Based on the rate you entered in settings",
+      note: t("rows.taxEstimateNote"),
     })
   }
   return rows
@@ -594,68 +597,70 @@ export function balanceSheetToRows(
   profile: TaxMoneyProfile,
   manualEntries: TaxManualEntry[] = []
 ): TaxReportLine[] {
+  const t = (key: string, options?: Record<string, unknown>) =>
+    i18n.t(key, { ns: "tax", ...options })
   const fmt = (value: number) => formatTaxMoney(value, profile)
   const rows: TaxReportLine[] = [
     {
-      section: "What you have",
-      line: "Customers still owe you",
+      section: t("rows.whatYouHave"),
+      line: t("rows.customersOweYou"),
       amount: fmt(bs.accountsReceivable),
     },
     {
-      section: "What you have",
-      line: "Inventory value",
+      section: t("rows.whatYouHave"),
+      line: t("rows.inventoryValue"),
       amount: fmt(bs.inventoryValue),
-      note: "Stock × cost price",
+      note: t("rows.stockTimesCost"),
     },
     {
-      section: "What you have",
-      line: "Cash movement this period",
+      section: t("rows.whatYouHave"),
+      line: t("rows.cashMovement"),
       amount: fmt(bs.cashMovement),
-      note: "Payments received minus payments sent",
+      note: t("rows.paymentsNetNote"),
     },
   ]
 
   for (const entry of manualEntries.filter((e) => e.category === "other_asset")) {
     rows.push({
-      section: "What you have",
+      section: t("rows.whatYouHave"),
       line: entry.label,
       amount: fmt(Number(entry.amount) || 0),
-      note: entry.note || "Added by you",
+      note: entry.note || t("rows.addedByYou"),
     })
   }
 
   rows.push({
-    section: "What you have",
-    line: "Total (estimate)",
+    section: t("rows.whatYouHave"),
+    line: t("rows.totalEstimate"),
     amount: fmt(bs.totalAssets),
   })
 
   rows.push({
-    section: "What you owe",
-    line: "Outstanding vendor bills",
+    section: t("rows.whatYouOwe"),
+    line: t("rows.outstandingVendorBills"),
     amount: fmt(bs.accountsPayable - bs.manualLiabilities),
   })
 
   for (const entry of manualEntries.filter((e) => e.category === "other_liability")) {
     rows.push({
-      section: "What you owe",
+      section: t("rows.whatYouOwe"),
       line: entry.label,
       amount: fmt(Number(entry.amount) || 0),
-      note: entry.note || "Added by you",
+      note: entry.note || t("rows.addedByYou"),
     })
   }
 
   rows.push(
     {
-      section: "What you owe",
-      line: "Total owed",
+      section: t("rows.whatYouOwe"),
+      line: t("rows.totalOwed"),
       amount: fmt(bs.accountsPayable),
     },
     {
-      section: "Bottom line",
-      line: "Estimated net worth",
+      section: t("rows.bottomLine"),
+      line: t("rows.estimatedNetWorth"),
       amount: fmt(bs.estimatedEquity),
-      note: "What you have minus what you owe",
+      note: t("rows.haveMinusOwe"),
     }
   )
 
@@ -666,42 +671,43 @@ export function yearSummaryToRows(
   summary: TaxYearSummary,
   profile: TaxMoneyProfile
 ): TaxReportLine[] {
+  const t = (key: string) => i18n.t(key, { ns: "tax" })
   const fmt = (value: number) => formatTaxMoney(value, profile)
   const { counts, profitAndLoss: pl } = summary
   return [
-    { section: "Overview", line: "Net revenue", amount: fmt(pl.netRevenue) },
+    { section: t("rows.overview"), line: t("rows.netRevenue"), amount: fmt(pl.netRevenue) },
     {
-      section: "Overview",
-      line: "Gross profit (estimate)",
+      section: t("rows.overview"),
+      line: t("rows.grossProfitEstimate"),
       amount: fmt(pl.grossProfitEstimate),
     },
     {
-      section: "Overview",
-      line: "Estimated equity",
+      section: t("rows.overview"),
+      line: t("rows.estimatedEquity"),
       amount: fmt(summary.balanceSheet.estimatedEquity),
     },
-    { section: "Counts", line: "Sales invoices", amount: String(counts.salesInvoices) },
-    { section: "Counts", line: "Purchase orders", amount: String(counts.purchaseOrders) },
-    { section: "Counts", line: "Sales returns", amount: String(counts.salesReturns) },
+    { section: t("rows.counts"), line: t("rows.salesInvoices"), amount: String(counts.salesInvoices) },
+    { section: t("rows.counts"), line: t("rows.purchaseOrders"), amount: String(counts.purchaseOrders) },
+    { section: t("rows.counts"), line: t("rows.salesReturnsCount"), amount: String(counts.salesReturns) },
     {
-      section: "Counts",
-      line: "Purchase returns",
+      section: t("rows.counts"),
+      line: t("rows.purchaseReturnsCount"),
       amount: String(counts.purchaseReturns),
     },
     {
-      section: "Counts",
-      line: "Customer payments",
+      section: t("rows.counts"),
+      line: t("rows.customerPayments"),
       amount: String(counts.customerPayments),
     },
     {
-      section: "Counts",
-      line: "Vendor payments",
+      section: t("rows.counts"),
+      line: t("rows.vendorPayments"),
       amount: String(counts.vendorPayments),
     },
-    { section: "Pending", line: "Pending sales", amount: String(counts.pendingSales) },
+    { section: t("rows.pending"), line: t("rows.pendingSales"), amount: String(counts.pendingSales) },
     {
-      section: "Pending",
-      line: "Pending purchases",
+      section: t("rows.pending"),
+      line: t("rows.pendingPurchases"),
       amount: String(counts.pendingPurchases),
     },
   ]

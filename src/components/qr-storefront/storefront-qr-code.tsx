@@ -2,7 +2,9 @@
 
 import * as React from "react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
+import i18n from "@/i18n"
 import { qrImageUrl } from "@/lib/storefront"
 import { cn } from "@/lib/utils"
 
@@ -19,6 +21,7 @@ export function StorefrontQrCode({
   subtitle,
   className,
 }: StorefrontQrCodeProps) {
+  const { t } = useTranslation("storefront")
   const src = qrImageUrl(url, 400)
 
   return (
@@ -33,7 +36,7 @@ export function StorefrontQrCode({
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
-        alt={`QR code for ${storeName} storefront`}
+        alt={t("qrAlt", { storeName })}
         className="size-56 sm:size-64 transition-opacity duration-300"
         width={256}
         height={256}
@@ -43,7 +46,7 @@ export function StorefrontQrCode({
         {subtitle ? (
           <p className="text-sm font-medium text-zinc-700">{subtitle}</p>
         ) : null}
-        <p className="text-xs text-zinc-500">Scan to browse and order</p>
+        <p className="text-xs text-zinc-500">{t("scanToBrowse")}</p>
       </div>
     </div>
   )
@@ -65,9 +68,9 @@ export async function downloadStorefrontQr(url: string, storeName: string) {
     anchor.click()
     anchor.remove()
     URL.revokeObjectURL(objectUrl)
-    toast.success("QR code downloaded.")
+    toast.success(i18n.t("qrDownloaded", { ns: "storefront" }))
   } catch {
     window.open(src, "_blank", "noopener,noreferrer")
-    toast.message("Opened the QR image in a new tab.")
+    toast.message(i18n.t("qrOpenedTab", { ns: "storefront" }))
   }
 }

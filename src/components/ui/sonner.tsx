@@ -1,11 +1,14 @@
 "use client"
 
+import { useTheme } from "next-themes"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
 
 const Toaster = ({ ...props }: ToasterProps) => {
+  const { resolvedTheme } = useTheme()
+
   return (
     <Sonner
-      theme="light"
+      theme={(resolvedTheme === "dark" ? "dark" : "light") as ToasterProps["theme"]}
       position="top-right"
       closeButton
       offset={16}
@@ -15,45 +18,26 @@ const Toaster = ({ ...props }: ToasterProps) => {
       toastOptions={{
         classNames: {
           toast:
-            "group toast w-[min(100%,22.5rem)] rounded-xl border bg-white text-zinc-900 shadow-[0_12px_40px_-12px_rgba(15,23,42,0.2)]",
-          title: "text-[13px] font-semibold tracking-tight",
-          description: "text-[12px] leading-snug text-zinc-500",
+            "group toast w-[min(100%,22.5rem)] rounded-xl border border-border bg-background text-foreground shadow-lg",
+          title: "text-[13px] font-semibold tracking-tight text-foreground",
+          description: "text-[12px] leading-snug text-muted-foreground",
           icon: "size-5",
           actionButton:
-            "rounded-md bg-zinc-900 text-white text-xs font-medium",
+            "rounded-md bg-primary text-primary-foreground text-xs font-medium",
           cancelButton:
-            "rounded-md bg-zinc-100 text-zinc-700 text-xs font-medium",
+            "rounded-md bg-muted text-muted-foreground text-xs font-medium",
           closeButton:
-            "border-zinc-200/80 bg-white text-zinc-400 hover:bg-zinc-50 hover:text-zinc-700",
+            "border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground",
           success:
-            "!bg-emerald-50 !border-emerald-200 !text-emerald-950 [&_[data-icon]]:text-emerald-600 [&_[data-description]]:text-emerald-800/70",
+            "!bg-emerald-50 !border-emerald-200/80 !text-emerald-950 dark:!bg-emerald-950/40 dark:!border-emerald-800 dark:!text-emerald-100 [&_[data-icon]]:text-emerald-600 dark:[&_[data-icon]]:text-emerald-400 [&_[data-description]]:text-emerald-800/70 dark:[&_[data-description]]:text-emerald-200/70",
           error:
-            "!bg-rose-50 !border-rose-200 !text-rose-950 [&_[data-icon]]:text-rose-600 [&_[data-description]]:text-rose-800/70",
+            "!bg-rose-50 !border-rose-200/80 !text-rose-950 dark:!bg-rose-950/40 dark:!border-rose-800 dark:!text-rose-100 [&_[data-icon]]:text-rose-600 dark:[&_[data-icon]]:text-rose-400 [&_[data-description]]:text-rose-800/70 dark:[&_[data-description]]:text-rose-200/70",
           warning:
-            "!bg-amber-50 !border-amber-200 !text-amber-950 [&_[data-icon]]:text-amber-600 [&_[data-description]]:text-amber-800/70",
+            "!bg-amber-50 !border-amber-200/80 !text-amber-950 dark:!bg-amber-950/40 dark:!border-amber-800 dark:!text-amber-100 [&_[data-icon]]:text-amber-600 dark:[&_[data-icon]]:text-amber-400 [&_[data-description]]:text-amber-800/70 dark:[&_[data-description]]:text-amber-200/70",
           info:
-            "!bg-sky-50 !border-sky-200 !text-sky-950 [&_[data-icon]]:text-sky-600 [&_[data-description]]:text-sky-800/70",
+            "!bg-sky-50 !border-sky-200/80 !text-sky-950 dark:!bg-sky-950/40 dark:!border-sky-800 dark:!text-sky-100 [&_[data-icon]]:text-sky-600 dark:[&_[data-icon]]:text-sky-400 [&_[data-description]]:text-sky-800/70 dark:[&_[data-description]]:text-sky-200/70",
         },
       }}
-      style={
-        {
-          "--normal-bg": "#ffffff",
-          "--normal-text": "#18181b",
-          "--normal-border": "#e4e4e7",
-          "--success-bg": "#ecfdf5",
-          "--success-text": "#064e3b",
-          "--success-border": "#a7f3d0",
-          "--error-bg": "#fff1f2",
-          "--error-text": "#881337",
-          "--error-border": "#fecdd3",
-          "--warning-bg": "#fffbeb",
-          "--warning-text": "#78350f",
-          "--warning-border": "#fde68a",
-          "--info-bg": "#f0f9ff",
-          "--info-text": "#0c4a6e",
-          "--info-border": "#bae6fd",
-        } as React.CSSProperties
-      }
       {...props}
     />
   )

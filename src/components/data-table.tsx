@@ -1,6 +1,8 @@
 "use client"
 
 import * as React from "react"
+import { useTranslation } from "react-i18next"
+import i18n from "@/i18n"
 import {
   IconAdjustmentsHorizontal,
   IconChevronDown,
@@ -132,7 +134,44 @@ export const schema = z.object({
   lifecycle: z.enum(["active", "inactive", "archived"]).default("active"),
 })
 
-export const defaultColumns: ColumnDef<z.infer<typeof schema>>[] = [
+const DASHBOARD_TYPE_KEYS: Record<string, string> = {
+  "Cover page": "dashboard.types.coverPage",
+  "Cover Page": "dashboard.types.coverPage",
+  "Table of contents": "dashboard.types.tableOfContents",
+  "Table of Contents": "dashboard.types.tableOfContents",
+  Narrative: "dashboard.types.narrative",
+  "Technical content": "dashboard.types.technicalContent",
+  "Plain language": "dashboard.types.plainLanguage",
+  Legal: "dashboard.types.legal",
+  Visual: "dashboard.types.visual",
+  Financial: "dashboard.types.financial",
+  Research: "dashboard.types.research",
+  Planning: "dashboard.types.planning",
+  "Executive Summary": "dashboard.types.executiveSummary",
+  "Technical Approach": "dashboard.types.technicalApproach",
+  Design: "dashboard.types.design",
+  Capabilities: "dashboard.types.capabilities",
+  "Focus Documents": "dashboard.types.focusDocuments",
+}
+
+const DASHBOARD_STATUS_KEYS: Record<string, string> = {
+  Done: "dashboard.statuses.done",
+  "In Process": "dashboard.statuses.inProcess",
+  "In Progress": "dashboard.statuses.inProgress",
+  "Not Started": "dashboard.statuses.notStarted",
+}
+
+function translateDashboardLabel(
+  value: string,
+  map: Record<string, string>,
+  t: (key: string) => string
+) {
+  const key = map[value]
+  return key ? t(key) : value
+}
+
+export function getDefaultColumns(): ColumnDef<z.infer<typeof schema>>[] {
+  return [
   {
     id: "select",
     header: ({ table }) => (
@@ -143,7 +182,7 @@ export const defaultColumns: ColumnDef<z.infer<typeof schema>>[] = [
             (table.getIsSomePageRowsSelected() && "indeterminate")
           }
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
+          aria-label={i18n.t("table.selectAll")}
         />
       </div>
     ),
@@ -152,7 +191,7 @@ export const defaultColumns: ColumnDef<z.infer<typeof schema>>[] = [
         <Checkbox
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
+          aria-label={i18n.t("table.selectRow")}
         />
       </div>
     ),
@@ -162,7 +201,7 @@ export const defaultColumns: ColumnDef<z.infer<typeof schema>>[] = [
   {
     accessorKey: "header",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Header" />
+      <DataTableColumnHeader column={column} title={i18n.t("dashboard.header")} />
     ),
     cell: ({ row }) => {
       return <TableCellViewer item={row.original} />
@@ -172,12 +211,12 @@ export const defaultColumns: ColumnDef<z.infer<typeof schema>>[] = [
   {
     accessorKey: "type",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Section Type" />
+      <DataTableColumnHeader column={column} title={i18n.t("dashboard.sectionType")} />
     ),
     cell: ({ row }) => (
       <div className="w-32">
         <Badge variant="outline" className="text-muted-foreground px-1.5">
-          {row.original.type}
+          {translateDashboardLabel(row.original.type, DASHBOARD_TYPE_KEYS, i18n.t)}
         </Badge>
       </div>
     ),
@@ -185,7 +224,7 @@ export const defaultColumns: ColumnDef<z.infer<typeof schema>>[] = [
   {
     accessorKey: "status",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Status" />
+      <DataTableColumnHeader column={column} title={i18n.t("dashboard.status")} />
     ),
     cell: ({ row }) => (
       <Badge variant="outline" className="text-muted-foreground px-1.5">
@@ -194,14 +233,14 @@ export const defaultColumns: ColumnDef<z.infer<typeof schema>>[] = [
         ) : (
           <IconLoader />
         )}
-        {row.original.status}
+        {translateDashboardLabel(row.original.status, DASHBOARD_STATUS_KEYS, i18n.t)}
       </Badge>
     ),
   },
   {
     accessorKey: "target",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Target" align="end" />
+      <DataTableColumnHeader column={column} title={i18n.t("dashboard.target")} align="end" />
     ),
     sortingFn: (rowA, rowB, columnId) => {
       const a = Number(rowA.getValue(columnId))
@@ -221,14 +260,14 @@ export const defaultColumns: ColumnDef<z.infer<typeof schema>>[] = [
         onSubmit={(e) => {
           e.preventDefault()
           toast.promise(new Promise((resolve) => setTimeout(resolve, 1000)), {
-            loading: `Saving ${row.original.header}`,
-            success: "Done",
-            error: "Error",
+            loading: i18n.t("toast.savingNamed", { name: row.original.header }),
+            success: i18n.t("toast.done"),
+            error: i18n.t("error.generic"),
           })
         }}
       >
         <Label htmlFor={`${row.original.id}-target`} className="sr-only">
-          Target
+          {i18n.t("dashboard.target")}
         </Label>
         <Input
           className="hover:bg-input/30 focus-visible:bg-background dark:hover:bg-input/30 dark:focus-visible:bg-input/30 h-8 w-16 border-transparent bg-transparent text-right shadow-none focus-visible:border dark:bg-transparent"
@@ -241,7 +280,7 @@ export const defaultColumns: ColumnDef<z.infer<typeof schema>>[] = [
   {
     accessorKey: "limit",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Limit" align="end" />
+      <DataTableColumnHeader column={column} title={i18n.t("dashboard.limit")} align="end" />
     ),
     sortingFn: (rowA, rowB, columnId) => {
       const a = Number(rowA.getValue(columnId))
@@ -261,14 +300,14 @@ export const defaultColumns: ColumnDef<z.infer<typeof schema>>[] = [
         onSubmit={(e) => {
           e.preventDefault()
           toast.promise(new Promise((resolve) => setTimeout(resolve, 1000)), {
-            loading: `Saving ${row.original.header}`,
-            success: "Done",
-            error: "Error",
+            loading: i18n.t("toast.savingNamed", { name: row.original.header }),
+            success: i18n.t("toast.done"),
+            error: i18n.t("error.generic"),
           })
         }}
       >
         <Label htmlFor={`${row.original.id}-limit`} className="sr-only">
-          Limit
+          {i18n.t("dashboard.limit")}
         </Label>
         <Input
           className="hover:bg-input/30 focus-visible:bg-background dark:hover:bg-input/30 dark:focus-visible:bg-input/30 h-8 w-16 border-transparent bg-transparent text-right shadow-none focus-visible:border dark:bg-transparent"
@@ -281,7 +320,7 @@ export const defaultColumns: ColumnDef<z.infer<typeof schema>>[] = [
   {
     accessorKey: "reviewer",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Reviewer" />
+      <DataTableColumnHeader column={column} title={i18n.t("dashboard.reviewer")} />
     ),
     cell: ({ row }) => {
       const isAssigned = row.original.reviewer !== "Assign reviewer"
@@ -293,7 +332,7 @@ export const defaultColumns: ColumnDef<z.infer<typeof schema>>[] = [
       return (
         <>
           <Label htmlFor={`${row.original.id}-reviewer`} className="sr-only">
-            Reviewer
+            {i18n.t("dashboard.reviewer")}
           </Label>
           <Select>
             <SelectTrigger
@@ -301,7 +340,7 @@ export const defaultColumns: ColumnDef<z.infer<typeof schema>>[] = [
               size="sm"
               id={`${row.original.id}-reviewer`}
             >
-              <SelectValue placeholder="Assign reviewer" />
+              <SelectValue placeholder={i18n.t("dashboard.assignReviewer")} />
             </SelectTrigger>
             <SelectContent align="end">
               <SelectItem value="Eddie Lake">Eddie Lake</SelectItem>
@@ -326,17 +365,17 @@ export const defaultColumns: ColumnDef<z.infer<typeof schema>>[] = [
             size="icon"
           >
             <IconDotsVertical />
-            <span className="sr-only">Open menu</span>
+            <span className="sr-only">{i18n.t("actions.openMenu")}</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-40">
           <DropdownMenuItem>
             <IconEye />
-            View
+            {i18n.t("actions.view")}
           </DropdownMenuItem>
           <DropdownMenuItem>
             <IconPencil />
-            Edit
+            {i18n.t("actions.edit")}
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() =>
@@ -344,23 +383,24 @@ export const defaultColumns: ColumnDef<z.infer<typeof schema>>[] = [
                 if (
                   !(await confirmDuplicateAction({
                     itemName: row.original.header,
-                    entityLabel: "section",
+                    entityLabel: i18n.t("entity.section"),
                   }))
                 ) {
                   return
                 }
-                toast.message(`Duplicated ${row.original.header} (demo).`)
+                toast.message(i18n.t("toast.duplicatedNamed", { name: row.original.header }))
               })()
             }
           >
             <IconCopy />
-            Duplicate
+            {i18n.t("actions.duplicate")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     ),
   },
 ]
+}
 
 const FILTER_ANY = "__data_table_any__"
 
@@ -503,6 +543,7 @@ function DataTableFiltersPopover<TData>({
   onLayoutViewChange?: (view: "list" | "grid") => void
   tableOptionsExtra?: React.ReactNode
 }) {
+  const { t } = useTranslation()
   const columns = filterableLeafColumns(table)
   const hideableColumns = hideableLeafColumns(table)
   const filterCount = activeColumnFilterCount(table.getState().columnFilters)
@@ -532,7 +573,7 @@ function DataTableFiltersPopover<TData>({
               showLayoutToggle ? "rounded-l-full rounded-r-none" : "rounded-full",
               filterCount > 0 && "bg-primary/5 text-foreground"
             )}
-            aria-label="Open filters"
+            aria-label={t("table.openFilters")}
           >
             <IconAdjustmentsHorizontal className="size-4 opacity-90" />
             {filterCount > 0 ? (
@@ -550,7 +591,7 @@ function DataTableFiltersPopover<TData>({
               variant="ghost"
               size="icon"
             className="text-muted-foreground hover:bg-muted/50 hover:text-foreground size-9 rounded-r-full rounded-l-none border-0 shadow-none"
-              aria-label="Toggle layout"
+              aria-label={t("table.toggleLayout")}
               onClick={() =>
                 onLayoutViewChange(layoutView === "list" ? "grid" : "list")
               }
@@ -574,10 +615,10 @@ function DataTableFiltersPopover<TData>({
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 space-y-1">
               <h3 className="text-foreground text-sm font-semibold tracking-tight">
-                Table options
+                {t("table.tableOptions")}
               </h3>
               <p className="text-muted-foreground text-[11px] leading-relaxed">
-                Columns and column filters.
+                {t("table.tableOptionsHint")}
               </p>
             </div>
             <Button
@@ -588,7 +629,7 @@ function DataTableFiltersPopover<TData>({
               disabled={filterCount === 0}
               onClick={() => table.resetColumnFilters()}
             >
-              Reset filters
+              {t("table.resetFilters")}
             </Button>
           </div>
         </div>
@@ -600,7 +641,7 @@ function DataTableFiltersPopover<TData>({
             <div className="border-border/80 space-y-2 border-b py-3">
               <div className="flex items-center justify-between gap-2">
                 <Label className="text-muted-foreground block text-[11px] font-semibold tracking-wide uppercase">
-                  Show columns
+                  {t("table.showColumns")}
                 </Label>
                 <button
                   type="button"
@@ -612,7 +653,7 @@ function DataTableFiltersPopover<TData>({
                     }
                   }}
                 >
-                  Reset
+                  {t("actions.reset")}
                 </button>
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -625,7 +666,7 @@ function DataTableFiltersPopover<TData>({
                     for (const c of hideableColumns) c.toggleVisibility(true)
                   }}
                 >
-                  All
+                  {t("table.all")}
                 </Button>
                 {hideableColumns.map((column) => {
                   const title = getColumnTitle(column)
@@ -645,7 +686,10 @@ function DataTableFiltersPopover<TData>({
                 })}
               </div>
               <p className="text-muted-foreground text-[11px]">
-                Showing {visibleHideableCount} of {hideableColumns.length}
+                {t("table.showingOf", {
+                  visible: visibleHideableCount,
+                  total: hideableColumns.length,
+                })}
               </p>
             </div>
           ) : null}
@@ -683,7 +727,7 @@ function DataTableFiltersPopover<TData>({
                         <Input
                           type="number"
                           inputMode="decimal"
-                          placeholder="Min"
+                          placeholder={t("table.min")}
                           className="border-input/80 bg-background h-8 text-sm shadow-none"
                           value={minV}
                           onChange={(e) => {
@@ -695,12 +739,12 @@ function DataTableFiltersPopover<TData>({
                           }}
                         />
                         <span className="text-muted-foreground shrink-0 text-xs font-medium">
-                          to
+                          {t("table.to")}
                         </span>
                         <Input
                           type="number"
                           inputMode="decimal"
-                          placeholder="Max"
+                          placeholder={t("table.max")}
                           className="border-input/80 bg-background h-8 text-sm shadow-none"
                           value={maxV}
                           onChange={(e) => {
@@ -740,7 +784,7 @@ function DataTableFiltersPopover<TData>({
                           )
                         }}
                       >
-                        <option value={FILTER_ANY}>All</option>
+                        <option value={FILTER_ANY}>{t("table.all")}</option>
                         {opts.map((opt) => (
                           <option key={opt} value={opt}>
                             {selectLabels?.[opt] ?? opt}
@@ -758,7 +802,7 @@ function DataTableFiltersPopover<TData>({
                 <div key={column.id}>
                   {fieldBlock(
                     <Input
-                      placeholder="Contains text…"
+                      placeholder={t("table.containsText")}
                       className="border-input/80 bg-background h-8 text-sm shadow-none"
                       value={textVal}
                       onChange={(e) =>
@@ -792,12 +836,13 @@ function getColumnTitle<TData>(column: Column<TData, unknown>): string {
 }
 
 function DataTableGridView<TData>({ table }: { table: TanStackTable<TData> }) {
+  const { t } = useTranslation()
   const rows = table.getRowModel().rows
   if (rows.length === 0) {
     return (
       <div className="bg-muted/20 text-muted-foreground flex min-h-[14rem] flex-col items-center justify-center gap-2 rounded-xl border border-dashed px-6 text-center text-sm">
-        <span className="text-foreground/80 font-medium">No results</span>
-        <span className="text-xs">Try another filter or search term.</span>
+        <span className="text-foreground/80 font-medium">{t("empty.noResultsTitle")}</span>
+        <span className="text-xs">{t("empty.noResultsHint")}</span>
       </div>
     )
   }
@@ -826,7 +871,7 @@ function DataTableGridView<TData>({ table }: { table: TanStackTable<TData> }) {
                 <Checkbox
                   checked={row.getIsSelected()}
                   onCheckedChange={(v) => row.toggleSelected(!!v)}
-                  aria-label="Select row"
+                  aria-label={t("table.selectRow")}
                 />
               </div>
               <div className="min-w-0 flex-1 pr-1 [&_button]:h-auto [&_button]:min-h-0 [&_button]:py-0 [&_button]:leading-snug">
@@ -895,8 +940,8 @@ export type DataTableTab = { value: string; label: string }
 export function DataTable<TData>({
   data: initialData,
   columns: columnsProp,
-  addButtonLabel = "Add",
-  searchPlaceholder = "Search...",
+  addButtonLabel,
+  searchPlaceholder,
   importRowMapper,
   importSampleFilename = "sample.csv",
   exportFilename = "export.csv",
@@ -958,6 +1003,9 @@ export function DataTable<TData>({
   /** Override import sample CSV content (e.g. when table rows differ from import shape). */
   importSampleCsvContent?: string
 }) {
+  const { t } = useTranslation()
+  const resolvedAddLabel = addButtonLabel ?? t("table.add")
+  const resolvedSearchPlaceholder = searchPlaceholder ?? t("search.placeholder")
   const [data, setData] = React.useState(() => initialData)
 
   React.useEffect(() => {
@@ -1071,17 +1119,17 @@ export function DataTable<TData>({
   const handleImportComplete = React.useCallback(
     (rows: Record<string, string>[]) => {
       if (rows.length === 0) {
-        toast.error("No rows to import.")
+        toast.error(t("toast.noRowsToImport"))
         return
       }
       if (onImportRows) {
         const added = onImportRows(rows)
         queueMicrotask(() => {
           if (added > 0) {
-            toast.success(`Imported ${added} row(s).`)
+            toast.success(t("toast.importedRows", { count: added }))
           } else {
             toast.message(
-              "No rows were added. Check that CSV headers match the sample file."
+              t("toast.noRowsAdded")
             )
           }
         })
@@ -1098,10 +1146,10 @@ export function DataTable<TData>({
         const added = acc.length - prev.length
         queueMicrotask(() => {
           if (added > 0) {
-            toast.success(`Imported ${added} row(s).`)
+            toast.success(t("toast.importedRows", { count: added }))
           } else {
             toast.message(
-              "No rows were added. Check that CSV headers match the sample file."
+              t("toast.noRowsAdded")
             )
           }
         })
@@ -1198,7 +1246,7 @@ export function DataTable<TData>({
                       colSpan={columnsProp.length}
                       className="h-24 text-center"
                     >
-                      No results.
+                      {t("empty.noResults")}
                     </TableCell>
                   </TableRow>
                 )}
@@ -1210,16 +1258,18 @@ export function DataTable<TData>({
         )}
         <div className="flex items-center justify-between">
           <div className="text-muted-foreground flex min-w-0 flex-1 text-sm">
-            Showing records {rangeFrom} to {rangeTo} of {filteredTotal}
+            {t("table.showingRecords", { from: rangeFrom, to: rangeTo, total: filteredTotal })}
           </div>
           <div className="flex w-full items-center gap-4 lg:w-fit lg:gap-8">
             <div className="flex w-fit items-center justify-center text-sm font-medium">
-              Page {table.getState().pagination.pageIndex + 1} of{" "}
-              {table.getPageCount()}
+              {t("table.pageOf", {
+                page: table.getState().pagination.pageIndex + 1,
+                pageCount: table.getPageCount(),
+              })}
             </div>
             <div className="hidden md:block">
               <select
-                aria-label="Rows per page"
+                aria-label={t("table.rowsPerPage")}
                 value={table.getState().pagination.pageSize}
                 onChange={(e) => table.setPageSize(Number(e.target.value))}
                 className="border-input/80 bg-background h-8 w-[4.25rem] rounded-md border px-2 text-sm shadow-none outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px]"
@@ -1231,14 +1281,14 @@ export function DataTable<TData>({
                 ))}
               </select>
             </div>
-            <div className="ml-auto flex items-center gap-2 lg:ml-0">
+            <div className="ms-auto flex items-center gap-2 lg:ms-0">
               <Button
                 variant="outline"
                 className="hidden h-8 w-8 p-0 lg:flex"
                 onClick={() => table.setPageIndex(0)}
                 disabled={!table.getCanPreviousPage()}
               >
-                <span className="sr-only">Go to first page</span>
+                <span className="sr-only">{t("table.goToFirstPage")}</span>
                 <IconChevronsLeft />
               </Button>
               <Button
@@ -1248,7 +1298,7 @@ export function DataTable<TData>({
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
               >
-                <span className="sr-only">Go to previous page</span>
+                <span className="sr-only">{t("table.goToPreviousPage")}</span>
                 <IconChevronLeft />
               </Button>
               <Button
@@ -1258,7 +1308,7 @@ export function DataTable<TData>({
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
               >
-                <span className="sr-only">Go to next page</span>
+                <span className="sr-only">{t("table.goToNextPage")}</span>
                 <IconChevronRight />
               </Button>
               <Button
@@ -1268,7 +1318,7 @@ export function DataTable<TData>({
                 onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                 disabled={!table.getCanNextPage()}
               >
-                <span className="sr-only">Go to last page</span>
+                <span className="sr-only">{t("table.goToLastPage")}</span>
                 <IconChevronsRight />
               </Button>
             </div>
@@ -1304,7 +1354,7 @@ export function DataTable<TData>({
             <div className="flex min-w-0 flex-1 items-center gap-2 sm:max-w-md">
               {showSearch ? (
                 <SearchInput
-                  placeholder={searchPlaceholder}
+                  placeholder={resolvedSearchPlaceholder}
                   value={globalFilter}
                   onChange={(e) => setGlobalFilter(e.target.value)}
                   icon={<IconSearch className="size-4" />}
@@ -1336,7 +1386,7 @@ export function DataTable<TData>({
               onClick={() => setImportOpen(true)}
             >
               <IconCloudUpload />
-              <span className="hidden sm:inline">Import</span>
+              <span className="hidden sm:inline">{t("table.import")}</span>
             </Button>
           ) : null}
           {showExportButton ? (
@@ -1347,7 +1397,7 @@ export function DataTable<TData>({
               onClick={() => setExportOpen(true)}
             >
               <IconCloudDownload />
-              <span className="hidden sm:inline">Export</span>
+              <span className="hidden sm:inline">{t("table.export")}</span>
             </Button>
           ) : null}
           {toolbarActions}
@@ -1359,7 +1409,7 @@ export function DataTable<TData>({
               onClick={() => onAddClick?.()}
             >
               <IconPlus className="size-4 shrink-0" />
-              <span className="leading-none">{addButtonLabel}</span>
+              <span className="leading-none">{resolvedAddLabel}</span>
             </Button>
           ) : null}
         </div>
@@ -1370,7 +1420,7 @@ export function DataTable<TData>({
         <div
           className="border-border mb-4 flex w-full min-w-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b px-3 sm:px-4"
           role={selectedRowCount > 0 ? "region" : undefined}
-          aria-label={selectedRowCount > 0 ? "Bulk selection" : undefined}
+          aria-label={selectedRowCount > 0 ? t("table.bulkSelection") : undefined}
         >
           {tabs && tabs.length > 0 ? (
             <div className="min-w-0 flex-1">
@@ -1416,12 +1466,12 @@ export function DataTable<TData>({
                     }}
                     aria-label={
                       allFilteredSelected
-                        ? "Deselect all filtered rows"
-                        : "Select all filtered rows"
+                        ? t("table.deselectAllFiltered")
+                        : t("table.selectAllFiltered")
                     }
                   />
                   <span className="text-sm font-semibold tracking-tight">
-                    {selectedRowCount} Selected
+                    {t("table.selectedCount", { count: selectedRowCount })}
                   </span>
                 </div>
                 <button
@@ -1433,7 +1483,7 @@ export function DataTable<TData>({
                       : selectAllFiltered()
                   }
                 >
-                  {allFilteredSelected ? "Deselect all" : "Select All"}
+                  {allFilteredSelected ? t("actions.deselectAll") : t("actions.selectAll")}
                 </button>
               </div>
               {bulkActions && bulkActions.length > 0 ? (
@@ -1507,11 +1557,16 @@ const chartConfig = {
 
 function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
   const isMobile = useIsMobile()
+  const { t } = useTranslation("common")
+  const localizedChartConfig = {
+    desktop: { ...chartConfig.desktop, label: t("dashboard.desktop") },
+    mobile: { ...chartConfig.mobile, label: t("dashboard.mobile") },
+  }
 
   return (
     <Drawer direction={isMobile ? "bottom" : "right"}>
       <DrawerTrigger asChild>
-        <Button variant="link" className="text-foreground w-fit px-0 text-left">
+        <Button variant="link" className="text-foreground w-fit px-0 text-start">
           {item.header}
         </Button>
       </DrawerTrigger>
@@ -1519,13 +1574,13 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
         <DrawerHeader className="gap-1">
           <DrawerTitle>{item.header}</DrawerTitle>
           <DrawerDescription>
-            Showing total visitors for the last 6 months
+            {t("dashboard.visitorsChartHint")}
           </DrawerDescription>
         </DrawerHeader>
         <div className="flex flex-col gap-4 overflow-y-auto px-4 text-sm">
           {!isMobile && (
             <>
-              <ChartContainer config={chartConfig}>
+              <ChartContainer config={localizedChartConfig}>
                 <AreaChart
                   accessibilityLayer
                   data={chartData}
@@ -1568,13 +1623,11 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
               <Separator />
               <div className="grid gap-2">
                 <div className="flex gap-2 leading-none font-medium">
-                  Trending up by 5.2% this month{" "}
+                  {t("dashboard.trendingUpBy")}{" "}
                   <IconTrendingUp className="size-4" />
                 </div>
                 <div className="text-muted-foreground">
-                  Showing total visitors for the last 6 months. This is just
-                  some random text to test the layout. It spans multiple lines
-                  and should wrap around.
+                  {t("dashboard.visitorsLayoutHint")}
                 </div>
               </div>
               <Separator />
@@ -1582,65 +1635,75 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
           )}
           <form className="flex flex-col gap-4">
             <div className="flex flex-col gap-3">
-              <Label htmlFor="header">Header</Label>
+              <Label htmlFor="header">{t("dashboard.header")}</Label>
               <Input id="header" defaultValue={item.header} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-3">
-                <Label htmlFor="type">Type</Label>
+                <Label htmlFor="type">{t("dashboard.type")}</Label>
                 <Select defaultValue={item.type}>
                   <SelectTrigger id="type" className="w-full">
-                    <SelectValue placeholder="Select a type" />
+                    <SelectValue placeholder={t("dashboard.selectType")} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Table of Contents">
-                      Table of Contents
+                      {t("dashboard.types.tableOfContents")}
                     </SelectItem>
                     <SelectItem value="Executive Summary">
-                      Executive Summary
+                      {t("dashboard.types.executiveSummary")}
                     </SelectItem>
                     <SelectItem value="Technical Approach">
-                      Technical Approach
+                      {t("dashboard.types.technicalApproach")}
                     </SelectItem>
-                    <SelectItem value="Design">Design</SelectItem>
-                    <SelectItem value="Capabilities">Capabilities</SelectItem>
+                    <SelectItem value="Design">{t("dashboard.types.design")}</SelectItem>
+                    <SelectItem value="Capabilities">
+                      {t("dashboard.types.capabilities")}
+                    </SelectItem>
                     <SelectItem value="Focus Documents">
-                      Focus Documents
+                      {t("dashboard.types.focusDocuments")}
                     </SelectItem>
-                    <SelectItem value="Narrative">Narrative</SelectItem>
-                    <SelectItem value="Cover Page">Cover Page</SelectItem>
+                    <SelectItem value="Narrative">
+                      {t("dashboard.types.narrative")}
+                    </SelectItem>
+                    <SelectItem value="Cover Page">
+                      {t("dashboard.types.coverPage")}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="flex flex-col gap-3">
-                <Label htmlFor="status">Status</Label>
+                <Label htmlFor="status">{t("dashboard.status")}</Label>
                 <Select defaultValue={item.status}>
                   <SelectTrigger id="status" className="w-full">
-                    <SelectValue placeholder="Select a status" />
+                    <SelectValue placeholder={t("dashboard.selectStatus")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Done">Done</SelectItem>
-                    <SelectItem value="In Progress">In Progress</SelectItem>
-                    <SelectItem value="Not Started">Not Started</SelectItem>
+                    <SelectItem value="Done">{t("dashboard.statuses.done")}</SelectItem>
+                    <SelectItem value="In Progress">
+                      {t("dashboard.statuses.inProgress")}
+                    </SelectItem>
+                    <SelectItem value="Not Started">
+                      {t("dashboard.statuses.notStarted")}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-3">
-                <Label htmlFor="target">Target</Label>
+                <Label htmlFor="target">{t("dashboard.target")}</Label>
                 <Input id="target" defaultValue={item.target} />
               </div>
               <div className="flex flex-col gap-3">
-                <Label htmlFor="limit">Limit</Label>
+                <Label htmlFor="limit">{t("dashboard.limit")}</Label>
                 <Input id="limit" defaultValue={item.limit} />
               </div>
             </div>
             <div className="flex flex-col gap-3">
-              <Label htmlFor="reviewer">Reviewer</Label>
+              <Label htmlFor="reviewer">{t("dashboard.reviewer")}</Label>
               <Select defaultValue={item.reviewer}>
                 <SelectTrigger id="reviewer" className="w-full">
-                  <SelectValue placeholder="Select a reviewer" />
+                  <SelectValue placeholder={t("dashboard.selectReviewer")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Eddie Lake">Eddie Lake</SelectItem>
@@ -1654,9 +1717,9 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
           </form>
         </div>
         <DrawerFooter>
-          <Button>Submit</Button>
+          <Button>{t("actions.submit")}</Button>
           <DrawerClose asChild>
-            <Button variant="outline">Done</Button>
+            <Button variant="outline">{t("actions.done")}</Button>
           </DrawerClose>
         </DrawerFooter>
       </DrawerContent>

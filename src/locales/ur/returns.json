@@ -1,0 +1,101 @@
+{
+  "title": "واپسیاں",
+  "search": {
+    "bills": "واپسیاں تلاش کریں…",
+    "items": "واپس شدہ آئٹمز تلاش کریں…"
+  },
+  "viewMode": {
+    "aria": "واپسیوں کا نظارہ",
+    "billDescription": "واپسی وائز — ہر واپسی دستاویز کے لیے ایک قطار",
+    "itemDescription": "آئٹم وائز — ہر واپس شدہ لائن کے لیے ایک قطار"
+  },
+  "tabs": {
+    "all": "تمام",
+    "sales": "فروخت",
+    "purchase": "خریداری",
+    "pending": "زیر التوا",
+    "completed": "مکمل"
+  },
+  "type": {
+    "sales": "فروخت",
+    "purchase": "خریداری"
+  },
+  "columns": {
+    "srNo": "نمبر",
+    "returnNumber": "واپسی #",
+    "type": "قسم",
+    "reference": "حوالہ",
+    "party": "پارٹی",
+    "date": "تاریخ",
+    "returnAmt": "واپسی رقم",
+    "refundDue": "واجب الاسترداد",
+    "balanceDue": "واجب بیلنس",
+    "status": "حیثیت",
+    "item": "آئٹم",
+    "qty": "مقدار",
+    "lineTotal": "لائن کل"
+  },
+  "actions": {
+    "view": "دیکھیں",
+    "delete": "حذف کریں",
+    "deleteReturn": "واپسی حذف کریں",
+    "openMenu": "مینو کھولیں"
+  },
+  "toasts": {
+    "removedNamed": "{{name}} ہٹا دیا گیا (ڈیمو)۔",
+    "addItem": "واپسی کے لیے کم از کم ایک آئٹم شامل کریں۔",
+    "onlyCompleted": "صرف مکمل ادا شدہ آئٹمز واپس کیے جا سکتے ہیں۔ زیر التوا آئٹمز منسوخ کریں۔",
+    "recorded": "واپسی درج ہو گئی اور ماخذ اپ ڈیٹ ہو گیا (ڈیمو)۔",
+    "saved": "واپسی محفوظ ہو گئی (ڈیمو)۔"
+  },
+  "detail": {
+    "salesReturn": "فروخت کی واپسی",
+    "purchaseReturn": "خریداری کی واپسی",
+    "customer": "گاہک",
+    "vendor": "سپلائر",
+    "type": "قسم",
+    "reference": "حوالہ",
+    "returnDate": "واپسی کی تاریخ",
+    "status": "حیثیت",
+    "returnAmount": "واپسی رقم",
+    "paymentImpact": "ادائیگی کا اثر",
+    "originalTotal": "اصل کل",
+    "paid": "ادا شدہ",
+    "newTotal": "نیا کل",
+    "refundDue": "واجب الاسترداد",
+    "balanceDue": "واجب بیلنس",
+    "returnedItems": "واپس شدہ آئٹمز",
+    "qtyTimes": "مقدار {{qty}} × {{price}}",
+    "notes": "نوٹس",
+    "item": "آئٹم",
+    "returnNumber": "واپسی #",
+    "date": "تاریخ",
+    "quantity": "مقدار",
+    "lineTotal": "لائن کل",
+    "refundDueOnReturn": "واجب الاسترداد (واپسی پر)",
+    "balanceDueOnReturn": "واجب بیلنس (واپسی پر)"
+  },
+  "form": {
+    "sale": "فروخت",
+    "purchase": "خریداری",
+    "returnOf": "{{type}} واپسی",
+    "reasonPlaceholder": "واپسی کی وجہ…",
+    "returnNumber": "واپسی #",
+    "returnDate": "واپسی کی تاریخ",
+    "notes": "نوٹس",
+    "itemsToReturn": "واپسی کے آئٹمز",
+    "returnQty": "واپسی مقدار",
+    "maxQty": "زیادہ سے زیادہ {{count}}",
+    "unitPrice": "یونٹ قیمت",
+    "paidAmount": "ادا شدہ رقم",
+    "recordReturn": "واپسی درج کریں"
+  },
+  "create": {
+    "returnSale": "فروخت واپس کریں",
+    "returnPurchase": "خریداری واپس کریں",
+    "createReturn": "واپسی بنائیں"
+  },
+  "entity": {
+    "return": "واپسی"
+  }
+}

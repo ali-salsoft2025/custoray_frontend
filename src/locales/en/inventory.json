@@ -1,0 +1,162 @@
+{
+  "title": "Products",
+  "add": "Add product",
+  "addButton": "New Product",
+  "search": "Search products…",
+  "brands": "Brands",
+  "addBrand": "Add brand",
+  "categories": "Categories",
+  "addCategory": "Add category",
+  "variants": "Variants",
+  "addVariant": "Add variant",
+  "yearClosing": "Year closing",
+  "termDetails": "Term details",
+  "tabs": {
+    "all": "All",
+    "active": "Active",
+    "inactive": "Inactive",
+    "archived": "Archived"
+  },
+  "columns": {
+    "id": "ID",
+    "name": "Name",
+    "productName": "Product name",
+    "sku": "SKU",
+    "brand": "Brand",
+    "category": "Category",
+    "variant": "Variant",
+    "price": "Price",
+    "costPrice": "Cost Price",
+    "salePrice": "Sale Price",
+    "stock": "Stock",
+    "status": "Status",
+    "description": "Description",
+    "products": "Products"
+  },
+  "actions": {
+    "edit": "Edit",
+    "delete": "Delete",
+    "duplicate": "Duplicate",
+    "view": "View",
+    "openMenu": "Open menu",
+    "deleteSelected": "Delete selected",
+    "moveToArchive": "Move to archive",
+    "setActive": "Set active",
+    "setInactive": "Set inactive"
+  },
+  "empty": "No products found.",
+  "stockLevel": {
+    "inStock": "In Stock",
+    "lowStock": "Low Stock",
+    "outOfStock": "Out of Stock"
+  },
+  "listing": {
+    "active": "Active",
+    "none": "No status"
+  },
+  "fields": {
+    "images": "Images",
+    "sku": "SKU",
+    "name": "Name",
+    "brand": "Brand",
+    "category": "Category",
+    "variant": "Variant",
+    "lifecycle": "Lifecycle",
+    "stock": "Stock",
+    "listing": "Listing",
+    "qty": "Qty",
+    "orders": "Orders",
+    "ordersPeriod": "Orders (period)",
+    "costPrice": "Cost price",
+    "salePrice": "Sale price",
+    "status": "Status",
+    "id": "ID",
+    "description": "Description",
+    "products": "Products"
+  },
+  "form": {
+    "addNewBrand": "+ Add new brand",
+    "addNewCategory": "+ Add new category",
+    "addNewVariant": "+ Add new variant"
+  },
+  "productSheet": {
+    "add": "Add product",
+    "edit": "Edit product",
+    "addDescription": "Fill in details and images.",
+    "skuLabel": "SKU {{sku}}",
+    "create": "Create product",
+    "save": "Save product"
+  },
+  "brandPage": {
+    "addButton": "New Brand",
+    "search": "Search brands…"
+  },
+  "categoryPage": {
+    "addButton": "New Category",
+    "search": "Search categories…",
+    "add": "Add category",
+    "edit": "Edit category",
+    "details": "Category details",
+    "addDescription": "Create a new category. Product count is set automatically from inventory.",
+    "create": "Create category",
+    "save": "Save category",
+    "namePlaceholder": "Category name",
+    "descriptionPlaceholder": "Short description",
+    "productCountHint": "Product count ({{count}}) updates automatically from inventory.",
+    "idLine": "ID {{id}}"
+  },
+  "variantPage": {
+    "addButton": "New Variant",
+    "search": "Search variants…",
+    "edit": "Edit variant",
+    "details": "Variant details",
+    "productsCount": "{{name}} · {{count}} products",
+    "save": "Save variant"
+  },
+  "toasts": {
+    "nameRequired": "Product name is required.",
+    "categoryNameRequired": "Name is required.",
+    "created": "Product created.",
+    "saved": "Product saved.",
+    "categoryCreated": "Category created (demo).",
+    "categorySaved": "Category saved (demo).",
+    "variantSaved": "Saved {{name}} (demo).",
+    "deletedNamed": "Deleted {{name}} (demo).",
+    "duplicatedNamed": "Duplicated {{name}} (demo).",
+    "archivedCount": "Moved {{count}} product(s) to archive (demo).",
+    "wouldDeleteProducts": "Would delete {{count}} product(s).",
+    "archivedBrands": "Moved {{count}} brand(s) to archive (demo).",
+    "wouldDeleteBrands": "Would delete {{count}} brand(s).",
+    "setActiveCount": "Set {{count}} categories to active (demo).",
+    "setInactiveCount": "Set {{count}} categories to inactive (demo).",
+    "deletedCategories": "Deleted {{count}} categories (demo).",
+    "maxImages": "You can upload up to {{count}} images.",
+    "onlyImagesAllowed": "Only {{count}} images are allowed."
+  },
+  "noDescription": "No description",
+  "images": {
+    "remove": "Remove image",
+    "upload": "Upload",
+    "maxReached": "Max reached",
+    "uploadImages": "Upload images",
+    "clickToAdd": "Click to add one or multiple product images",
+    "hint": "PNG, JPG, WebP — up to {{count}} images. Click the X on any thumbnail to remove it."
+  },
+  "lookup": {
+    "add": "Add {{label}}",
+    "addDescription": "Create a new {{label}} and use it immediately.",
+    "nameRequired": "{{label}} name is required.",
+    "alreadyExists": "{{label}} already exists.",
+    "added": "{{label}} added",
+    "nameLabel": "{{label}} name",
+    "namePlaceholder": "Enter {{label}} name",
+    "descriptionPlaceholder": "Short description for {{label}}",
+    "save": "Save {{label}}"
+  },
+  "entity": {
+    "product": "product",
+    "brand": "brand",
+    "category": "category",
+    "variant": "variant"
+  }
+}

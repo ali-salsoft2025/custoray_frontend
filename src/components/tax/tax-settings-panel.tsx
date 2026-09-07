@@ -6,6 +6,7 @@ import {
   IconReceipt,
 } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 import { SettingsSection } from "@/components/settings/settings-section"
 import { TaxDisclaimer } from "@/components/tax/tax-disclaimer"
@@ -34,20 +35,24 @@ const selectTriggerClass = "h-9 w-full text-sm"
 const hintClass = "text-muted-foreground text-[11px] leading-snug"
 
 export function TaxSettingsPanel() {
+  const { t } = useTranslation("tax")
   const { settings, updateSettings, resetSettings } = useTaxSettings()
 
   const handleReset = () => {
     resetSettings()
-    toast.success("Settings reset.")
+    toast.success(t("settingsPage.reset"))
   }
+
+  const categoryList = TAX_MANUAL_ENTRY_CATEGORIES.map((c) =>
+    t(`categories.${c.value}`)
+  ).join(", ")
 
   return (
     <div className="flex flex-col gap-5">
       <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent px-5 py-5 ring-1 ring-primary/15">
-        <h2 className="text-xl font-semibold tracking-tight">Tax settings</h2>
+        <h2 className="text-xl font-semibold tracking-tight">{t("settings")}</h2>
         <p className="text-muted-foreground mt-1 max-w-2xl text-sm leading-relaxed">
-          Optional details for your export file — currency, tax ID, and notes for your
-          accountant. Everything here is optional.
+          {t("settingsPage.intro")}
         </p>
       </div>
 
@@ -55,14 +60,14 @@ export function TaxSettingsPanel() {
 
       <SettingsSection
         compact
-        title="Display currency"
-        description="How amounts appear on your tax reports."
+        title={t("settingsPage.displayCurrency")}
+        description={t("settingsPage.displayCurrencyHint")}
         icon={<IconCoin stroke={1.75} />}
         iconClassName="bg-sky-500/10 text-sky-600 dark:text-sky-400"
       >
         <div className={fieldClass}>
           <Label htmlFor="tax-currency" className={labelClass}>
-            Currency
+            {t("settingsPage.currency")}
           </Label>
           <Select
             value={settings.displayCurrency}
@@ -83,26 +88,26 @@ export function TaxSettingsPanel() {
               ))}
             </SelectContent>
           </Select>
-          <p className={hintClass}>Pick the currency you use for bookkeeping.</p>
+          <p className={hintClass}>{t("settingsPage.currencyHint")}</p>
         </div>
       </SettingsSection>
 
       <SettingsSection
         compact
-        title="Business details (optional)"
-        description="Printed on your Excel export for your accountant."
+        title={t("settingsPage.businessDetails")}
+        description={t("settingsPage.businessDetailsHint")}
         icon={<IconReceipt stroke={1.75} />}
         iconClassName="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
       >
         <div className={fieldClass}>
           <Label htmlFor="tax-business-id" className={labelClass}>
-            Tax ID / registration number
+            {t("settingsPage.taxId")}
           </Label>
           <Input
             id="tax-business-id"
             className={inputClass}
             value={settings.businessTaxId}
-            placeholder="e.g. EIN, NTN, VAT number — whatever applies to you"
+            placeholder={t("settingsPage.taxIdPlaceholder")}
             onChange={(event) =>
               updateSettings({ businessTaxId: event.target.value.slice(0, 40) })
             }
@@ -110,7 +115,7 @@ export function TaxSettingsPanel() {
         </div>
         <div className={fieldClass}>
           <Label htmlFor="tax-rate" className={labelClass}>
-            Rough tax rate on sales (%) — optional
+            {t("settingsPage.taxRate")}
           </Label>
           <Input
             id="tax-rate"
@@ -128,14 +133,11 @@ export function TaxSettingsPanel() {
               }
             }}
           />
-          <p className={hintClass}>
-            Leave at 0 to hide the estimate. This is only a rough helper, not a filing
-            calculation.
-          </p>
+          <p className={hintClass}>{t("settingsPage.taxRateHint")}</p>
         </div>
         <div className={fieldClass}>
           <Label htmlFor="tax-notes" className={labelClass}>
-            Notes for your accountant
+            {t("settingsPage.notes")}
           </Label>
           <textarea
             id="tax-notes"
@@ -144,7 +146,7 @@ export function TaxSettingsPanel() {
               updateSettings({ accountantNotes: event.target.value.slice(0, 500) })
             }
             rows={3}
-            placeholder="Anything they should know — home office, large purchases, etc."
+            placeholder={t("settingsPage.notesPlaceholder")}
             className={cn(
               "border-input bg-background placeholder:text-muted-foreground flex min-h-[80px] w-full rounded-md border px-3 py-2 text-sm shadow-xs outline-none",
               "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
@@ -154,31 +156,27 @@ export function TaxSettingsPanel() {
       </SettingsSection>
 
       <div className="space-y-2">
-        <p className="text-sm font-semibold">Manual entries</p>
+        <p className="text-sm font-semibold">{t("settingsPage.manualEntries")}</p>
         <p className="text-muted-foreground text-xs">
-          Same as step 2 on the Tax Helper home —{" "}
-          {TAX_MANUAL_ENTRY_CATEGORIES.map((c) => c.label.toLowerCase()).join(", ")}.
+          {t("settingsPage.manualEntriesHint", { categories: categoryList })}
         </p>
         <TaxManualEntries />
       </div>
 
       <SettingsSection
         compact
-        title="Reset"
-        description="Clear optional settings and manual entries."
+        title={t("settingsPage.resetTitle")}
+        description={t("settingsPage.clearHint")}
         icon={<IconNotes stroke={1.75} />}
         iconClassName="bg-muted text-muted-foreground"
         contentClassName="space-y-0"
         footer={
           <Button type="button" variant="outline" size="sm" onClick={handleReset}>
-            Reset settings
+            {t("settingsPage.resetSettings")}
           </Button>
         }
       >
-        <p className={hintClass}>
-          Your sales and purchase data in Custoray is not affected — only tax helper
-          preferences and manual entries are cleared.
-        </p>
+        <p className={hintClass}>{t("settingsPage.resetBody")}</p>
       </SettingsSection>
     </div>
   )

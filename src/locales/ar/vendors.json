@@ -1,0 +1,50 @@
+{
+  "title": "المورّدون",
+  "add": "إضافة مورّد",
+  "addButton": "مورّد جديد",
+  "search": "البحث في المورّدين…",
+  "empty": "لم يُعثر على مورّدين.",
+  "tabs": {
+    "all": "الكل",
+    "active": "نشط",
+    "inactive": "غير نشط"
+  },
+  "columns": {
+    "id": "المعرّف",
+    "name": "الاسم",
+    "description": "الوصف",
+    "openingBalance": "الرصيد الافتتاحي",
+    "totalPurchases": "إجمالي المشتريات",
+    "totalPayments": "إجمالي المدفوعات",
+    "balance": "الرصيد",
+    "phone": "رقم الهاتف",
+    "email": "البريد الإلكتروني",
+    "status": "الحالة"
+  },
+  "actions": {
+    "view": "عرض",
+    "edit": "تعديل",
+    "duplicate": "تكرار",
+    "delete": "حذف",
+    "openMenu": "فتح القائمة",
+    "deleteSelected": "حذف المحدد"
+  },
+  "sheet": {
+    "add": "إضافة مورّد",
+    "edit": "تعديل المورّد",
+    "addDescription": "أدخل بيانات المورّد والصورة. الحفظ للتجربة فقط.",
+    "create": "إنشاء مورّد",
+    "save": "حفظ المورّد"
+  },
+  "toasts": {
+    "removedNamed": "تم حذف {{name}} (تجريبي).",
+    "duplicatedNamed": "تم تكرار {{name}} (تجريبي).",
+    "nameRequired": "اسم المورّد مطلوب.",
+    "created": "تم إنشاء المورّد (تجريبي).",
+    "saved": "تم حفظ المورّد (تجريبي).",
+    "removedCount": "تم حذف {{count}} مورّد (تجريبي)."
+  },
+  "entity": {
+    "vendor": "مورّد"
+  }
+}

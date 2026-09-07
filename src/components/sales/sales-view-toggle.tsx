@@ -1,5 +1,7 @@
 "use client"
 
+import { useTranslation } from "react-i18next"
+
 import { BillItemViewTableOption } from "@/components/shared/bill-item-view-toggle"
 import type { BillItemViewMode } from "@/lib/app-preferences"
 
@@ -10,13 +12,14 @@ export function SalesViewTableOption({
   value: BillItemViewMode
   onValueChange: (value: BillItemViewMode) => void
 }) {
+  const { t } = useTranslation("sales")
   return (
     <BillItemViewTableOption
       value={value}
       onValueChange={onValueChange}
-      ariaLabel="Sales view mode"
-      billDescription="Bill wise — one row per invoice"
-      itemDescription="Item wise — one row per sold line item"
+      ariaLabel={t("viewMode.aria")}
+      billDescription={t("viewMode.billDescription")}
+      itemDescription={t("viewMode.itemDescription")}
     />
   )
 }

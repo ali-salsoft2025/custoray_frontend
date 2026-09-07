@@ -1,5 +1,7 @@
 "use client"
 
+import { useTranslation } from "react-i18next"
+
 import { InvoicePdfButton } from "@/components/invoices/invoice-pdf-button"
 import { formatDate, type OrderRow } from "@/lib/orders"
 import { cn } from "@/lib/utils"
@@ -21,15 +23,16 @@ export function PosInvoicePanel({
   onDismissJustCreated,
   className,
 }: PosInvoicePanelProps) {
+  const { t } = useTranslation("pos")
   return (
     <div
       className={cn(
-        "rounded-xl bg-card px-3 py-2 text-xs shadow-sm shadow-black/[0.04] ring-1 ring-border/40",
+        "rounded-xl bg-card px-4 py-2.5 text-xs shadow-sm shadow-black/[0.04] ring-1 ring-border/40",
         className
       )}
     >
       <div className="flex items-baseline justify-between gap-2">
-        <span className="text-muted-foreground">Next invoice</span>
+        <span className="text-muted-foreground">{t("nextInvoice")}</span>
         <span className="font-semibold tabular-nums">{nextInvoiceNumber}</span>
       </div>
 
@@ -42,7 +45,7 @@ export function PosInvoicePanel({
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-1">
-            <InvoicePdfButton order={justCreated} size="sm" variant="outline" label="PDF" />
+            <InvoicePdfButton order={justCreated} size="sm" variant="outline" label={t("pdf")} />
             {onDismissJustCreated ? (
               <button
                 type="button"
@@ -56,8 +59,11 @@ export function PosInvoicePanel({
         </div>
       ) : lastCreated ? (
         <p className="text-muted-foreground mt-1 truncate text-[10px]">
-          Last {lastCreated.invoiceNumber} · {formatDate(lastCreated.orderDate)} ·{" "}
-          {formatMoney(lastCreated.totalAmount)}
+          {t("lastReceipt", {
+            number: lastCreated.invoiceNumber,
+            date: formatDate(lastCreated.orderDate),
+            amount: formatMoney(lastCreated.totalAmount),
+          })}
         </p>
       ) : null}
     </div>

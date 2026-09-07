@@ -1,0 +1,78 @@
+{
+  "title": "خریداریاں",
+  "add": "نئی خریداری",
+  "addButton": "نئی خریداری",
+  "search": {
+    "bills": "انوائس، سپلائر سے خریداری تلاش کریں…",
+    "items": "آئٹم، سپلائر، انوائس سے خریداری تلاش کریں…"
+  },
+  "tabs": {
+    "all": "تمام",
+    "pending": "زیر التوا",
+    "completed": "مکمل",
+    "cancelled": "منسوخ"
+  },
+  "status": {
+    "pending": "زیر التوا",
+    "completed": "مکمل",
+    "cancelled": "منسوخ"
+  },
+  "viewMode": {
+    "aria": "خریداری کا نظارہ",
+    "billDescription": "بل وائز — ہر انوائس کے لیے ایک قطار",
+    "itemDescription": "آئٹم وائز — ہر خریدی گئی لائن آئٹم کے لیے ایک قطار"
+  },
+  "columns": {
+    "srNo": "نمبر",
+    "invoiceNumber": "انوائس #",
+    "poNumber": "PO #",
+    "vendor": "سپلائر",
+    "date": "تاریخ",
+    "totalAmount": "کل رقم",
+    "paidAmount": "ادا شدہ رقم",
+    "balance": "بیلنس",
+    "status": "حیثیت",
+    "item": "آئٹم",
+    "qty": "مقدار",
+    "unitPrice": "یونٹ قیمت",
+    "lineTotal": "لائن کل",
+    "items": "آئٹمز"
+  },
+  "actions": {
+    "view": "دیکھیں",
+    "edit": "ترمیم",
+    "duplicate": "نقل بنائیں",
+    "return": "واپس کریں",
+    "cancel": "منسوخ کریں",
+    "delete": "حذف کریں",
+    "openMenu": "مینو کھولیں",
+    "deleteSelected": "منتخب حذف کریں",
+    "openPurchase": "خریداری کھولیں"
+  },
+  "sheet": {
+    "create": "خریداری آرڈر بنائیں",
+    "edit": "خریداری آرڈر میں ترمیم",
+    "addDescription": "خریداری کا ہیڈر اور لائن آئٹمز شامل کریں۔ محفوظ کرنا صرف ڈیمو ہے۔",
+    "createButton": "خریداری بنائیں",
+    "saveButton": "خریداری محفوظ کریں"
+  },
+  "toasts": {
+    "removedNamed": "{{name}} ہٹا دیا گیا (ڈیمو)۔",
+    "duplicatedNamed": "{{name}} کی نقل بن گئی (ڈیمو)۔",
+    "removedLines": "{{count}} لائن آئٹم(ز) ہٹا دی گئیں (ڈیمو)۔",
+    "removedPurchases": "{{count}} خریداری آرڈر ہٹا دیے گئے (ڈیمو)۔",
+    "onlyCompletedPaid": "صرف مکمل ادا شدہ خریداری واپس کی جا سکتی ہے۔",
+    "sourceNotFound": "ماخذ خریداری نہیں ملی۔",
+    "cancelled": "{{name}} منسوخ ہو گیا۔",
+    "onlyPendingUnpaid": "صرف زیر التوا غیر ادا شدہ خریداری منسوخ کی جا سکتی ہے۔",
+    "vendorRequired": "سپلائر کا نام درکار ہے۔",
+    "lineRequired": "کم از کم ایک لائن آئٹم مصنوعات کے نام کے ساتھ شامل کریں۔",
+    "created": "خریداری آرڈر بن گیا (ڈیمو)۔",
+    "saved": "خریداری آرڈر محفوظ ہو گیا (ڈیمو)۔"
+  },
+  "entity": {
+    "purchase": "خریداری",
+    "purchaseOrder": "خریداری آرڈر",
+    "purchaseLineItem": "خریداری لائن آئٹم"
+  }
+}

@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useTranslation } from "react-i18next"
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
@@ -24,6 +25,7 @@ export function PosCatalogTabs({
   brands,
   className,
 }: PosCatalogTabsProps) {
+  const { t } = useTranslation("common")
   const scrollRef = React.useRef<HTMLDivElement>(null)
 
   React.useEffect(() => {
@@ -55,7 +57,7 @@ export function PosCatalogTabs({
           <TabsList className={tabListClass}>
             {brands.map((item) => (
               <TabsTrigger key={item} value={item} className={tabTriggerClass}>
-                {item === "all" ? "All" : item}
+                {item === "all" ? t("tabs.all") : item}
               </TabsTrigger>
             ))}
           </TabsList>

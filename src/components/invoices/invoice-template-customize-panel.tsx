@@ -3,6 +3,7 @@
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
+import { useTranslation } from "react-i18next"
 import {
   DEFAULT_INVOICE_TEMPLATE_COPY,
   getDefaultColorsForTemplate,
@@ -29,26 +30,27 @@ export function InvoiceTemplateCustomizePanel({
   onColorsChange,
   onResetColors,
 }: InvoiceTemplateCustomizePanelProps) {
+  const { t } = useTranslation("documents")
   return (
     <div
       className="rounded-lg border p-4"
       style={{ backgroundColor: "#fafafa", borderColor: "#e5e7eb" }}
     >
       <p className="mb-1 text-sm font-semibold" style={{ color: "#111827" }}>
-        Invoice text & colors
+        {t("customizePanel.title")}
       </p>
       <p className="mb-4 text-xs" style={{ color: "#6b7280" }}>
-        PDF invoice styling only — does not follow app theme colors.
+        {t("customizePanel.hint")}
       </p>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div className="flex flex-col gap-3">
           <p className="text-xs font-medium uppercase tracking-wide" style={{ color: "#374151" }}>
-            Labels & messages
+            {t("customizePanel.labelsMessages")}
           </p>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor={`copy-title-${templateId}`} className="text-xs" style={{ color: "#374151" }}>
-              Document title
+              {t("builder.labelFields.documentTitle")}
             </Label>
             <Input
               id={`copy-title-${templateId}`}
@@ -59,7 +61,7 @@ export function InvoiceTemplateCustomizePanel({
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor={`copy-bill-${templateId}`} className="text-xs" style={{ color: "#374151" }}>
-              Bill-to label
+              {t("builder.labelFields.billToLabel")}
             </Label>
             <Input
               id={`copy-bill-${templateId}`}
@@ -70,7 +72,7 @@ export function InvoiceTemplateCustomizePanel({
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor={`copy-thanks-${templateId}`} className="text-xs" style={{ color: "#374151" }}>
-              Thank-you message
+              {t("builder.labelFields.thankYouMessage")}
             </Label>
             <Input
               id={`copy-thanks-${templateId}`}
@@ -81,7 +83,7 @@ export function InvoiceTemplateCustomizePanel({
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor={`copy-footer-${templateId}`} className="text-xs" style={{ color: "#374151" }}>
-              Footer note
+              {t("builder.labelFields.footerNote")}
             </Label>
             <Input
               id={`copy-footer-${templateId}`}
@@ -97,22 +99,23 @@ export function InvoiceTemplateCustomizePanel({
             className="w-fit bg-white"
             onClick={() => onCopyChange(DEFAULT_INVOICE_TEMPLATE_COPY)}
           >
-            Reset text to defaults
+            {t("customizePanel.resetText")}
           </Button>
         </div>
 
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between gap-2">
             <p className="text-xs font-medium uppercase tracking-wide" style={{ color: "#374151" }}>
-              Template colors
+              {t("builder.templateColors")}
             </p>
             <Button type="button" variant="outline" size="sm" className="bg-white" onClick={onResetColors}>
-              Reset colors
+              {t("builder.resetColors")}
             </Button>
           </div>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {INVOICE_COLOR_FIELDS.map(({ key, label }) => {
+            {INVOICE_COLOR_FIELDS.map(({ key }) => {
               const value = colors[key] ?? getDefaultColorsForTemplate(templateId)[key] ?? "#000000"
+              const colorLabel = t(`colors.${key}`)
               return (
                 <div
                   key={key}
@@ -124,11 +127,11 @@ export function InvoiceTemplateCustomizePanel({
                     value={value}
                     onChange={(e) => onColorsChange({ ...colors, [key]: e.target.value })}
                     className="size-8 shrink-0 cursor-pointer rounded border-0 bg-transparent p-0"
-                    aria-label={label}
+                    aria-label={colorLabel}
                   />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[11px] font-medium" style={{ color: "#111827" }}>
-                      {label}
+                      {colorLabel}
                     </p>
                     <p className="font-mono text-[10px] uppercase" style={{ color: "#6b7280" }}>
                       {value}

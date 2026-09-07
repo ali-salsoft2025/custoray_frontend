@@ -11,6 +11,8 @@ import {
 } from "@tabler/icons-react"
 import { z } from "zod"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
+import type { TFunction } from "i18next"
 
 import { DataTableColumnHeader } from "@/components/data-table-column-header"
 import { DataTable } from "@/components/data-table"
@@ -53,6 +55,7 @@ const variantData: VariantRow[] = [
 ]
 
 function getVariantColumns(
+  t: TFunction<"inventory">,
   openVariantSidebar: (row: VariantRow, mode: "view" | "edit") => void,
   onDelete: (row: VariantRow) => void
 ): ColumnDef<VariantRow>[] {
@@ -67,7 +70,7 @@ function getVariantColumns(
             (table.getIsSomePageRowsSelected() && "indeterminate")
           }
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
+          aria-label={t("table.selectAll", { ns: "common" })}
         />
       </div>
     ),
@@ -76,7 +79,7 @@ function getVariantColumns(
         <Checkbox
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
+          aria-label={t("table.selectRow", { ns: "common" })}
         />
       </div>
     ),
@@ -85,7 +88,9 @@ function getVariantColumns(
   },
   {
     accessorKey: "id",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="ID" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title={t("columns.id")} />
+    ),
     cell: ({ row }) => (
       <span className="text-left tabular-nums">{row.original.id}</span>
     ),
@@ -93,7 +98,7 @@ function getVariantColumns(
   {
     accessorKey: "name",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Variant" />
+      <DataTableColumnHeader column={column} title={t("columns.variant")} />
     ),
     cell: ({ row }) => (
       <span className="text-foreground font-medium">{row.original.name}</span>
@@ -102,7 +107,7 @@ function getVariantColumns(
   {
     accessorKey: "description",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Description" />
+      <DataTableColumnHeader column={column} title={t("columns.description")} />
     ),
     cell: ({ row }) => (
       <span className="text-muted-foreground truncate">{row.original.description}</span>
@@ -112,7 +117,7 @@ function getVariantColumns(
   {
     accessorKey: "products",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Products" />
+      <DataTableColumnHeader column={column} title={t("columns.products")} />
     ),
     cell: ({ row }) => (
       <span className="text-foreground tabular-nums">{row.original.products}</span>
@@ -130,23 +135,25 @@ function getVariantColumns(
             size="icon"
           >
             <IconDotsVertical />
-            <span className="sr-only">Open menu</span>
+            <span className="sr-only">{t("actions.openMenu")}</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-40">
           <DropdownMenuItem onClick={() => openVariantSidebar(row.original, "view")}>
             <IconEye />
-            View
+            {t("actions.view")}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => openVariantSidebar(row.original, "edit")}>
             <IconPencil />
-            Edit
+            {t("actions.edit")}
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() => toast.message(`Duplicated ${row.original.name} (demo).`)}
+            onClick={() =>
+              toast.message(t("toasts.duplicatedNamed", { name: row.original.name }))
+            }
           >
             <IconCopy />
-            Duplicate
+            {t("actions.duplicate")}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
@@ -154,7 +161,7 @@ function getVariantColumns(
             onClick={() => onDelete(row.original)}
           >
             <IconTrash />
-            Delete
+            {t("actions.delete")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -164,6 +171,7 @@ function getVariantColumns(
 }
 
 export default function VariantsPage() {
+  const { t } = useTranslation("inventory")
   const [lookupOpen, setLookupOpen] = useState(false)
   const [rows, setRows] = useState<VariantRow[]>(() => [...variantData])
   const [sidebar, setSidebar] = useState<
@@ -176,16 +184,17 @@ export default function VariantsPage() {
     setSidebar((current) =>
       current?.variant.id === variant.id ? null : current
     )
-    toast.message(`Deleted ${variant.name} (demo).`)
-  }, [])
+    toast.message(t("toasts.deletedNamed", { name: variant.name }))
+  }, [t])
 
   const columns = useMemo(
     () =>
       getVariantColumns(
+        t,
         (variant, mode) => setSidebar({ variant, mode }),
         handleDeleteVariant
       ),
-    [handleDeleteVariant]
+    [t, handleDeleteVariant]
   )
 
   return (
@@ -204,29 +213,34 @@ export default function VariantsPage() {
             <>
               <SheetHeader className="border-border/60 space-y-1 border-b px-6 py-5 text-left">
                 <SheetTitle className="text-lg leading-tight">
-                  {sidebar.mode === "edit" ? "Edit variant" : "Variant details"}
+                  {sidebar.mode === "edit"
+                    ? t("variantPage.edit")
+                    : t("variantPage.details")}
                 </SheetTitle>
                 <SheetDescription>
-                  {sidebar.variant.name} · {sidebar.variant.products} products
+                  {t("variantPage.productsCount", {
+                    name: sidebar.variant.name,
+                    count: sidebar.variant.products,
+                  })}
                 </SheetDescription>
               </SheetHeader>
               <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
                 {sidebar.mode === "view" ? (
                   <dl className="space-y-3 text-sm">
                     <div className="grid grid-cols-[7rem_1fr] gap-2">
-                      <dt className="text-muted-foreground">ID</dt>
+                      <dt className="text-muted-foreground">{t("fields.id")}</dt>
                       <dd className="font-medium">{sidebar.variant.id}</dd>
                     </div>
                     <div className="grid grid-cols-[7rem_1fr] gap-2">
-                      <dt className="text-muted-foreground">Variant</dt>
+                      <dt className="text-muted-foreground">{t("fields.variant")}</dt>
                       <dd className="font-medium">{sidebar.variant.name}</dd>
                     </div>
                     <div className="grid grid-cols-[7rem_1fr] gap-2">
-                      <dt className="text-muted-foreground">Description</dt>
+                      <dt className="text-muted-foreground">{t("fields.description")}</dt>
                       <dd>{sidebar.variant.description}</dd>
                     </div>
                     <div className="grid grid-cols-[7rem_1fr] gap-2">
-                      <dt className="text-muted-foreground">Products</dt>
+                      <dt className="text-muted-foreground">{t("fields.products")}</dt>
                       <dd className="font-medium tabular-nums">
                         {sidebar.variant.products}
                       </dd>
@@ -238,23 +252,25 @@ export default function VariantsPage() {
                     className="flex flex-col gap-4 text-sm"
                     onSubmit={(e) => {
                       e.preventDefault()
-                      toast.success(`Saved ${sidebar.variant.name} (demo).`)
+                      toast.success(
+                        t("toasts.variantSaved", { name: sidebar.variant.name })
+                      )
                       closeSidebar()
                     }}
                   >
                     <div className="flex flex-col gap-2">
-                      <Label htmlFor="variant-name">Variant</Label>
+                      <Label htmlFor="variant-name">{t("fields.variant")}</Label>
                       <Input id="variant-name" defaultValue={sidebar.variant.name} />
                     </div>
                     <div className="flex flex-col gap-2">
-                      <Label htmlFor="variant-description">Description</Label>
+                      <Label htmlFor="variant-description">{t("fields.description")}</Label>
                       <Input
                         id="variant-description"
                         defaultValue={sidebar.variant.description}
                       />
                     </div>
                     <div className="flex flex-col gap-2">
-                      <Label htmlFor="variant-products">Products</Label>
+                      <Label htmlFor="variant-products">{t("fields.products")}</Label>
                       <Input
                         id="variant-products"
                         type="number"
@@ -268,18 +284,18 @@ export default function VariantsPage() {
                 {sidebar.mode === "view" ? (
                   <SheetClose asChild>
                     <Button variant="outline" className="w-full sm:w-auto">
-                      Close
+                      {t("actions.close", { ns: "common" })}
                     </Button>
                   </SheetClose>
                 ) : (
                   <>
                     <SheetClose asChild>
                       <Button variant="outline" type="button">
-                        Cancel
+                        {t("actions.cancel", { ns: "common" })}
                       </Button>
                     </SheetClose>
                     <Button type="submit" form="variant-edit-form">
-                      Save variant
+                      {t("variantPage.save")}
                     </Button>
                   </>
                 )}
@@ -291,8 +307,8 @@ export default function VariantsPage() {
       <DataTable
         data={rows}
         columns={columns}
-        addButtonLabel="New Variant"
-        searchPlaceholder="Search variants..."
+        addButtonLabel={t("variantPage.addButton")}
+        searchPlaceholder={t("variantPage.search")}
         importSampleFilename="variants-sample.csv"
         exportFilename="variants-export.csv"
         onAddClick={() => setLookupOpen(true)}

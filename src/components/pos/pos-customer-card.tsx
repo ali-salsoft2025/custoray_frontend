@@ -1,6 +1,7 @@
 "use client"
 
 import { IconPlus, IconUser } from "@tabler/icons-react"
+import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import { InfiniteScrollSelect } from "@/components/ui/infinite-scroll-select"
@@ -33,6 +34,7 @@ export function PosCustomerCard({
   walkInCustomerId,
   className,
 }: PosCustomerCardProps) {
+  const { t } = useTranslation("pos")
   const hasSelectedCustomer = customerId !== walkInCustomerId
 
   return (
@@ -43,10 +45,10 @@ export function PosCustomerCard({
       )}
     >
       <div className="mb-3 flex items-center justify-between gap-2">
-        <p className="text-sm font-semibold">Customer</p>
+        <p className="text-sm font-semibold">{t("customer")}</p>
         {hasSelectedCustomer ? (
           <Button type="button" variant="ghost" size="sm" onClick={onClearCustomer}>
-            Clear
+            {t("clear")}
           </Button>
         ) : null}
       </div>
@@ -58,7 +60,7 @@ export function PosCustomerCard({
         <div className="min-w-0 flex-1">
           <p className="truncate font-medium">{customerName}</p>
           <p className="text-muted-foreground truncate text-xs">
-            {customerDescription ?? "No customer record"}
+            {customerDescription ?? t("noCustomerRecord")}
           </p>
         </div>
       </div>
@@ -68,12 +70,12 @@ export function PosCustomerCard({
         value={customerId}
         onValueChange={onCustomerChange}
         options={customerOptions}
-        placeholder="Search or select customer"
-        searchPlaceholder="Search customers…"
-        emptyMessage="No customers found."
+        placeholder={t("searchOrSelectCustomer")}
+        searchPlaceholder={t("searchCustomers")}
+        emptyMessage={t("noCustomersFound")}
         pageSize={10}
         onAddNew={onAddCustomer}
-        addNewLabel="Add customer"
+        addNewLabel={t("addCustomer")}
         className="h-10"
       />
 
@@ -85,7 +87,7 @@ export function PosCustomerCard({
         onClick={onAddCustomer}
       >
         <IconPlus className="mr-1.5 size-4" />
-        Add new customer
+        {t("addNewCustomer")}
       </Button>
     </div>
   )

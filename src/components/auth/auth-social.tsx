@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -41,6 +42,7 @@ export function AuthSocialButtons({
 }: {
   onNavigate?: () => void
 }) {
+  const { t } = useTranslation("auth")
   const router = useRouter()
   const { loginWithGoogle } = useAuth()
   const [pending, setPending] = useState(false)
@@ -48,7 +50,7 @@ export function AuthSocialButtons({
   async function handleGoogle() {
     const clientId = getGoogleClientId()
     if (!clientId) {
-      toast.error("Google sign-in is not configured.")
+      toast.error(t("social.notConfigured"))
       return
     }
 
@@ -70,18 +72,18 @@ export function AuthSocialButtons({
       }
 
       if (result.isNewUser) {
-        toast.success("Welcome to Custoray")
+        toast.success(t("signup.toastWelcome"))
         router.replace("/onboarding")
         return
       }
 
       toast.success(
-        result.accessAllowed ? "Welcome back!" : "Your trial has ended."
+        result.accessAllowed ? t("login.toastWelcome") : t("login.toastTrialEnded")
       )
       router.replace(result.accessAllowed ? "/home" : "/trial-ended")
     } catch (err) {
       if (err instanceof Error && err.message === "POPUP_CLOSED") return
-      toast.error(err instanceof Error ? err.message : "Google sign-in failed")
+      toast.error(err instanceof Error ? err.message : t("social.failed"))
     } finally {
       setPending(false)
     }
@@ -94,7 +96,7 @@ export function AuthSocialButtons({
           <span className="w-full border-t border-border/80" />
         </div>
         <div className="relative flex justify-center text-[11px] uppercase tracking-wide">
-          <span className="bg-card px-3 text-muted-foreground">or</span>
+          <span className="bg-card px-3 text-muted-foreground">{t("social.or")}</span>
         </div>
       </div>
       <Button
@@ -105,7 +107,7 @@ export function AuthSocialButtons({
         disabled={pending}
       >
         {pending ? <LoadingSpinner size="sm" /> : <GoogleIcon />}
-        {pending ? "Connecting…" : "Continue with Google"}
+        {pending ? t("social.connecting") : t("social.continueWithGoogle")}
       </Button>
     </div>
   )

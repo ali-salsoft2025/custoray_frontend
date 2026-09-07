@@ -11,6 +11,7 @@ import {
   IconSparkles,
 } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 import { SettingsSection } from "@/components/settings/settings-section"
 import { SettingsToggleRow } from "@/components/settings/settings-toggle-row"
@@ -51,6 +52,7 @@ function PaymentMethodToggles({
   settings: PosSettings
   updateSettings: (patch: Partial<PosSettings>) => void
 }) {
+  const { t } = useTranslation("pos")
   const toggleMethod = (method: PosSettings["defaultPaymentMethod"], enabled: boolean) => {
     const current = settings.enabledPaymentMethods
     if (enabled) {
@@ -59,7 +61,7 @@ function PaymentMethodToggles({
       return
     }
     if (current.length <= 1) {
-      toast.error("At least one payment method must stay enabled.")
+      toast.error(t("settingsPage.onePaymentRequired"))
       return
     }
     updateSettings({
@@ -76,7 +78,7 @@ function PaymentMethodToggles({
           title={method}
           description={
             method === settings.defaultPaymentMethod
-              ? "Current default on register"
+              ? t("settingsPage.currentDefault")
               : undefined
           }
           checked={settings.enabledPaymentMethods.includes(method)}
@@ -88,11 +90,12 @@ function PaymentMethodToggles({
 }
 
 export function PosSettingsPanel() {
+  const { t } = useTranslation("pos")
   const { settings, updateSettings, resetSettings } = usePosSettings()
 
   const handleReset = () => {
     resetSettings()
-    toast.success("POS settings reset to defaults.")
+    toast.success(t("settingsPage.resetDefaults"))
   }
 
   return (
@@ -102,9 +105,9 @@ export function PosSettingsPanel() {
           <IconSettings className="size-4" stroke={1.75} />
         </div>
         <div className="min-w-0">
-          <h2 className="text-lg font-semibold tracking-tight">POS settings</h2>
+          <h2 className="text-lg font-semibold tracking-tight">{t("settings")}</h2>
           <p className="text-muted-foreground text-xs leading-snug">
-            Register display, checkout rules, receipts, and inventory.
+            {t("settingsPage.intro")}
           </p>
         </div>
       </div>
@@ -112,15 +115,15 @@ export function PosSettingsPanel() {
       <div className="grid gap-3 xl:grid-cols-2">
         <SettingsSection
           compact
-          title="Register & terminal"
-          description="Identity and startup behavior."
+          title={t("settingsPage.registerTitle")}
+          description={t("settingsPage.registerHint")}
           icon={<IconDeviceDesktop stroke={1.75} />}
           iconClassName="bg-primary/10 text-primary"
         >
           <div className={formGridClass}>
             <div className={fieldClass}>
               <Label htmlFor="pos-register-name" className={labelClass}>
-                Register name
+                {t("settingsPage.registerName")}
               </Label>
               <Input
                 id="pos-register-name"
@@ -129,12 +132,12 @@ export function PosSettingsPanel() {
                 onChange={(event) =>
                   updateSettings({ registerName: event.target.value.slice(0, 40) })
                 }
-                placeholder="Main register"
+                placeholder={t("settingsPage.mainRegister")}
               />
             </div>
             <div className={fieldClass}>
               <Label htmlFor="pos-receipt-prefix" className={labelClass}>
-                Receipt prefix
+                {t("settingsPage.receiptPrefix")}
               </Label>
               <Input
                 id="pos-receipt-prefix"
@@ -148,12 +151,14 @@ export function PosSettingsPanel() {
                 placeholder="POS"
               />
               <p className={hintClass}>
-                Next: {sanitizeReceiptPrefix(settings.receiptPrefix)}-1001
+                {t("settingsPage.nextReceipt", {
+                  prefix: sanitizeReceiptPrefix(settings.receiptPrefix),
+                })}
               </p>
             </div>
             <div className={fieldClass}>
               <Label htmlFor="pos-default-mode" className={labelClass}>
-                Open register on
+                {t("settingsPage.openRegisterOn")}
               </Label>
               <Select
                 value={settings.defaultRegisterMode}
@@ -167,14 +172,14 @@ export function PosSettingsPanel() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="sale">New sale</SelectItem>
-                  <SelectItem value="return">Returns</SelectItem>
+                  <SelectItem value="sale">{t("newSale")}</SelectItem>
+                  <SelectItem value="return">{t("returns")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className={fieldClass}>
               <Label htmlFor="pos-recent-limit" className={labelClass}>
-                Recent sales on register
+                {t("settingsPage.recentSales")}
               </Label>
               <Select
                 value={String(settings.recentSalesLimit)}
@@ -188,7 +193,7 @@ export function PosSettingsPanel() {
                 <SelectContent>
                   {RECENT_SALES_OPTIONS.map((count) => (
                     <SelectItem key={count} value={String(count)}>
-                      {count} receipts
+                      {t("settingsPage.receiptCount", { count })}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -199,15 +204,15 @@ export function PosSettingsPanel() {
 
         <SettingsSection
           compact
-          title="Product catalog"
-          description="How items appear on the grid."
+          title={t("settingsPage.catalogTitle")}
+          description={t("settingsPage.catalogHint")}
           icon={<IconLayoutGrid stroke={1.75} />}
           iconClassName="bg-sky-500/10 text-sky-600 dark:text-sky-400"
         >
           <div className={formGridClass}>
             <div className={fieldClass}>
               <Label htmlFor="pos-catalog-columns" className={labelClass}>
-                Grid columns
+                {t("settingsPage.gridColumns")}
               </Label>
               <Select
                 value={String(settings.catalogColumns)}
@@ -223,7 +228,7 @@ export function PosSettingsPanel() {
                 <SelectContent>
                   {COLUMN_OPTIONS.map((count) => (
                     <SelectItem key={count} value={String(count)}>
-                      {count} columns
+                      {t("settingsPage.columnCount", { count })}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -231,7 +236,7 @@ export function PosSettingsPanel() {
             </div>
             <div className={fieldClass}>
               <Label htmlFor="pos-low-stock" className={labelClass}>
-                Low stock warning at
+                {t("settingsPage.lowStock")}
               </Label>
               <Input
                 id="pos-low-stock"
@@ -254,20 +259,20 @@ export function PosSettingsPanel() {
           <div className={toggleStackClass}>
             <SettingsToggleRow
               compact
-              title="Show SKU on product cards"
+              title={t("settingsPage.showSku")}
               checked={settings.showSkuOnCards}
               onCheckedChange={(checked) => updateSettings({ showSkuOnCards: checked })}
             />
             <SettingsToggleRow
               compact
-              title="Show stock on product cards"
+              title={t("settingsPage.showStock")}
               checked={settings.showStockOnCards}
               onCheckedChange={(checked) => updateSettings({ showStockOnCards: checked })}
             />
             <SettingsToggleRow
               compact
-              title="Hide out-of-stock on sales"
-              description="When off, items still appear but cannot be added."
+              title={t("settingsPage.hideOutOfStock")}
+              description={t("settingsPage.hideOutOfStockHint")}
               checked={settings.hideOutOfStockOnSale}
               onCheckedChange={(checked) => updateSettings({ hideOutOfStockOnSale: checked })}
             />
@@ -277,15 +282,15 @@ export function PosSettingsPanel() {
 
       <SettingsSection
         compact
-        title="Checkout & payments"
-        description="Defaults and rules when completing a sale or return."
+        title={t("settingsPage.checkoutTitle")}
+        description={t("settingsPage.checkoutHint")}
         icon={<IconCreditCard stroke={1.75} />}
         iconClassName="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
       >
         <div className={formGridClass}>
           <div className={fieldClass}>
             <Label htmlFor="pos-default-payment" className={labelClass}>
-              Default payment method
+              {t("settingsPage.defaultPayment")}
             </Label>
             <Select
               value={settings.defaultPaymentMethod}
@@ -309,7 +314,7 @@ export function PosSettingsPanel() {
           </div>
           <div className={fieldClass}>
             <Label htmlFor="pos-max-discount" className={labelClass}>
-              Max discount (%)
+              {t("settingsPage.maxDiscount")}
             </Label>
             <Input
               id="pos-max-discount"
@@ -327,11 +332,11 @@ export function PosSettingsPanel() {
                 }
               }}
             />
-            <p className={hintClass}>0 = no limit</p>
+            <p className={hintClass}>{t("settingsPage.noLimit")}</p>
           </div>
           <div className={fieldClass}>
             <Label htmlFor="pos-default-sale-status" className={labelClass}>
-              Default sale status
+              {t("settingsPage.defaultSaleStatus")}
             </Label>
             <Select
               value={settings.defaultSaleStatus}
@@ -355,7 +360,7 @@ export function PosSettingsPanel() {
           </div>
           <div className={fieldClass}>
             <Label htmlFor="pos-default-return-status" className={labelClass}>
-              Default return status
+              {t("settingsPage.defaultReturnStatus")}
             </Label>
             <Select
               value={settings.defaultReturnStatus}
@@ -382,34 +387,34 @@ export function PosSettingsPanel() {
         <div className={toggleStackClass}>
           <SettingsToggleRow
             compact
-            title="Allow cart discounts"
+            title={t("settingsPage.allowDiscounts")}
             checked={settings.allowDiscounts}
             onCheckedChange={(checked) => updateSettings({ allowDiscounts: checked })}
           />
           <SettingsToggleRow
             compact
-            title="Allow line price edits"
-            description="Override line total on cart items."
+            title={t("settingsPage.allowPriceEdits")}
+            description={t("settingsPage.allowPriceEditsHint")}
             checked={settings.allowLinePriceEdit}
             onCheckedChange={(checked) => updateSettings({ allowLinePriceEdit: checked })}
           />
           <SettingsToggleRow
             compact
-            title="Allow partial payment"
-            description="Paid amount can be less than total."
+            title={t("settingsPage.allowPartial")}
+            description={t("settingsPage.allowPartialHint")}
             checked={settings.allowPartialPayment}
             onCheckedChange={(checked) => updateSettings({ allowPartialPayment: checked })}
           />
           <SettingsToggleRow
             compact
-            title="Require customer"
-            description="Block checkout while Walk-in is selected."
+            title={t("settingsPage.requireCustomer")}
+            description={t("settingsPage.requireCustomerHint")}
             checked={settings.requireCustomer}
             onCheckedChange={(checked) => updateSettings({ requireCustomer: checked })}
           />
           <SettingsToggleRow
             compact
-            title="Confirm before completing"
+            title={t("settingsPage.confirmBefore")}
             checked={settings.confirmBeforeComplete}
             onCheckedChange={(checked) =>
               updateSettings({ confirmBeforeComplete: checked })
@@ -419,7 +424,7 @@ export function PosSettingsPanel() {
 
         <div className="border-border/40 space-y-2 border-t pt-3">
           <p className="text-emerald-600 dark:text-emerald-400 text-xs font-medium">
-            Enabled payment methods
+            {t("settingsPage.enabledMethods")}
           </p>
           <PaymentMethodToggles settings={settings} updateSettings={updateSettings} />
         </div>
@@ -428,14 +433,14 @@ export function PosSettingsPanel() {
       <div className="grid gap-3 xl:grid-cols-2">
         <SettingsSection
           compact
-          title="Receipts"
-          description="Printed and PDF receipt behavior."
+          title={t("settingsPage.receiptsTitle")}
+          description={t("settingsPage.receiptHint")}
           icon={<IconReceipt stroke={1.75} />}
           iconClassName="bg-amber-500/10 text-amber-600 dark:text-amber-400"
         >
           <div className={fieldClass}>
             <Label htmlFor="pos-receipt-footer" className={labelClass}>
-              Receipt footer note
+              {t("settingsPage.receiptFooter")}
             </Label>
             <textarea
               id="pos-receipt-footer"
@@ -443,7 +448,7 @@ export function PosSettingsPanel() {
               onChange={(event) =>
                 updateSettings({ receiptFooterNote: event.target.value.slice(0, 200) })
               }
-              placeholder="Thank you for shopping with us!"
+              placeholder={t("settingsPage.thankYouPlaceholder")}
               rows={2}
               className={cn(
                 "border-input bg-background placeholder:text-muted-foreground flex min-h-[64px] w-full rounded-md border px-3 py-2 text-sm shadow-xs outline-none",
@@ -453,8 +458,8 @@ export function PosSettingsPanel() {
           </div>
           <SettingsToggleRow
             compact
-            title="Auto-download PDF after sale"
-            description="Opens receipt PDF when a sale completes."
+            title={t("settingsPage.autoPdf")}
+            description={t("settingsPage.autoPdfHint")}
             checked={settings.autoOpenReceiptPdf}
             onCheckedChange={(checked) => updateSettings({ autoOpenReceiptPdf: checked })}
           />
@@ -462,23 +467,23 @@ export function PosSettingsPanel() {
 
         <SettingsSection
           compact
-          title="Inventory"
-          description="Stock validation and deduction."
+          title={t("settingsPage.inventoryTitle")}
+          description={t("settingsPage.inventoryHint")}
           icon={<IconPackage stroke={1.75} />}
           iconClassName="bg-orange-500/10 text-orange-600 dark:text-orange-400"
         >
           <div className={toggleStackClass}>
             <SettingsToggleRow
               compact
-              title="Allow overselling"
-              description="Sell when stock is insufficient."
+              title={t("settingsPage.allowOverselling")}
+              description={t("settingsPage.allowOversellingHint")}
               checked={settings.allowOverselling}
               onCheckedChange={(checked) => updateSettings({ allowOverselling: checked })}
             />
             <SettingsToggleRow
               compact
-              title="Deduct stock on pending sales"
-              description="When off, stock updates only on Completed."
+              title={t("settingsPage.deductPending")}
+              description={t("settingsPage.deductPendingHint")}
               checked={settings.deductStockOnPending}
               onCheckedChange={(checked) => updateSettings({ deductStockOnPending: checked })}
             />
@@ -489,15 +494,15 @@ export function PosSettingsPanel() {
       <div className="grid gap-3 sm:grid-cols-2">
         <SettingsSection
           compact
-          title="Register UX"
-          description="Small workflow improvements."
+          title={t("settingsPage.uxTitle")}
+          description={t("settingsPage.uxHint")}
           icon={<IconSparkles stroke={1.75} />}
           iconClassName="bg-violet-500/10 text-violet-600 dark:text-violet-400"
         >
           <SettingsToggleRow
             compact
-            title="Focus search after sale"
-            description="Return cursor to product search after checkout."
+            title={t("settingsPage.focusSearch")}
+            description={t("settingsPage.focusSearchHint")}
             checked={settings.autoFocusSearchAfterSale}
             onCheckedChange={(checked) =>
               updateSettings({ autoFocusSearchAfterSale: checked })
@@ -507,21 +512,23 @@ export function PosSettingsPanel() {
 
         <SettingsSection
           compact
-          title="Reset"
-          description="Restore factory defaults."
+          title={t("settingsPage.resetTitle")}
+          description={t("settingsPage.restoreHint")}
           icon={<IconRefresh stroke={1.75} />}
           iconClassName="bg-muted text-muted-foreground"
           contentClassName="space-y-0"
           footer={
             <Button type="button" variant="outline" size="sm" onClick={handleReset}>
-              Reset to defaults
+              {t("settingsPage.resetButton")}
             </Button>
           }
         >
           <p className={hintClass}>
-            Defaults: {DEFAULT_POS_SETTINGS.registerName} ·{" "}
-            {DEFAULT_POS_SETTINGS.receiptPrefix} receipts ·{" "}
-            {statusLabel(DEFAULT_POS_SETTINGS.defaultSaleStatus)} sales
+            {t("settingsPage.defaultsLine", {
+              name: DEFAULT_POS_SETTINGS.registerName,
+              prefix: DEFAULT_POS_SETTINGS.receiptPrefix,
+              status: statusLabel(DEFAULT_POS_SETTINGS.defaultSaleStatus),
+            })}
           </p>
         </SettingsSection>
       </div>

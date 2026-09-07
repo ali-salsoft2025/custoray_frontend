@@ -1,14 +1,16 @@
 "use client"
 
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
   CreditCard,
+  Languages,
   LogIn,
   LogOut,
   Palette,
   Settings,
   UserCircle,
 } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 import {
   Avatar,
@@ -37,32 +39,59 @@ function initials(name: string): string {
     .join("")
 }
 
+function translateRole(role: string, t: (key: string) => string) {
+  const normalized = role.trim().toLowerCase()
+  if (normalized === "owner") return t("userMenu.owner")
+  if (normalized === "admin") return t("userMenu.admin")
+  if (normalized === "member") return t("userMenu.member")
+  return role.trim()
+}
+
 export function NavUser({ className }: { className?: string }) {
-  const { user, logout, isAuthenticated } = useAuth()
+  const router = useRouter()
+  const { user, logout, isAuthenticated, activeCompany } = useAuth()
+  const { t } = useTranslation("nav")
 
   const accessLabel = isAuthenticated
     ? user.isAdmin
-      ? "Admin"
+      ? t("userMenu.admin")
       : permissionSummary(user.permissions)
-    : "Demo mode"
+    : t("userMenu.demoMode")
+
+  const designation =
+    translateRole(activeCompany?.role || user.designation || "", t) ||
+    accessLabel
+
+  const go = (href: string) => {
+    router.push(href)
+  }
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          aria-label="Account menu"
+          dir="ltr"
+          aria-label={t("userMenu.accountMenu")}
           className={cn(
-            "flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full border-0 p-0",
+            "flex max-w-[16rem] shrink-0 flex-row items-center gap-2 rounded-none border-0 bg-transparent p-0 text-start shadow-none hover:bg-transparent focus-visible:ring-0 sm:max-w-[20rem]",
             className
           )}
         >
-          <Avatar className="size-9">
+          <Avatar className="size-9 shrink-0 rounded-full bg-white shadow-[0_1px_4px_0_rgba(0,0,0,0.16)] dark:bg-zinc-950">
             <AvatarImage src={user.avatar} alt={user.name} />
             <AvatarFallback className="bg-transparent text-xs font-semibold">
               {initials(user.name)}
             </AvatarFallback>
           </Avatar>
+          <span className="grid min-w-0 flex-1 leading-tight">
+            <span className="text-foreground truncate text-sm font-medium">
+              {user.name}
+            </span>
+            <span className="text-muted-foreground truncate text-[11px]">
+              {designation}
+            </span>
+          </span>
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
@@ -72,60 +101,59 @@ export function NavUser({ className }: { className?: string }) {
         sideOffset={8}
       >
         <DropdownMenuLabel className="p-0 font-normal">
-          <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+          <div className="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
             <Avatar className="h-8 w-8">
               <AvatarImage src={user.avatar} alt={user.name} />
               <AvatarFallback className="text-xs font-semibold">
                 {initials(user.name)}
               </AvatarFallback>
             </Avatar>
-            <div className="grid flex-1 text-left text-sm leading-tight">
+            <div className="grid flex-1 text-start text-sm leading-tight">
               <span className="truncate font-medium">{user.name}</span>
               <span className="text-muted-foreground truncate text-xs">
-                {isAuthenticated ? user.email : accessLabel}
+                {designation}
               </span>
+              {isAuthenticated ? (
+                <span className="text-muted-foreground truncate text-[11px]">
+                  {user.email}
+                </span>
+              ) : null}
             </div>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem asChild>
-            <Link href="/settings/account">
-              <UserCircle />
-              Account
-            </Link>
+          <DropdownMenuItem className="cursor-pointer" onSelect={() => go("/settings/account")}>
+            <UserCircle />
+            {t("userMenu.account")}
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/settings/billing">
-              <CreditCard />
-              Plans & billing
-            </Link>
+          <DropdownMenuItem className="cursor-pointer" onSelect={() => go("/settings/billing")}>
+            <CreditCard />
+            {t("userMenu.plansBilling")}
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/settings/appearance">
-              <Palette />
-              Appearance
-            </Link>
+          <DropdownMenuItem className="cursor-pointer" onSelect={() => go("/settings/appearance")}>
+            <Palette />
+            {t("userMenu.appearance")}
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/settings">
-              <Settings />
-              Settings
-            </Link>
+          <DropdownMenuItem className="cursor-pointer" onSelect={() => go("/settings/language")}>
+            <Languages />
+            {t("userMenu.language")}
+          </DropdownMenuItem>
+          <DropdownMenuItem className="cursor-pointer" onSelect={() => go("/settings")}>
+            <Settings />
+            {t("userMenu.settings")}
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         {isAuthenticated ? (
-          <DropdownMenuItem onClick={() => void logout()}>
+          <DropdownMenuItem className="cursor-pointer" onSelect={() => void logout()}>
             <LogOut />
-            Log out
+            {t("userMenu.logOut")}
           </DropdownMenuItem>
         ) : (
-          <DropdownMenuItem asChild>
-            <Link href="/">
-              <LogIn />
-              Sign in
-            </Link>
+          <DropdownMenuItem className="cursor-pointer" onSelect={() => go("/")}>
+            <LogIn />
+            {t("userMenu.signIn")}
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>

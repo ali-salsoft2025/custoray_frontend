@@ -4,6 +4,7 @@ import { useRef, useState } from "react"
 import Link from "next/link"
 import { IconPencil } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 import { EmployeeDetail } from "@/components/employees/employee-detail"
 import {
@@ -43,6 +44,8 @@ import {
 export function EmployeeProfilePage({ employeeId }: { employeeId: number }) {
   const { canAdmin } = useAuth()
   const { getEmployee, updateEmployee } = useEmployees()
+  const { t } = useTranslation("employees")
+  const { t: tc } = useTranslation("common")
   const { getRecordsForEmployee: getPayroll } = usePayroll()
   const { getRecordsForEmployee: getLeaves } = useLeaves()
   const [editOpen, setEditOpen] = useState(false)
@@ -52,9 +55,9 @@ export function EmployeeProfilePage({ employeeId }: { employeeId: number }) {
   if (!employee) {
     return (
       <div className="py-12 text-center">
-        <p className="text-muted-foreground">Employee not found.</p>
+        <p className="text-muted-foreground">{t("profilePage.notFound")}</p>
         <Button type="button" variant="outline" className="mt-4" asChild>
-          <Link href="/employees">Back to team</Link>
+          <Link href="/employees">{t("profilePage.backToTeam")}</Link>
         </Button>
       </div>
     )
@@ -69,7 +72,7 @@ export function EmployeeProfilePage({ employeeId }: { employeeId: number }) {
       employee.id,
       employeeFromValues(values, employee.id, employee)
     )
-    toast.success("Employee saved.")
+    toast.success(t("list.toastSaved"))
     setEditOpen(false)
   }
 
@@ -85,13 +88,13 @@ export function EmployeeProfilePage({ employeeId }: { employeeId: number }) {
         >
           <SheetHeader className="border-border/60 space-y-1 border-b px-6 py-5 text-left">
             <SheetTitle className="text-lg leading-tight">
-              Edit employee
+              {t("edit")}
             </SheetTitle>
             <SheetDescription>
               {employee.name}
               <span className="text-muted-foreground">
                 {" "}
-                · {employee.department || "No department"}
+                · {employee.department || t("profilePage.noDepartment")}
               </span>
             </SheetDescription>
           </SheetHeader>
@@ -110,14 +113,14 @@ export function EmployeeProfilePage({ employeeId }: { employeeId: number }) {
           <SheetFooter className="border-border/60 gap-2 border-t px-6 py-4 sm:flex-row sm:justify-end">
             <SheetClose asChild>
               <Button variant="outline" type="button">
-                Cancel
+                {tc("actions.cancel")}
               </Button>
             </SheetClose>
             <Button
               type="button"
               onClick={() => formRef.current?.goNextOrSubmit()}
             >
-              Save employee
+              {t("list.saveEmployee")}
             </Button>
           </SheetFooter>
         </SheetContent>
@@ -127,7 +130,7 @@ export function EmployeeProfilePage({ employeeId }: { employeeId: number }) {
         <div className="space-y-4">
           <div className="rounded-xl border border-border/60 bg-card p-5 shadow-sm">
             <div className="mb-4 flex items-center justify-between gap-2">
-              <h3 className="font-semibold">Profile</h3>
+              <h3 className="font-semibold">{t("profilePage.profile")}</h3>
               {canAdmin ? (
                 <Button
                   type="button"
@@ -136,7 +139,7 @@ export function EmployeeProfilePage({ employeeId }: { employeeId: number }) {
                   onClick={() => setEditOpen(true)}
                 >
                   <IconPencil className="size-4" />
-                  Edit
+                  {tc("actions.edit")}
                 </Button>
               ) : null}
             </div>
@@ -146,14 +149,14 @@ export function EmployeeProfilePage({ employeeId }: { employeeId: number }) {
           <div className="flex flex-wrap gap-2">
             <Button type="button" variant="outline" size="sm" asChild>
               <Link href={`/employees/permissions?employee=${employeeId}`}>
-                Manage permissions
+                {t("profilePage.managePermissions")}
               </Link>
             </Button>
             <Button type="button" variant="outline" size="sm" asChild>
-              <Link href="/employees/payroll">View payroll</Link>
+              <Link href="/employees/payroll">{t("profilePage.viewPayroll")}</Link>
             </Button>
             <Button type="button" variant="outline" size="sm" asChild>
-              <Link href="/employees/leaves">View leave</Link>
+              <Link href="/employees/leaves">{t("profilePage.viewLeave")}</Link>
             </Button>
           </div>
         </div>
@@ -161,17 +164,17 @@ export function EmployeeProfilePage({ employeeId }: { employeeId: number }) {
         <div className="space-y-4">
           <section className="rounded-xl border border-border/60 bg-card p-5 shadow-sm">
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="font-semibold">Recent payroll</h3>
+              <h3 className="font-semibold">{t("profilePage.recentPayroll")}</h3>
               <Link
                 href="/employees/payroll"
                 className="text-primary text-xs font-medium hover:underline"
               >
-                See all
+                {t("profilePage.seeAll")}
               </Link>
             </div>
             {payroll.length === 0 ? (
               <p className="text-muted-foreground text-sm">
-                No payroll records yet.
+                {t("profilePage.noPayroll")}
               </p>
             ) : (
               <ul className="space-y-2">
@@ -183,7 +186,7 @@ export function EmployeeProfilePage({ employeeId }: { employeeId: number }) {
                     <div>
                       <p className="font-medium">{row.period}</p>
                       <p className="text-muted-foreground text-xs">
-                        {formatMoney(row.netPay)} net
+                        {t("profilePage.netPay", { amount: formatMoney(row.netPay) })}
                       </p>
                     </div>
                     <Badge
@@ -200,17 +203,17 @@ export function EmployeeProfilePage({ employeeId }: { employeeId: number }) {
 
           <section className="rounded-xl border border-border/60 bg-card p-5 shadow-sm">
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="font-semibold">Recent leave</h3>
+              <h3 className="font-semibold">{t("profilePage.recentLeave")}</h3>
               <Link
                 href="/employees/leaves"
                 className="text-primary text-xs font-medium hover:underline"
               >
-                See all
+                {t("profilePage.seeAll")}
               </Link>
             </div>
             {leaves.length === 0 ? (
               <p className="text-muted-foreground text-sm">
-                No leave requests yet.
+                {t("profilePage.noLeave")}
               </p>
             ) : (
               <ul className="space-y-2">
@@ -222,7 +225,11 @@ export function EmployeeProfilePage({ employeeId }: { employeeId: number }) {
                     <div>
                       <p className="font-medium">{leaveTypeLabel(row.type)}</p>
                       <p className="text-muted-foreground text-xs">
-                        {row.startDate} → {row.endDate} · {row.days} day(s)
+                        {t("profilePage.leaveDates", {
+                          start: row.startDate,
+                          end: row.endDate,
+                          count: row.days,
+                        })}
                       </p>
                     </div>
                     <Badge

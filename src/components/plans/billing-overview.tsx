@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -9,16 +10,17 @@ import { apiBillingSummary } from "@/lib/api/auth"
 import { formatLimit } from "@/lib/plans"
 import { formatTrialEndDate } from "@/lib/subscription-access"
 
-function statusLabel(status: string | undefined) {
-  if (status === "TRIAL") return "Trial"
-  if (status === "ACTIVE") return "Active"
-  if (status === "PAST_DUE") return "Past due"
-  if (status === "CANCELLED") return "Cancelled"
-  if (status === "EXPIRED") return "Expired"
-  return status ?? "—"
+function statusI18nKey(status: string | undefined) {
+  if (status === "TRIAL") return "trial"
+  if (status === "ACTIVE") return "active"
+  if (status === "PAST_DUE") return "pastDue"
+  if (status === "CANCELLED") return "cancelled"
+  if (status === "EXPIRED") return "expired"
+  return null
 }
 
 export function BillingOverview() {
+  const { t } = useTranslation("settings")
   const { access, activeCompany } = useAuth()
   const [data, setData] = useState<Awaited<ReturnType<typeof apiBillingSummary>> | null>(
     null
@@ -37,52 +39,53 @@ export function BillingOverview() {
   const periodEnd = data?.subscription?.currentPeriodEnd
   const usage = data?.usage
   const plan = data?.plan
+  const statusKey = statusI18nKey(status)
+  const statusText = statusKey ? t(`billing.statuses.${statusKey}`) : (status ?? "—")
 
   const periodText = onTrial
     ? trialEndsAt
-      ? `Trial ends ${formatTrialEndDate(trialEndsAt)}`
-      : "Trial in progress"
+      ? t("billing.trialEnds", { date: formatTrialEndDate(trialEndsAt) })
+      : t("billing.trialInProgress")
     : periodEnd
-      ? `Current period ends ${formatTrialEndDate(periodEnd)}`
-      : "No billing period"
+      ? t("billing.periodEnds", { date: formatTrialEndDate(periodEnd) })
+      : t("billing.noBillingPeriod")
 
   return (
     <section className="bg-card rounded-2xl border p-5 shadow-sm">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-base font-semibold">Billing</h2>
-            <Badge variant={onTrial ? "secondary" : "default"}>{statusLabel(status)}</Badge>
+            <h2 className="text-base font-semibold">{t("billing.title")}</h2>
+            <Badge variant={onTrial ? "secondary" : "default"}>{statusText}</Badge>
           </div>
           <p className="text-muted-foreground mt-1 text-sm">
             {activeCompany?.name ? `${activeCompany.name} · ` : null}
-            {onTrial ? "Free trial" : planName}
+            {onTrial ? t("billing.freeTrial") : planName}
             {" · "}
             {periodText}
           </p>
         </div>
         <Button variant="outline" className="shrink-0 rounded-full" disabled>
-          Manage payment
+          {t("billing.managePayment")}
         </Button>
       </div>
 
       <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <UsageStat
-          label="Products"
+          label={t("billing.products")}
           used={usage?.products}
           max={plan?.maxProducts}
         />
-        <UsageStat label="Users" used={usage?.users} max={plan?.maxUsers} />
+        <UsageStat label={t("billing.users")} used={usage?.users} max={plan?.maxUsers} />
         <UsageStat
-          label="Branches"
+          label={t("billing.branches")}
           used={usage?.stores}
           max={plan?.maxStores}
         />
       </div>
 
       <p className="text-muted-foreground mt-4 text-xs">
-        Card payments are not connected yet. This page is for your current
-        subscription and usage — not for switching plans.
+        {t("billing.cardPaymentsHint")}
       </p>
     </section>
   )

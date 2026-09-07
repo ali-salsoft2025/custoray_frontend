@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { IconCloudUpload, IconTrash } from "@tabler/icons-react"
+import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
@@ -44,12 +45,6 @@ type CsvPreviewRow = {
   cells: Record<string, string>
 }
 
-const STEPS = [
-  { n: 1, title: "Sample file", short: "Sample" },
-  { n: 2, title: "Upload CSV", short: "Upload" },
-  { n: 3, title: "Review & import", short: "Review" },
-] as const
-
 export function DataTableImportDialog({
   open,
   onOpenChange,
@@ -57,6 +52,7 @@ export function DataTableImportDialog({
   sampleFilename = "sample.csv",
   onComplete,
 }: Props) {
+  const { t } = useTranslation()
   const [step, setStep] = React.useState(1)
   const [uploadName, setUploadName] = React.useState("")
   const [previewRows, setPreviewRows] = React.useState<CsvPreviewRow[]>([])
@@ -66,6 +62,12 @@ export function DataTableImportDialog({
   const [readPercent, setReadPercent] = React.useState<number | null>(null)
   const fileRef = React.useRef<HTMLInputElement>(null)
   const previewIdRef = React.useRef(0)
+
+  const steps = [
+    { n: 1, title: t("importDialog.stepSample"), short: t("importDialog.stepSampleShort") },
+    { n: 2, title: t("importDialog.stepUpload"), short: t("importDialog.stepUploadShort") },
+    { n: 3, title: t("importDialog.stepReview"), short: t("importDialog.stepReviewShort") },
+  ]
 
   const reset = React.useCallback(() => {
     setStep(1)
@@ -88,7 +90,7 @@ export function DataTableImportDialog({
       sampleCsvContent,
       "text/csv;charset=utf-8"
     )
-    toast.success("Sample CSV downloaded")
+    toast.success(t("importDialog.toastSampleDownloaded"))
   }
 
   const handleFile = (file: File | undefined) => {
@@ -108,7 +110,7 @@ export function DataTableImportDialog({
       const text = String(reader.result ?? "")
       const rows = parseCsv(text)
       if (rows.length === 0) {
-        toast.error("No data rows found in this CSV.")
+        toast.error(t("importDialog.toastNoDataRows"))
         setPreviewRows([])
         setPreviewKeys([])
         setSelectedIds(new Set())
@@ -122,12 +124,12 @@ export function DataTableImportDialog({
       setPreviewKeys(keys)
       setPreviewRows(withIds)
       setSelectedIds(new Set(withIds.map((r) => r.id)))
-      toast.success(`Parsed ${rows.length} row(s)`)
+      toast.success(t("importDialog.toastParsed", { count: rows.length }))
     }
     reader.onerror = () => {
       setIsReadingFile(false)
       setReadPercent(null)
-      toast.error("Could not read the file.")
+      toast.error(t("importDialog.toastCouldNotRead"))
     }
     reader.readAsText(file, "UTF-8")
   }
@@ -184,18 +186,17 @@ export function DataTableImportDialog({
       <DialogContent className={cn(dataTableDialogContentClassName, "gap-0")}>
         <DataTableDialogHeaderSection>
           <DialogTitle className="text-xl font-semibold tracking-tight sm:text-2xl">
-            Import data
+            {t("importDialog.title")}
           </DialogTitle>
           <DialogDescription className="text-muted-foreground text-base leading-relaxed">
-            Download the template, add your rows, upload the file, then review
-            before merging into the table.
+            {t("importDialog.description")}
           </DialogDescription>
 
           <nav
-            aria-label="Import steps"
+            aria-label={t("importDialog.stepsAria")}
             className="mt-6 grid w-full grid-cols-3 gap-3 sm:gap-6"
           >
-            {STEPS.map((s) => {
+            {steps.map((s) => {
               const done = step > s.n
               const active = step === s.n
               return (
@@ -237,16 +238,14 @@ export function DataTableImportDialog({
             <div className="bg-muted/40 space-y-5 rounded-xl border p-6 sm:p-8">
               <div className="space-y-2">
                 <h3 className="text-foreground text-sm font-medium">
-                  Step 1 — Get the template
+                  {t("importDialog.step1Title")}
                 </h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">
-                  The sample file lists every column your table expects, with one
-                  example row. Fill more rows below that line in Excel or Google
-                  Sheets, then continue.
+                  {t("importDialog.step1Body")}
                 </p>
               </div>
               <Button type="button" size="lg" onClick={handleDownloadSample}>
-                Download sample CSV
+                {t("importDialog.downloadSample")}
               </Button>
             </div>
           )}
@@ -255,11 +254,10 @@ export function DataTableImportDialog({
             <div className="space-y-5">
               <div className="space-y-2">
                 <h3 className="text-foreground text-sm font-medium">
-                  Step 2 — Upload your file
+                  {t("importDialog.step2Title")}
                 </h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">
-                  Use UTF-8 encoding. Column headers must match the sample file
-                  exactly.
+                  {t("importDialog.step2Body")}
                 </p>
               </div>
               <label
@@ -274,10 +272,10 @@ export function DataTableImportDialog({
                 </div>
                 <div className="text-center">
                   <span className="text-foreground text-sm font-medium">
-                    Click to choose a CSV file
+                    {t("importDialog.chooseCsv")}
                   </span>
                   <p className="text-muted-foreground mt-1 text-xs">
-                    or drag and drop (browser: click only)
+                    {t("importDialog.dragHint")}
                   </p>
                 </div>
                 <input
@@ -295,14 +293,14 @@ export function DataTableImportDialog({
                   className="bg-muted/40 space-y-2 rounded-xl border px-4 py-3"
                   role="status"
                   aria-live="polite"
-                  aria-label="Reading uploaded file"
+                  aria-label={t("importDialog.readingAria")}
                 >
                   <div className="flex items-center gap-2 text-sm font-medium">
                     <LoadingSpinner size="sm" className="shrink-0" />
                     <span>
                       {readPercent != null
-                        ? `Reading file… ${readPercent}%`
-                        : "Reading file…"}
+                        ? t("importDialog.readingFilePercent", { percent: readPercent })
+                        : t("importDialog.readingFile")}
                     </span>
                   </div>
                   <div
@@ -312,7 +310,7 @@ export function DataTableImportDialog({
                     aria-valuemax={100}
                     aria-valuenow={readPercent ?? undefined}
                     aria-valuetext={
-                      readPercent != null ? `${readPercent}%` : "Indeterminate"
+                      readPercent != null ? `${readPercent}%` : undefined
                     }
                   >
                     <div
@@ -330,8 +328,7 @@ export function DataTableImportDialog({
               )}
               {uploadName && !isReadingFile ? (
                 <p className="text-muted-foreground text-center text-sm">
-                  Selected:{" "}
-                  <span className="text-foreground font-medium">{uploadName}</span>
+                  {t("importDialog.selectedFile", { name: uploadName })}
                 </p>
               ) : null}
             </div>
@@ -341,12 +338,10 @@ export function DataTableImportDialog({
             <div className="space-y-4">
               <div className="space-y-2">
                 <h3 className="text-foreground text-sm font-medium">
-                  Step 3 — Review rows
+                  {t("importDialog.step3Title")}
                 </h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">
-                  Use the checkboxes to choose which rows to import (this only
-                  affects the import — not row selection on the main table).
-                  Remove a row with the trash icon if needed.
+                  {t("importDialog.step3Body")}
                 </p>
               </div>
               <div className="max-h-[min(50vh,420px)] overflow-auto rounded-xl border bg-card shadow-inner">
@@ -366,7 +361,7 @@ export function DataTableImportDialog({
                             onCheckedChange={(v) =>
                               toggleSelectAllPreview(!!v)
                             }
-                            aria-label="Select all preview rows for import"
+                            aria-label={t("importDialog.selectAllPreview")}
                           />
                         </div>
                       </TableHead>
@@ -388,7 +383,7 @@ export function DataTableImportDialog({
                           colSpan={Math.max(1, previewKeys.length + 2)}
                           className="text-muted-foreground h-24 text-center text-sm"
                         >
-                          No rows left. Go back to upload again.
+                          {t("importDialog.noRowsLeft")}
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -407,7 +402,7 @@ export function DataTableImportDialog({
                                 onCheckedChange={(v) =>
                                   toggleRowSelected(row.id, !!v)
                                 }
-                                aria-label={`Include row ${idx + 1} in import`}
+                                aria-label={t("importDialog.includeRow", { n: idx + 1 })}
                               />
                             </div>
                           </TableCell>
@@ -417,7 +412,7 @@ export function DataTableImportDialog({
                               variant="ghost"
                               size="icon"
                               className="text-destructive hover:text-destructive size-9"
-                              aria-label={`Delete row ${idx + 1}`}
+                              aria-label={t("importDialog.deleteRow", { n: idx + 1 })}
                               onClick={() => removeRow(row.id)}
                             >
                               <IconTrash className="size-4" />
@@ -439,11 +434,10 @@ export function DataTableImportDialog({
                 </Table>
               </div>
               <p className="text-muted-foreground text-sm">
-                <span className="text-foreground font-semibold tabular-nums">
-                  {selectedCount}
-                </span>{" "}
-                of {previewRows.length} row
-                {previewRows.length === 1 ? "" : "s"} selected for import.
+                {t("importDialog.rowsSelected", {
+                  selected: selectedCount,
+                  total: previewRows.length,
+                })}
               </p>
             </div>
           )}
@@ -457,7 +451,7 @@ export function DataTableImportDialog({
               className="sm:min-w-[7rem]"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              {t("actions.cancel")}
             </Button>
             <div className="flex flex-wrap justify-end gap-2">
               {step > 1 && (
@@ -466,12 +460,12 @@ export function DataTableImportDialog({
                   variant="outline"
                   onClick={() => setStep((s) => Math.max(1, s - 1))}
                 >
-                  Back
+                  {t("actions.back")}
                 </Button>
               )}
               {step === 1 && (
                 <Button type="button" size="lg" onClick={() => setStep(2)}>
-                  Continue
+                  {t("actions.continue")}
                 </Button>
               )}
               {step === 2 && (
@@ -481,7 +475,7 @@ export function DataTableImportDialog({
                   disabled={!hasParsedRows}
                   onClick={() => setStep(3)}
                 >
-                  Continue to review
+                  {t("importDialog.continueToReview")}
                 </Button>
               )}
               {step === 3 && (
@@ -491,8 +485,7 @@ export function DataTableImportDialog({
                   disabled={!canFinish}
                   onClick={handleFinish}
                 >
-                  Import {selectedCount} row
-                  {selectedCount === 1 ? "" : "s"}
+                  {t("importDialog.importRows", { count: selectedCount })}
                 </Button>
               )}
             </div>

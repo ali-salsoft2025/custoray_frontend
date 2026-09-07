@@ -1,6 +1,8 @@
 import { z } from "zod"
 
 import { formatMoney, parseMoney } from "@/lib/customers"
+import i18n from "@/i18n"
+import { dateLocaleForLanguage } from "@/i18n/config"
 
 export { formatMoney, parseMoney }
 
@@ -481,6 +483,33 @@ export const initialOrders: OrderRow[] = [
       },
     ],
   },
+  {
+    id: 16,
+    invoiceNumber: "INV-1011",
+    customerName: "Acme Retail Co.",
+    description: "June restock",
+    orderDate: "2026-06-18",
+    totalAmount: "9600.00",
+    paidAmount: "9600.00",
+    paymentMethod: "Bank transfer",
+    status: "completed",
+    lines: [
+      {
+        id: 1,
+        productName: "Sunflower Oil 5L",
+        quantity: 6,
+        unitPrice: "1100.00",
+        lineTotal: "6600.00",
+      },
+      {
+        id: 2,
+        productName: "Mixed Spices Carton",
+        quantity: 2,
+        unitPrice: "1500.00",
+        lineTotal: "3000.00",
+      },
+    ],
+  },
 ]
 
 export const EMPTY_ORDER_LINE: OrderLineRow = {
@@ -507,7 +536,7 @@ export const EMPTY_ORDER: OrderRow = {
 export function formatDate(value: string): string {
   const date = new Date(`${value}T00:00:00`)
   if (Number.isNaN(date.getTime())) return value
-  return new Intl.DateTimeFormat("en-GB", {
+  return new Intl.DateTimeFormat(dateLocaleForLanguage(i18n.language), {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -525,7 +554,7 @@ export function statusBadgeClass(status: OrderRow["status"] | undefined | null) 
 
 export function statusLabel(status: OrderRow["status"] | undefined | null) {
   const normalized = status ?? "pending"
-  return normalized.charAt(0).toUpperCase() + normalized.slice(1)
+  return i18n.t(`status.${normalized}`, { ns: "common", defaultValue: normalized })
 }
 
 export function parseStatus(raw: string): OrderRow["status"] {

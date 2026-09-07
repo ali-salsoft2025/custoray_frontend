@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
 
 import { SettingsSection } from "@/components/settings/settings-section"
 import { Badge } from "@/components/ui/badge"
@@ -26,6 +27,7 @@ function initials(name: string) {
 }
 
 export default function TeamSettingsPage() {
+  const { t } = useTranslation("settings")
   const [users, setUsers] = useState<TeamUser[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -39,16 +41,16 @@ export default function TeamSettingsPage() {
   return (
     <div className="w-full max-w-2xl">
       <SettingsSection
-        title="Members"
-        description="People who can sign in to this organization."
+        title={t("team.title")}
+        description={t("team.description")}
       >
         {loading ? (
           <div className="text-muted-foreground flex items-center gap-2 py-6 text-sm">
             <LoadingSpinner size="sm" />
-            Loading members…
+            {t("team.loading")}
           </div>
         ) : users.length === 0 ? (
-          <p className="text-muted-foreground py-6 text-sm">No members found.</p>
+          <p className="text-muted-foreground py-6 text-sm">{t("team.empty")}</p>
         ) : (
           <ul className="divide-border/60 divide-y">
             {users.map((user) => (
@@ -57,15 +59,15 @@ export default function TeamSettingsPage() {
                   {initials(user.name || user.email)}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{user.name || "Unnamed"}</p>
+                  <p className="truncate text-sm font-medium">{user.name || t("team.unnamed")}</p>
                   <p className="text-muted-foreground truncate text-xs">{user.email}</p>
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-2">
                   <Badge variant="secondary">
-                    {user.isOwner ? "Owner" : user.role?.name ?? "Member"}
+                    {user.isOwner ? t("team.owner") : user.role?.name ?? t("team.member")}
                   </Badge>
                   <Badge variant={user.isActive ? "outline" : "secondary"}>
-                    {user.isActive ? "Active" : "Inactive"}
+                    {user.isActive ? t("team.active") : t("team.inactive")}
                   </Badge>
                 </div>
               </li>

@@ -1,6 +1,7 @@
 "use client"
 
 import { IconMinus, IconPackage, IconPlus } from "@tabler/icons-react"
+import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import type { ProductRow } from "@/lib/products"
@@ -26,6 +27,7 @@ export function StorefrontProductCard({
   onAdd: (product: ProductRow) => void
   onQuantityChange: (productId: number, quantity: number) => void
 }) {
+  const { t } = useTranslation("storefront")
   const imageUrl = product.imageUrls?.[0]?.trim()
 
   return (
@@ -61,7 +63,7 @@ export function StorefrontProductCard({
               className="h-11 rounded-full px-5 text-sm font-semibold"
               onClick={() => onAdd(product)}
             >
-              Add
+              {t("add")}
             </Button>
           ) : (
             <div className="flex items-center gap-2">

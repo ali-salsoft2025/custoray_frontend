@@ -1,7 +1,7 @@
 "use client"
 
-import Swal from "sweetalert2"
-import "sweetalert2/dist/sweetalert2.min.css"
+import i18n from "@/i18n"
+import { openConfirmDialog } from "@/lib/confirm-dialog"
 
 type ConfirmActionOptions = {
   itemName?: string
@@ -17,70 +17,73 @@ type ConfirmReturnOptions = {
   refundDue?: string
 }
 
-function pluralEntity(label: string, count: number) {
-  return count === 1 ? label : `${label}s`
+function entityLabel(label: string | undefined, count: number) {
+  const base = label || i18n.t("confirm.entityDefaults.item")
+  if (count === 1) return base
+  return `${base}`
+}
+
+async function confirm(options: Parameters<typeof openConfirmDialog>[0]) {
+  const result = await openConfirmDialog(options)
+  return result.confirmed
 }
 
 export async function confirmDeleteAction({
   itemName,
   count,
-  entityLabel = "item",
+  entityLabel: entity,
 }: ConfirmActionOptions): Promise<boolean> {
   const isBulk = count != null && count > 0
+  const entityText = entityLabel(entity, isBulk ? count : 1)
   const title = isBulk
-    ? `Delete ${count} ${pluralEntity(entityLabel, count)}?`
-    : `Delete ${itemName ?? entityLabel}?`
+    ? i18n.t("confirm.delete.titleBulk", { count, entity: entityText })
+    : i18n.t("confirm.delete.titleNamed", {
+        name: itemName ?? entityText,
+      })
 
-  const text = isBulk
-    ? `This will permanently remove ${count} selected ${pluralEntity(entityLabel, count)}. This action cannot be undone.`
+  const description = isBulk
+    ? i18n.t("confirm.delete.textBulk", { count, entity: entityText })
     : itemName
-      ? `Are you sure you want to delete "${itemName}"? This action cannot be undone.`
-      : "This action cannot be undone."
+      ? i18n.t("confirm.delete.textNamed", { name: itemName })
+      : i18n.t("confirm.delete.textGeneric")
 
-  const result = await Swal.fire({
+  return confirm({
     title,
-    text,
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonText: "Yes, delete",
-    cancelButtonText: "Cancel",
-    confirmButtonColor: "#dc2626",
-    reverseButtons: true,
-    focusCancel: true,
+    description,
+    confirmLabel: i18n.t("confirm.delete.confirm"),
+    cancelLabel: i18n.t("confirm.cancel"),
+    variant: "destructive",
+    tone: "danger",
   })
-
-  return result.isConfirmed
 }
 
 export async function confirmCancelAction({
   itemName,
   count,
-  entityLabel = "item",
+  entityLabel: entity,
 }: ConfirmActionOptions): Promise<boolean> {
   const isBulk = count != null && count > 0
+  const entityText = entityLabel(entity, isBulk ? count : 1)
   const title = isBulk
-    ? `Cancel ${count} pending ${pluralEntity(entityLabel, count)}?`
-    : `Cancel ${itemName ?? entityLabel}?`
+    ? i18n.t("confirm.cancelAction.titleBulk", { count, entity: entityText })
+    : i18n.t("confirm.cancelAction.titleNamed", {
+        name: itemName ?? entityText,
+      })
 
-  const text = isBulk
-    ? `These pending ${pluralEntity(entityLabel, count)} will be marked as cancelled.`
+  const description = isBulk
+    ? i18n.t("confirm.cancelAction.textBulk", { entity: entityText })
     : itemName
-      ? `Cancel pending "${itemName}"? Unpaid items cannot be returned — they will be cancelled instead.`
-      : "This pending item will be marked as cancelled."
+      ? i18n.t("confirm.cancelAction.textNamed", { name: itemName })
+      : i18n.t("confirm.cancelAction.textGeneric")
 
-  const result = await Swal.fire({
+  return confirm({
     title,
-    text,
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonText: "Yes, cancel",
-    cancelButtonText: "Keep",
-    confirmButtonColor: "#dc2626",
-    reverseButtons: true,
-    focusCancel: true,
+    description,
+    confirmLabel: i18n.t("confirm.cancelAction.confirm"),
+    cancelLabel: i18n.t("confirm.cancelAction.keep"),
+    variant: "destructive",
+    tone: "danger",
   })
-
-  return result.isConfirmed
 }
 
 export async function confirmReturnAction({
@@ -90,39 +93,87 @@ export async function confirmReturnAction({
   totalAmount,
   refundDue,
 }: ConfirmReturnOptions): Promise<boolean> {
+  const name =
+    itemName ??
+    (scope === "invoice"
+      ? i18n.t("confirm.return.defaults.invoice")
+      : i18n.t("confirm.return.defaults.item"))
   const title =
     scope === "invoice"
-      ? `Return ${itemName ?? "invoice"}?`
-      : `Return ${itemName ?? "item"}?`
+      ? i18n.t("confirm.return.titleInvoice", { name })
+      : i18n.t("confirm.return.titleItem", { name })
 
   const parts: string[] = []
   if (scope === "item" && referenceNumber) {
-    parts.push(`From invoice ${referenceNumber}.`)
+    parts.push(i18n.t("confirm.return.fromInvoice", { reference: referenceNumber }))
   }
   if (scope === "invoice") {
-    parts.push("All line items on this invoice will be returned.")
+    parts.push(i18n.t("confirm.return.allLineItems"))
   } else {
-    parts.push("This line item will be returned.")
+    parts.push(i18n.t("confirm.return.thisLineItem"))
   }
   if (totalAmount && Number(totalAmount) > 0) {
-    parts.push(`Return amount: ${totalAmount}.`)
+    parts.push(i18n.t("confirm.return.returnAmount", { amount: totalAmount }))
   }
   if (refundDue && Number(refundDue) > 0) {
-    parts.push(`Refund due: ${refundDue}.`)
+    parts.push(i18n.t("confirm.return.refundDue", { amount: refundDue }))
   }
+  parts.push(i18n.t("confirm.return.willUpdate"))
 
-  const result = await Swal.fire({
+  return confirm({
     title,
-    text: parts.join(" "),
-    icon: "question",
-    showCancelButton: true,
-    confirmButtonText: "Yes, return",
-    cancelButtonText: "Cancel",
-    reverseButtons: true,
-    focusCancel: true,
+    description: parts.join(" "),
+    confirmLabel: i18n.t("confirm.return.confirm"),
+    cancelLabel: i18n.t("confirm.cancel"),
+    tone: "question",
+  })
+}
+
+export async function confirmReturnLineAction({
+  itemName,
+  referenceNumber,
+  unitPrice,
+  maxQuantity,
+}: {
+  itemName: string
+  referenceNumber: string
+  unitPrice: string
+  maxQuantity: number
+}): Promise<number | null> {
+  const maxQty = Math.max(1, maxQuantity)
+  const allowQty = maxQty > 1
+  const description = [
+    i18n.t("confirm.return.fromInvoice", { reference: referenceNumber }),
+    allowQty ? i18n.t("confirm.return.unitPrice", { price: unitPrice }) : null,
+    i18n.t("confirm.return.willUpdate"),
+  ]
+    .filter(Boolean)
+    .join(" ")
+
+  const result = await openConfirmDialog({
+    title: i18n.t("confirm.return.titleItem", { name: itemName }),
+    description,
+    confirmLabel: i18n.t("confirm.return.confirm"),
+    cancelLabel: i18n.t("confirm.cancel"),
+    tone: "question",
+    input: allowQty
+      ? {
+          type: "number",
+          min: 1,
+          max: maxQty,
+          defaultValue: 1,
+          label: i18n.t("confirm.return.quantity"),
+          hint: i18n.t("confirm.return.maxHint", { max: maxQty }),
+          invalidMin: i18n.t("confirm.return.invalidMin"),
+          invalidMax: i18n.t("confirm.return.invalidMax", { max: maxQty }),
+        }
+      : undefined,
   })
 
-  return result.isConfirmed
+  if (!result.confirmed) return null
+  if (!allowQty) return 1
+  const qty = Math.min(maxQty, Math.max(1, Number(result.value) || 1))
+  return Number.isFinite(qty) ? qty : 1
 }
 
 type ConfirmPosSaleOptions = {
@@ -138,39 +189,30 @@ export async function confirmPosSaleAction({
   customerName,
   status,
 }: ConfirmPosSaleOptions): Promise<boolean> {
-  const result = await Swal.fire({
-    title: `Complete ${invoiceNumber}?`,
-    text: `${customerName} · ${totalAmount} · ${status.charAt(0).toUpperCase()}${status.slice(1)}`,
-    icon: "question",
-    showCancelButton: true,
-    confirmButtonText: "Yes, complete",
-    cancelButtonText: "Cancel",
-    reverseButtons: true,
-    focusCancel: true,
+  return confirm({
+    title: i18n.t("confirm.posSale.title", { invoiceNumber }),
+    description: `${customerName} · ${totalAmount} · ${status}`,
+    confirmLabel: i18n.t("confirm.posSale.confirm"),
+    cancelLabel: i18n.t("confirm.cancel"),
+    tone: "question",
   })
-
-  return result.isConfirmed
 }
 
 export async function confirmDuplicateAction({
   itemName,
-  entityLabel = "item",
+  entityLabel: entity,
 }: ConfirmActionOptions): Promise<boolean> {
-  const label = itemName ?? entityLabel
-  const result = await Swal.fire({
-    title: `Duplicate ${label}?`,
-    text: itemName
-      ? `A copy of "${itemName}" will be created.`
-      : `A copy of this ${entityLabel} will be created.`,
-    icon: "question",
-    showCancelButton: true,
-    confirmButtonText: "Yes, duplicate",
-    cancelButtonText: "Cancel",
-    reverseButtons: true,
-    focusCancel: true,
+  const entityText = entity || i18n.t("confirm.entityDefaults.item")
+  const label = itemName ?? entityText
+  return confirm({
+    title: i18n.t("confirm.duplicate.title", { label }),
+    description: itemName
+      ? i18n.t("confirm.duplicate.textNamed", { name: itemName })
+      : i18n.t("confirm.duplicate.textGeneric", { entity: entityText }),
+    confirmLabel: i18n.t("confirm.duplicate.confirm"),
+    cancelLabel: i18n.t("confirm.cancel"),
+    tone: "question",
   })
-
-  return result.isConfirmed
 }
 
 export async function confirmSelectInvoiceTemplateAction({
@@ -178,16 +220,11 @@ export async function confirmSelectInvoiceTemplateAction({
 }: {
   templateName: string
 }): Promise<boolean> {
-  const result = await Swal.fire({
-    title: `Use ${templateName}?`,
-    text: `"${templateName}" will be set as your active invoice template for PDF downloads.`,
-    icon: "question",
-    showCancelButton: true,
-    confirmButtonText: "Yes, use template",
-    cancelButtonText: "Cancel",
-    reverseButtons: true,
-    focusCancel: true,
+  return confirm({
+    title: i18n.t("confirm.invoiceTemplate.title", { templateName }),
+    description: i18n.t("confirm.invoiceTemplate.text", { templateName }),
+    confirmLabel: i18n.t("confirm.invoiceTemplate.confirm"),
+    cancelLabel: i18n.t("confirm.cancel"),
+    tone: "question",
   })
-
-  return result.isConfirmed
 }

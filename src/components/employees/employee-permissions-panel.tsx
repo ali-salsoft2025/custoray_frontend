@@ -13,6 +13,7 @@ import {
   IconX,
 } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 import { CustomerAvatar } from "@/components/customers/customer-avatar"
 import { EmployeePermissionsMatrix } from "@/components/employees/employee-permissions-matrix"
@@ -33,7 +34,7 @@ import {
   permissionPreset,
   permissionSummary,
   PERMISSION_PRESET_IDS,
-  PERMISSION_PRESET_LABELS,
+  permissionPresetLabel,
   permissionsEqual,
   type EmployeePermissions,
   type PermissionPresetId,
@@ -50,14 +51,16 @@ function EmployeeListRow({
   selected: boolean
   onSelect: () => void
 }) {
+  const { t } = useTranslation("employees")
+  const { t: tn } = useTranslation("nav")
   const summary = permissionSummary(employee.permissions)
   const modules = countGrantedModules(employee.permissions)
   const preview =
-    summary === "Admin"
-      ? "Full admin access"
-      : summary === "No access"
-        ? "No modules assigned"
-        : `${modules} module${modules === 1 ? "" : "s"} · ${summary}`
+    summary === tn("userMenu.admin")
+      ? t("permissionsPage.fullAdminAccess")
+      : summary === tn("userMenu.noAccess")
+        ? t("permissionsPage.noModulesAssigned")
+        : t("permissionsPage.modulesSummary", { count: modules, summary })
 
   return (
     <button
@@ -89,6 +92,8 @@ function EmployeeListRow({
 }
 
 export function EmployeePermissionsPanel() {
+  const { t } = useTranslation("employees")
+  const { t: tc } = useTranslation("common")
   const searchParams = useSearchParams()
   const highlightId = Number(searchParams.get("employee"))
   const { employees, updateEmployee } = useEmployees()
@@ -157,7 +162,7 @@ export function EmployeePermissionsPanel() {
 
   const selectEmployee = (id: number) => {
     if (id !== selectedId && isDirty) {
-      toast.message("Save or discard your changes before switching.")
+      toast.message(t("permissionsPage.toastSwitchDirty"))
       return
     }
     setSelectedId(id)
@@ -169,18 +174,22 @@ export function EmployeePermissionsPanel() {
     updateEmployee(selected.id, {
       permissions: normalizePermissions(draft),
     })
-    toast.success(`Permissions updated for ${selected.name}.`)
+    toast.success(t("permissionsPage.toastUpdated", { name: selected.name }))
   }
 
   const discardChanges = () => {
     if (!savedPermissions) return
     setDraft(savedPermissions)
-    toast.message("Changes discarded.")
+    toast.message(t("permissionsPage.toastDiscarded"))
   }
 
   const applyPreset = (presetId: PermissionPresetId) => {
     setDraft(permissionPreset(presetId))
-    toast.message(`Applied ${PERMISSION_PRESET_LABELS[presetId]} preset.`)
+    toast.message(
+      t("permissionsPage.toastAppliedPreset", {
+        preset: permissionPresetLabel(presetId),
+      })
+    )
   }
 
   const copyFromEmployee = (employeeId: string) => {
@@ -188,7 +197,7 @@ export function EmployeePermissionsPanel() {
     if (!source) return
     setDraft(normalizePermissions(source.permissions))
     setCopyFromId(employeeId)
-    toast.message(`Copied permissions from ${source.name}.`)
+    toast.message(t("permissionsPage.toastCopied", { name: source.name }))
   }
 
   if (employees.length === 0) {
@@ -196,13 +205,13 @@ export function EmployeePermissionsPanel() {
       <div className="bg-card flex flex-col items-center justify-center gap-3 rounded-xl border py-20 text-center">
         <IconShieldCheck className="text-muted-foreground size-10" />
         <div className="space-y-1">
-          <p className="font-medium">No employees yet</p>
+          <p className="font-medium">{t("permissionsPage.noEmployeesYet")}</p>
           <p className="text-muted-foreground text-sm">
-            Add a team member first, then assign their module permissions here.
+            {t("permissionsPage.noEmployeesHint")}
           </p>
         </div>
         <Button type="button" size="sm" asChild>
-          <Link href="/employees">Go to team</Link>
+          <Link href="/employees">{t("permissionsPage.goToTeam")}</Link>
         </Button>
       </div>
     )
@@ -213,7 +222,7 @@ export function EmployeePermissionsPanel() {
   const copyCandidates = employees.filter((e) => e.id !== selected.id)
   const roleLine =
     [selected.designation, selected.department].filter(Boolean).join(" · ") ||
-    "Team member"
+    t("permissionsPage.teamMember")
 
   return (
     <div className="bg-card text-card-foreground -mx-4 -my-4 flex h-[calc(100dvh-var(--header-height)-1.5rem)] min-h-[28rem] w-[calc(100%+2rem)] overflow-hidden md:-mx-6 md:-my-6 md:h-[calc(100dvh-var(--header-height)-2rem)] md:w-[calc(100%+3rem)]">
@@ -225,11 +234,11 @@ export function EmployeePermissionsPanel() {
         )}
       >
         <div className="flex items-center gap-3 border-b border-primary/15 px-4 py-3">
-          <CustomerAvatar name="Permissions" size="sm" />
+          <CustomerAvatar name={t("permissions")} size="sm" />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold">Permissions</p>
+            <p className="truncate text-sm font-semibold">{t("permissions")}</p>
             <p className="text-muted-foreground truncate text-xs">
-              {employees.length} team member{employees.length === 1 ? "" : "s"}
+              {t("permissionsPage.teamMembers", { count: employees.length })}
             </p>
           </div>
         </div>
@@ -240,8 +249,8 @@ export function EmployeePermissionsPanel() {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search employees"
-              aria-label="Search employees"
+              placeholder={t("permissionsPage.searchPlaceholder")}
+              aria-label={t("permissionsPage.searchPlaceholder")}
               className="placeholder:text-muted-foreground h-9 w-full rounded-lg bg-transparent py-2 pr-3 pl-9 text-sm outline-none"
             />
           </label>
@@ -250,7 +259,7 @@ export function EmployeePermissionsPanel() {
         <div className="flex-1 overflow-y-auto">
           {filteredEmployees.length === 0 ? (
             <p className="text-muted-foreground px-4 py-10 text-center text-sm">
-              No employees found
+              {t("permissionsPage.noEmployeesFound")}
             </p>
           ) : (
             filteredEmployees.map((employee) => (
@@ -278,12 +287,12 @@ export function EmployeePermissionsPanel() {
             className="text-muted-foreground hover:text-foreground -ms-1 rounded-full p-1.5 md:hidden"
             onClick={() => {
               if (isDirty) {
-                toast.message("Save or discard your changes first.")
+                toast.message(t("permissionsPage.toastSaveFirst"))
                 return
               }
               setMobileShowChat(false)
             }}
-            aria-label="Back to list"
+            aria-label={t("permissionsPage.backToList")}
           >
             <IconArrowLeft className="size-5" />
           </button>
@@ -301,7 +310,7 @@ export function EmployeePermissionsPanel() {
           <Button type="button" variant="ghost" size="sm" asChild>
             <Link href={`/employees/${selected.id}`}>
               <IconExternalLink className="size-4" />
-              <span className="hidden sm:inline">Profile</span>
+              <span className="hidden sm:inline">{t("profilePage.profile")}</span>
             </Link>
           </Button>
         </header>
@@ -312,12 +321,13 @@ export function EmployeePermissionsPanel() {
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="space-y-1">
                   <p className="text-sm leading-relaxed">
-                    Set what <span className="font-medium">{selected.name}</span>{" "}
-                    can add, edit, and delete across modules.
+                    {t("permissionsPage.setWhatCan", { name: selected.name })}
                   </p>
                   <div className="flex flex-wrap gap-1.5 pt-1">
                     <Badge variant="outline" className="text-[10px]">
-                      {selected.portalEnabled ? "Portal on" : "Portal off"}
+                      {selected.portalEnabled
+                        ? t("permissionsPage.portalOn")
+                        : t("permissionsPage.portalOff")}
                     </Badge>
                     <Badge variant="outline" className="text-[10px]">
                       {permissionSummary(draft)}
@@ -327,30 +337,30 @@ export function EmployeePermissionsPanel() {
               </div>
               {!selected.portalEnabled ? (
                 <p className="text-muted-foreground mt-3 border-t pt-3 text-xs leading-relaxed">
-                  Portal is off — permissions take effect once they can sign in.
+                  {t("permissionsPage.portalOffHint")}
                 </p>
               ) : null}
             </div>
 
             <div className="bg-card w-full rounded-xl border border-primary/15 px-4 py-4">
               <p className="text-muted-foreground mb-3 text-xs font-medium tracking-wide uppercase">
-                Quick actions
+                {t("permissionsPage.quickActions")}
               </p>
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
                 <div className="space-y-1.5 sm:min-w-[11rem]">
-                  <Label className="text-xs">Preset</Label>
+                  <Label className="text-xs">{t("permissionsPage.preset")}</Label>
                   <Select
                     onValueChange={(value) =>
                       applyPreset(value as PermissionPresetId)
                     }
                   >
                     <SelectTrigger className="w-full sm:w-[12rem]" size="sm">
-                      <SelectValue placeholder="Apply preset…" />
+                      <SelectValue placeholder={t("permissionsPage.applyPreset")} />
                     </SelectTrigger>
                     <SelectContent>
                       {PERMISSION_PRESET_IDS.map((id) => (
                         <SelectItem key={id} value={id}>
-                          {PERMISSION_PRESET_LABELS[id]}
+                          {permissionPresetLabel(id)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -359,10 +369,10 @@ export function EmployeePermissionsPanel() {
 
                 {copyCandidates.length > 0 ? (
                   <div className="space-y-1.5 sm:min-w-[14rem] sm:flex-1">
-                    <Label className="text-xs">Copy from</Label>
+                    <Label className="text-xs">{t("permissionsPage.copyFrom")}</Label>
                     <Select value={copyFromId} onValueChange={copyFromEmployee}>
                       <SelectTrigger className="w-full" size="sm">
-                        <SelectValue placeholder="Another employee…" />
+                        <SelectValue placeholder={t("permissionsPage.anotherEmployee")} />
                       </SelectTrigger>
                       <SelectContent>
                         {copyCandidates.map((employee) => (
@@ -380,13 +390,13 @@ export function EmployeePermissionsPanel() {
               </div>
               <p className="text-muted-foreground mt-3 flex items-center gap-1.5 text-xs">
                 <IconCopy className="size-3.5 shrink-0" />
-                Updates the draft — save to apply.
+                {t("permissionsPage.draftHint")}
               </p>
             </div>
 
             <div className="bg-card w-full rounded-xl border border-primary/15 px-4 py-4">
               <p className="text-muted-foreground mb-3 text-xs font-medium tracking-wide uppercase">
-                Module access
+                {t("permissionsPage.moduleAccess")}
               </p>
               <EmployeePermissionsMatrix value={draft} onChange={setDraft} />
             </div>
@@ -397,7 +407,7 @@ export function EmployeePermissionsPanel() {
           {isDirty ? (
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-muted-foreground text-sm">
-                Unsaved changes for {selected.name}
+                {t("permissionsPage.unsavedChanges", { name: selected.name })}
               </p>
               <div className="flex gap-2">
                 <Button
@@ -407,17 +417,17 @@ export function EmployeePermissionsPanel() {
                   onClick={discardChanges}
                 >
                   <IconX className="size-4" />
-                  Discard
+                  {t("permissionsPage.discard")}
                 </Button>
                 <Button type="button" size="sm" onClick={savePermissions}>
                   <IconCheck className="size-4" />
-                  Save
+                  {tc("actions.save")}
                 </Button>
               </div>
             </div>
           ) : (
             <p className="text-muted-foreground py-0.5 text-center text-sm">
-              All changes saved
+              {t("permissionsPage.allSaved")}
             </p>
           )}
         </footer>

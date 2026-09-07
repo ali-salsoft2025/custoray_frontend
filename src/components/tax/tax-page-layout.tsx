@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { IconArrowLeft } from "@tabler/icons-react"
+import { useTranslation } from "react-i18next"
 
 import { TaxDisclaimer, TaxExplainBox } from "@/components/tax/tax-disclaimer"
 import { TaxTermBanner } from "@/components/tax/tax-term-banner"
@@ -32,6 +33,7 @@ export function TaxPageLayout({
   actions?: React.ReactNode
   children: React.ReactNode
 }) {
+  const { t } = useTranslation("tax")
   return (
     <div className="flex flex-col gap-5">
       <Button
@@ -43,14 +45,14 @@ export function TaxPageLayout({
       >
         <Link href={backHref}>
           <IconArrowLeft className="size-4" />
-          Back to Tax Helper
+          {t("backToHelper")}
         </Link>
       </Button>
 
       <div className={cn(panelClass, "px-5 py-5 sm:px-6")}>
         {step ? (
           <p className="text-primary text-xs font-semibold tracking-wide uppercase">
-            Step {step} of {totalSteps}
+            {t("stepOf", { step, total: totalSteps })}
           </p>
         ) : null}
         <div className="mt-1 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">

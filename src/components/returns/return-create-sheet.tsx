@@ -2,6 +2,7 @@
 
 import { useCallback, type FormEvent } from "react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 import { ReturnForm } from "@/components/returns/return-form"
 import { Button } from "@/components/ui/button"
@@ -33,6 +34,7 @@ export function ReturnCreateSheet({
   draft,
   formId = "return-create-form",
 }: ReturnCreateSheetProps) {
+  const { t } = useTranslation("returns")
   const { addReturn } = useReturns()
   const { getOrder, updateOrder } = useOrders()
   const { getPurchase, updatePurchase } = usePurchases()
@@ -44,7 +46,7 @@ export function ReturnCreateSheet({
 
       const parsed = returnFromFormData(new FormData(e.currentTarget), 0)
       if (parsed.lines.length === 0 || !parsed.lines.some((l) => l.productName.trim())) {
-        toast.error("Add at least one item to return.")
+        toast.error(t("toasts.addItem"))
         return
       }
 
@@ -53,7 +55,7 @@ export function ReturnCreateSheet({
           ? getOrder(parsed.sourceId)
           : getPurchase(parsed.sourceId)
       if (!source || !canReturnDocument(source)) {
-        toast.error("Only completed paid items can be returned. Cancel pending items instead.")
+        toast.error(t("toasts.onlyCompleted"))
         return
       }
 
@@ -65,21 +67,19 @@ export function ReturnCreateSheet({
       })
 
       toast.success(
-        parsed.status === "completed"
-          ? "Return recorded and source updated (demo)."
-          : "Return saved (demo)."
+        parsed.status === "completed" ? t("toasts.recorded") : t("toasts.saved")
       )
       onOpenChange(false)
     },
-    [addReturn, draft, getOrder, getPurchase, onOpenChange, updateOrder, updatePurchase]
+    [addReturn, draft, getOrder, getPurchase, onOpenChange, t, updateOrder, updatePurchase]
   )
 
   const title =
     draft?.type === "sales"
-      ? "Return sale"
+      ? t("create.returnSale")
       : draft?.type === "purchase"
-        ? "Return purchase"
-        : "Create return"
+        ? t("create.returnPurchase")
+        : t("create.createReturn")
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -105,11 +105,11 @@ export function ReturnCreateSheet({
             <SheetFooter className="border-border/60 gap-2 border-t px-6 py-4 sm:flex-row sm:justify-end">
               <SheetClose asChild>
                 <Button variant="outline" type="button">
-                  Cancel
+                  {t("actions.cancel", { ns: "common" })}
                 </Button>
               </SheetClose>
               <Button type="submit" form={formId}>
-                Record return
+                {t("form.recordReturn")}
               </Button>
             </SheetFooter>
           </>

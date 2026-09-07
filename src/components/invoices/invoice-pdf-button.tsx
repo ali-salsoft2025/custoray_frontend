@@ -3,11 +3,19 @@
 import { useState } from "react"
 import { IconDownload } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 import { Button } from "@/components/ui/button"
 import { loadCompanySettings } from "@/lib/company-settings"
+import {
+  computeBalance as computeCustomerBalance,
+  CUSTOMERS_STORAGE_KEY,
+  initialCustomers,
+  parsePersistedCustomers,
+} from "@/lib/customers"
+import { loadDocumentDisplaySettings } from "@/lib/document-display-settings"
 import { resolveActiveTemplateForPdf } from "@/lib/invoice-templates"
 import type { OrderRow } from "@/lib/orders"
 import { cn } from "@/lib/utils"
@@ -27,13 +35,35 @@ function filenameFromDisposition(header: string | null, fallback: string) {
   return match?.[1] ?? fallback
 }
 
+function lookupCustomerBalance(customerName: string): string | undefined {
+  if (typeof window === "undefined") return undefined
+  const customers =
+    parsePersistedCustomers(window.localStorage.getItem(CUSTOMERS_STORAGE_KEY)) ??
+    initialCustomers
+  const match = customers.find(
+    (customer) =>
+      customer.name.trim().toLowerCase() === customerName.trim().toLowerCase()
+  )
+  return match ? computeCustomerBalance(match) : undefined
+}
+
 export async function downloadInvoicePdf(order: OrderRow) {
   const company = loadCompanySettings()
   const { templateId, colors, builder } = resolveActiveTemplateForPdf()
+  const display = loadDocumentDisplaySettings().invoice
+  const customerBalance = lookupCustomerBalance(order.customerName)
   const response = await fetch("/api/invoices/pdf", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ order, company, templateId, colors, builder }),
+    body: JSON.stringify({
+      order,
+      company,
+      templateId,
+      colors,
+      builder,
+      display,
+      customerBalance,
+    }),
   })
 
   if (!response.ok) {
@@ -59,17 +89,19 @@ export function InvoicePdfButton({
   variant = "outline",
   size = "default",
   className,
-  label = "Download PDF",
+  label,
   showIcon = true,
 }: InvoicePdfButtonProps) {
+  const { t } = useTranslation("documents")
   const [loading, setLoading] = useState(false)
+  const buttonLabel = label ?? t("downloadPdf")
 
   const handleClick = async () => {
     setLoading(true)
     try {
       await downloadInvoicePdf(order)
     } catch {
-      toast.error("Could not download invoice PDF.")
+      toast.error(t("toasts.pdfFailed"))
     } finally {
       setLoading(false)
     }
@@ -89,7 +121,7 @@ export function InvoicePdfButton({
       ) : showIcon ? (
         <IconDownload className="size-4" />
       ) : null}
-      {size !== "icon" ? label : <span className="sr-only">{label}</span>}
+      {size !== "icon" ? buttonLabel : <span className="sr-only">{buttonLabel}</span>}
     </Button>
   )
 }

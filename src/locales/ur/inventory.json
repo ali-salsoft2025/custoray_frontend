@@ -1,0 +1,162 @@
+{
+  "title": "مصنوعات",
+  "add": "مصنوعات شامل کریں",
+  "addButton": "نئی مصنوعات",
+  "search": "مصنوعات تلاش کریں…",
+  "brands": "برانڈز",
+  "addBrand": "برانڈ شامل کریں",
+  "categories": "کیٹگریز",
+  "addCategory": "کیٹگری شامل کریں",
+  "variants": "اقسام",
+  "addVariant": "قسم شامل کریں",
+  "yearClosing": "سالانہ اختتام",
+  "termDetails": "مدت کی تفصیلات",
+  "tabs": {
+    "all": "تمام",
+    "active": "فعال",
+    "inactive": "غیر فعال",
+    "archived": "محفوظ شدہ"
+  },
+  "columns": {
+    "id": "آئی ڈی",
+    "name": "نام",
+    "productName": "مصنوعات کا نام",
+    "sku": "SKU",
+    "brand": "برانڈ",
+    "category": "کیٹگری",
+    "variant": "قسم",
+    "price": "قیمت",
+    "costPrice": "لاگت قیمت",
+    "salePrice": "فروخت قیمت",
+    "stock": "اسٹاک",
+    "status": "حیثیت",
+    "description": "تفصیل",
+    "products": "مصنوعات"
+  },
+  "actions": {
+    "edit": "ترمیم",
+    "delete": "حذف کریں",
+    "duplicate": "نقل بنائیں",
+    "view": "دیکھیں",
+    "openMenu": "مینو کھولیں",
+    "deleteSelected": "منتخب حذف کریں",
+    "moveToArchive": "آرکائیو میں منتقل کریں",
+    "setActive": "فعال کریں",
+    "setInactive": "غیر فعال کریں"
+  },
+  "empty": "کوئی مصنوعات نہیں ملیں۔",
+  "stockLevel": {
+    "inStock": "دستیاب",
+    "lowStock": "کم اسٹاک",
+    "outOfStock": "ختم"
+  },
+  "listing": {
+    "active": "فعال",
+    "none": "کوئی حیثیت نہیں"
+  },
+  "fields": {
+    "images": "تصاویر",
+    "sku": "SKU",
+    "name": "نام",
+    "brand": "برانڈ",
+    "category": "کیٹگری",
+    "variant": "قسم",
+    "lifecycle": "لائف سائیکل",
+    "stock": "اسٹاک",
+    "listing": "لسٹنگ",
+    "qty": "مقدار",
+    "orders": "آرڈرز",
+    "ordersPeriod": "آرڈرز (مدت)",
+    "costPrice": "لاگت قیمت",
+    "salePrice": "فروخت قیمت",
+    "status": "حیثیت",
+    "id": "آئی ڈی",
+    "description": "تفصیل",
+    "products": "مصنوعات"
+  },
+  "form": {
+    "addNewBrand": "+ نیا برانڈ شامل کریں",
+    "addNewCategory": "+ نئی کیٹگری شامل کریں",
+    "addNewVariant": "+ نئی قسم شامل کریں"
+  },
+  "productSheet": {
+    "add": "مصنوعات شامل کریں",
+    "edit": "مصنوعات میں ترمیم",
+    "addDescription": "تفصیلات اور تصاویر درج کریں۔",
+    "skuLabel": "SKU {{sku}}",
+    "create": "مصنوعات بنائیں",
+    "save": "مصنوعات محفوظ کریں"
+  },
+  "brandPage": {
+    "addButton": "نیا برانڈ",
+    "search": "برانڈز تلاش کریں…"
+  },
+  "categoryPage": {
+    "addButton": "نئی کیٹگری",
+    "search": "کیٹگریز تلاش کریں…",
+    "add": "کیٹگری شامل کریں",
+    "edit": "کیٹگری میں ترمیم",
+    "details": "کیٹگری کی تفصیلات",
+    "addDescription": "نئی کیٹگری بنائیں۔ مصنوعات کی تعداد انوینٹری سے خود بخود سیٹ ہوتی ہے۔",
+    "create": "کیٹگری بنائیں",
+    "save": "کیٹگری محفوظ کریں",
+    "namePlaceholder": "کیٹگری کا نام",
+    "descriptionPlaceholder": "مختصر تفصیل",
+    "productCountHint": "مصنوعات کی تعداد ({{count}}) انوینٹری سے خود بخود اپ ڈیٹ ہوتی ہے۔",
+    "idLine": "آئی ڈی {{id}}"
+  },
+  "variantPage": {
+    "addButton": "نئی قسم",
+    "search": "اقسام تلاش کریں…",
+    "edit": "قسم میں ترمیم",
+    "details": "قسم کی تفصیلات",
+    "productsCount": "{{name}} · {{count}} مصنوعات",
+    "save": "قسم محفوظ کریں"
+  },
+  "toasts": {
+    "nameRequired": "مصنوعات کا نام درکار ہے۔",
+    "categoryNameRequired": "نام درکار ہے۔",
+    "created": "مصنوعات بن گئی۔",
+    "saved": "مصنوعات محفوظ ہو گئیں۔",
+    "categoryCreated": "کیٹگری بن گئی (ڈیمو)۔",
+    "categorySaved": "کیٹگری محفوظ ہو گئی (ڈیمو)۔",
+    "variantSaved": "{{name}} محفوظ ہو گئی (ڈیمو)۔",
+    "deletedNamed": "{{name}} حذف ہو گئی (ڈیمو)۔",
+    "duplicatedNamed": "{{name}} کی نقل بن گئی (ڈیمو)۔",
+    "archivedCount": "{{count}} مصنوعات آرکائیو میں منتقل ہو گئیں (ڈیمو)۔",
+    "wouldDeleteProducts": "{{count}} مصنوعات حذف ہو جائیں گی۔",
+    "archivedBrands": "{{count}} برانڈ(ز) آرکائیو میں منتقل ہو گئے (ڈیمو)۔",
+    "wouldDeleteBrands": "{{count}} برانڈ(ز) حذف ہو جائیں گے۔",
+    "setActiveCount": "{{count}} کیٹگری(ز) فعال ہو گئیں (ڈیمو)۔",
+    "setInactiveCount": "{{count}} کیٹگری(ز) غیر فعال ہو گئیں (ڈیمو)۔",
+    "deletedCategories": "{{count}} کیٹگری(ز) حذف ہو گئیں (ڈیمو)۔",
+    "maxImages": "آپ زیادہ سے زیادہ {{count}} تصاویر اپ لوڈ کر سکتے ہیں۔",
+    "onlyImagesAllowed": "صرف {{count}} تصاویر کی اجازت ہے۔"
+  },
+  "noDescription": "کوئی تفصیل نہیں",
+  "images": {
+    "remove": "تصویر ہٹائیں",
+    "upload": "اپ لوڈ",
+    "maxReached": "حد پوری ہو گئی",
+    "uploadImages": "تصاویر اپ لوڈ کریں",
+    "clickToAdd": "ایک یا زیادہ مصنوعات کی تصاویر شامل کرنے کے لیے کلک کریں",
+    "hint": "PNG، JPG، WebP — زیادہ سے زیادہ {{count}} تصاویر۔ ہٹانے کے لیے تھمب نیل پر X کلک کریں۔"
+  },
+  "lookup": {
+    "add": "{{label}} شامل کریں",
+    "addDescription": "نیا {{label}} بنائیں اور فوراً استعمال کریں۔",
+    "nameRequired": "{{label}} کا نام درکار ہے۔",
+    "alreadyExists": "{{label}} پہلے سے موجود ہے۔",
+    "added": "{{label}} شامل ہو گیا",
+    "nameLabel": "{{label}} کا نام",
+    "namePlaceholder": "{{label}} کا نام درج کریں",
+    "descriptionPlaceholder": "{{label}} کی مختصر تفصیل",
+    "save": "{{label}} محفوظ کریں"
+  },
+  "entity": {
+    "product": "مصنوعات",
+    "brand": "برانڈ",
+    "category": "کیٹگری",
+    "variant": "قسم"
+  }
+}

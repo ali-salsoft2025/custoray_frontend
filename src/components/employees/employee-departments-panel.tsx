@@ -9,6 +9,7 @@ import {
   IconTrash,
 } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 import { DataTableColumnHeader } from "@/components/data-table-column-header"
 import { DataTable, type DataTableTab } from "@/components/data-table"
@@ -42,12 +43,6 @@ import {
   type DepartmentRow,
 } from "@/lib/employee-departments"
 
-const departmentTabs: DataTableTab[] = [
-  { value: "all", label: "All" },
-  { value: "active", label: "Active" },
-  { value: "inactive", label: "Inactive" },
-]
-
 type DepartmentSidebarState =
   | { mode: "add" }
   | { mode: "view"; department: DepartmentRow }
@@ -68,39 +63,41 @@ function DepartmentForm({
   department: DepartmentRow
   onSubmit: (e: FormEvent<HTMLFormElement>) => void
 }) {
+  const { t } = useTranslation("employees")
+  const { t: tc } = useTranslation("common")
   return (
     <form id={formId} className="flex flex-col gap-4 text-sm" onSubmit={onSubmit}>
       <div className="flex flex-col gap-2">
-        <Label htmlFor={`${formId}-name`}>Name</Label>
+        <Label htmlFor={`${formId}-name`}>{t("departmentsPage.name")}</Label>
         <Input
           id={`${formId}-name`}
           name="name"
           required
           defaultValue={department.name}
-          placeholder="e.g. Sales"
+          placeholder={t("departmentsPage.namePlaceholder")}
         />
       </div>
       <div className="flex flex-col gap-2">
-        <Label htmlFor={`${formId}-description`}>Description</Label>
+        <Label htmlFor={`${formId}-description`}>{t("departmentsPage.description")}</Label>
         <Input
           id={`${formId}-description`}
           name="description"
           defaultValue={
             department.description === "—" ? "" : department.description
           }
-          placeholder="What this team does"
+          placeholder={t("departmentsPage.descriptionPlaceholder")}
         />
       </div>
       <div className="flex flex-col gap-2">
-        <Label htmlFor={`${formId}-status`}>Status</Label>
+        <Label htmlFor={`${formId}-status`}>{t("columns.status")}</Label>
         <select
           id={`${formId}-status`}
           name="status"
           defaultValue={department.status}
           className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm shadow-xs outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px]"
         >
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
+          <option value="active">{tc("status.active")}</option>
+          <option value="inactive">{tc("status.inactive")}</option>
         </select>
       </div>
     </form>
@@ -114,31 +111,40 @@ function DepartmentDetail({
   department: DepartmentRow
   headcount: number
 }) {
+  const { t } = useTranslation("employees")
   return (
     <dl className="space-y-3 text-sm">
       <div className="grid grid-cols-[7rem_1fr] gap-2">
-        <dt className="text-muted-foreground">Name</dt>
+        <dt className="text-muted-foreground">{t("departmentsPage.name")}</dt>
         <dd className="font-medium">{department.name}</dd>
       </div>
       <div className="grid grid-cols-[7rem_1fr] gap-2">
-        <dt className="text-muted-foreground">Description</dt>
+        <dt className="text-muted-foreground">{t("departmentsPage.description")}</dt>
         <dd className="text-foreground whitespace-normal">
           {department.description}
         </dd>
       </div>
       <div className="grid grid-cols-[7rem_1fr] gap-2">
-        <dt className="text-muted-foreground">Status</dt>
-        <dd className="font-medium capitalize">{department.status}</dd>
+        <dt className="text-muted-foreground">{t("columns.status")}</dt>
+        <dd className="font-medium">
+          {department.status === "active"
+            ? t("status.active")
+            : t("status.inactive")}
+        </dd>
       </div>
       <div className="grid grid-cols-[7rem_1fr] gap-2">
-        <dt className="text-muted-foreground">Employees</dt>
-        <dd className="font-medium tabular-nums">{headcount} active</dd>
+        <dt className="text-muted-foreground">{t("departmentsPage.employees")}</dt>
+        <dd className="font-medium tabular-nums">
+          {t("departmentsPage.activeCount", { count: headcount })}
+        </dd>
       </div>
     </dl>
   )
 }
 
 export function EmployeeDepartmentsPanel() {
+  const { t } = useTranslation("employees")
+  const { t: tc } = useTranslation("common")
   const {
     departments,
     setDepartments,
@@ -148,6 +154,11 @@ export function EmployeeDepartmentsPanel() {
   } = useDepartments()
   const { employees } = useEmployees()
   const [sidebar, setSidebar] = useState<DepartmentSidebarState>(null)
+  const departmentTabs: DataTableTab[] = [
+    { value: "all", label: tc("tabs.all") },
+    { value: "active", label: tc("tabs.active") },
+    { value: "inactive", label: tc("tabs.inactive") },
+  ]
 
   const headcountByName = useCallback(
     (name: string) =>
@@ -163,7 +174,7 @@ export function EmployeeDepartmentsPanel() {
       if (
         !(await confirmDeleteAction({
           itemName: dept.name,
-          entityLabel: "department",
+          entityLabel: t("entity.department"),
         }))
       ) {
         return
@@ -176,9 +187,9 @@ export function EmployeeDepartmentsPanel() {
       ) {
         closeSidebar()
       }
-      toast.message(`Removed ${dept.name}.`)
+      toast.message(t("departmentsPage.toastRemoved", { name: dept.name }))
     },
-    [removeDepartment, sidebar]
+    [removeDepartment, sidebar, t]
   )
 
   const handleSubmit = useCallback(
@@ -187,13 +198,13 @@ export function EmployeeDepartmentsPanel() {
       const fd = new FormData(e.currentTarget)
       const name = String(fd.get("name") ?? "").trim()
       if (!name) {
-        toast.error("Department name is required.")
+        toast.error(t("departmentsPage.toastNameRequired"))
         return
       }
 
       if (sidebar?.mode === "add") {
         addDepartment(departmentFromFormData(fd, 0))
-        toast.success("Department created.")
+        toast.success(t("departmentsPage.toastCreated"))
         closeSidebar()
         return
       }
@@ -203,11 +214,11 @@ export function EmployeeDepartmentsPanel() {
           sidebar.department.id,
           departmentFromFormData(fd, sidebar.department.id)
         )
-        toast.success("Department saved.")
+        toast.success(t("departmentsPage.toastSaved"))
         closeSidebar()
       }
     },
-    [sidebar, addDepartment, updateDepartment]
+    [sidebar, addDepartment, updateDepartment, t]
   )
 
   const columns = useMemo<ColumnDef<DepartmentRow>[]>(
@@ -224,7 +235,7 @@ export function EmployeeDepartmentsPanel() {
               onCheckedChange={(value) =>
                 table.toggleAllPageRowsSelected(!!value)
               }
-              aria-label="Select all"
+              aria-label={tc("table.selectAll")}
             />
           </div>
         ),
@@ -233,7 +244,7 @@ export function EmployeeDepartmentsPanel() {
             <Checkbox
               checked={row.getIsSelected()}
               onCheckedChange={(value) => row.toggleSelected(!!value)}
-              aria-label="Select row"
+              aria-label={tc("table.selectRow")}
             />
           </div>
         ),
@@ -243,7 +254,7 @@ export function EmployeeDepartmentsPanel() {
       {
         accessorKey: "id",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="ID" />
+          <DataTableColumnHeader column={column} title={t("departmentsPage.id")} />
         ),
         cell: ({ row }) => (
           <span className="text-muted-foreground font-mono tabular-nums">
@@ -255,7 +266,7 @@ export function EmployeeDepartmentsPanel() {
       {
         accessorKey: "name",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Department" />
+          <DataTableColumnHeader column={column} title={t("departmentsPage.department")} />
         ),
         cell: ({ row }) => (
           <button
@@ -274,7 +285,7 @@ export function EmployeeDepartmentsPanel() {
       {
         accessorKey: "description",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Description" />
+          <DataTableColumnHeader column={column} title={t("departmentsPage.description")} />
         ),
         cell: ({ row }) => (
           <span className="text-muted-foreground max-w-xs text-sm leading-snug whitespace-normal">
@@ -290,7 +301,7 @@ export function EmployeeDepartmentsPanel() {
         id: "employees",
         accessorFn: (row) => headcountByName(row.name),
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Employees" />
+          <DataTableColumnHeader column={column} title={t("departmentsPage.employees")} />
         ),
         cell: ({ row }) => (
           <span className="tabular-nums">
@@ -302,7 +313,7 @@ export function EmployeeDepartmentsPanel() {
       {
         accessorKey: "status",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Status" />
+          <DataTableColumnHeader column={column} title={t("columns.status")} />
         ),
         cell: ({ row }) => (
           <span
@@ -312,7 +323,7 @@ export function EmployeeDepartmentsPanel() {
                 : "text-muted-foreground text-sm"
             }
           >
-            {row.original.status === "active" ? "Active" : "Inactive"}
+            {row.original.status === "active" ? t("status.active") : t("status.inactive")}
           </span>
         ),
         meta: { dataTableFilter: false },
@@ -326,7 +337,7 @@ export function EmployeeDepartmentsPanel() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="size-8" size="icon">
                 <IconDotsVertical />
-                <span className="sr-only">Open menu</span>
+                <span className="sr-only">{tc("actions.openMenu")}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40">
@@ -336,7 +347,7 @@ export function EmployeeDepartmentsPanel() {
                 }
               >
                 <IconEye />
-                View
+                {tc("actions.view")}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() =>
@@ -344,7 +355,7 @@ export function EmployeeDepartmentsPanel() {
                 }
               >
                 <IconPencil />
-                Edit
+                {tc("actions.edit")}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
@@ -352,14 +363,14 @@ export function EmployeeDepartmentsPanel() {
                 onClick={() => handleDelete(row.original)}
               >
                 <IconTrash />
-                Delete
+                {tc("actions.delete")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         ),
       },
     ],
-    [handleDelete, headcountByName]
+    [handleDelete, headcountByName, t, tc]
   )
 
   const sheetDepartment =
@@ -392,29 +403,30 @@ export function EmployeeDepartmentsPanel() {
               <SheetHeader className="border-border/60 space-y-1 border-b px-6 py-5 text-left">
                 <SheetTitle className="text-lg leading-tight">
                   {sidebar.mode === "add"
-                    ? "Add department"
+                    ? t("departmentsPage.addTitle")
                     : sidebar.mode === "edit"
-                      ? "Edit department"
+                      ? t("departmentsPage.editTitle")
                       : sheetDepartment?.name}
                 </SheetTitle>
                 <SheetDescription>
                   {sidebar.mode === "add" ? (
-                    "Create a department for organizing your team."
+                    t("departmentsPage.addHint")
                   ) : sidebar.mode === "edit" && sheetDepartment ? (
                     <>
                       {sheetDepartment.name}
                       <span className="text-muted-foreground">
                         {" "}
-                        · ID {sheetDepartment.id}
+                        {t("departmentsPage.idLabel", { id: sheetDepartment.id })}
                       </span>
                     </>
                   ) : sheetDepartment ? (
                     <>
-                      ID {sheetDepartment.id}
+                      {t("departmentsPage.idLabel", { id: sheetDepartment.id })}
                       <span className="text-muted-foreground">
                         {" "}
-                        · {headcountByName(sheetDepartment.name)} active
-                        employee(s)
+                        · {t("departmentsPage.activeEmployees", {
+                          count: headcountByName(sheetDepartment.name),
+                        })}
                       </span>
                     </>
                   ) : null}
@@ -455,23 +467,23 @@ export function EmployeeDepartmentsPanel() {
                         })
                       }
                     >
-                      Edit
+                      {tc("actions.edit")}
                     </Button>
                     <SheetClose asChild>
-                      <Button className="w-full sm:w-auto">Close</Button>
+                      <Button className="w-full sm:w-auto">{tc("actions.close")}</Button>
                     </SheetClose>
                   </>
                 ) : (
                   <>
                     <SheetClose asChild>
                       <Button variant="outline" type="button">
-                        Cancel
+                        {tc("actions.cancel")}
                       </Button>
                     </SheetClose>
                     <Button type="submit" form={formId}>
                       {sidebar.mode === "add"
-                        ? "Create department"
-                        : "Save department"}
+                        ? t("departmentsPage.createDepartment")
+                        : t("departmentsPage.saveDepartment")}
                     </Button>
                   </>
                 )}
@@ -484,8 +496,8 @@ export function EmployeeDepartmentsPanel() {
       <DataTable
         data={departments}
         columns={columns}
-        addButtonLabel="New Department"
-        searchPlaceholder="Search departments..."
+        addButtonLabel={t("departmentsPage.newDepartment")}
+        searchPlaceholder={t("departmentsPage.searchPlaceholder")}
         importRowMapper={mapImportedDepartment}
         importSampleFilename="departments-sample.csv"
         exportFilename="departments-export.csv"
@@ -495,14 +507,14 @@ export function EmployeeDepartmentsPanel() {
         bulkActions={[
           {
             id: "delete",
-            label: "Delete selected",
+            label: tc("actions.deleteSelected"),
             icon: <IconTrash className="size-4" />,
             variant: "destructive",
             onClick: async (selected) => {
               if (
                 !(await confirmDeleteAction({
                   count: selected.length,
-                  entityLabel: "department",
+                  entityLabel: t("entity.department"),
                 }))
               ) {
                 return
@@ -510,7 +522,7 @@ export function EmployeeDepartmentsPanel() {
               const ids = new Set(selected.map((d) => d.id))
               setDepartments((prev) => prev.filter((r) => !ids.has(r.id)))
               toast.message(
-                `Removed ${selected.length} department${selected.length === 1 ? "" : "s"}.`
+                t("departmentsPage.toastRemovedCount", { count: selected.length })
               )
             },
           },

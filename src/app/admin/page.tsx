@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,6 +34,7 @@ type TrialRequestRow = {
 };
 
 export default function AdminDashboardPage() {
+  const { t } = useTranslation("plans");
   const [tenants, setTenants] = useState<TenantRow[]>([]);
   const [requests, setRequests] = useState<TrialRequestRow[]>([]);
   const [plans, setPlans] = useState(FALLBACK_PLANS);
@@ -62,10 +64,10 @@ export default function AdminDashboardPage() {
         method: "POST",
         body: JSON.stringify({ days }),
       });
-      toast.success("Trial extended");
+      toast.success(t("admin.toastExtended"));
       await reload();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not extend trial");
+      toast.error(err instanceof Error ? err.message : t("admin.toastExtendFailed"));
     }
   }
 
@@ -77,10 +79,10 @@ export default function AdminDashboardPage() {
         method: "POST",
         body: JSON.stringify({ planCode }),
       });
-      toast.success("Subscription assigned");
+      toast.success(t("admin.toastAssigned"));
       await reload();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not assign plan");
+      toast.error(err instanceof Error ? err.message : t("admin.toastAssignFailed"));
     }
   }
 
@@ -91,20 +93,20 @@ export default function AdminDashboardPage() {
         method: "POST",
         body: JSON.stringify({ days }),
       });
-      toast.success("Trial request approved");
+      toast.success(t("admin.toastApproved"));
       await reload();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not approve");
+      toast.error(err instanceof Error ? err.message : t("admin.toastApproveFailed"));
     }
   }
 
   async function rejectRequest(id: string) {
     try {
       await apiFetch(`/admin/trial-requests/${id}/reject`, { method: "POST" });
-      toast.success("Request rejected");
+      toast.success(t("admin.toastRejected"));
       await reload();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not reject");
+      toast.error(err instanceof Error ? err.message : t("admin.toastRejectFailed"));
     }
   }
 
@@ -112,15 +114,15 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-4 py-10">
-      <h1 className="text-2xl font-semibold">Super Admin</h1>
+      <h1 className="text-2xl font-semibold">{t("admin.title")}</h1>
 
       <Card>
         <CardHeader>
-          <CardTitle>Trial requests ({pending.length} pending)</CardTitle>
+          <CardTitle>{t("admin.trialRequests", { count: pending.length })}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {pending.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No pending requests.</p>
+            <p className="text-muted-foreground text-sm">{t("admin.noPending")}</p>
           ) : (
             pending.map((row) => (
               <div key={row.id} className="rounded-lg border p-3 text-sm">
@@ -132,17 +134,17 @@ export default function AdminDashboardPage() {
                     type="number"
                     min={1}
                     max={15}
-                    placeholder="Days"
+                    placeholder={t("admin.days")}
                     value={approveDays[row.id] ?? "7"}
                     onChange={(e) =>
                       setApproveDays((prev) => ({ ...prev, [row.id]: e.target.value }))
                     }
                   />
                   <Button size="sm" onClick={() => void approveRequest(row.id)}>
-                    Approve
+                    {t("admin.approve")}
                   </Button>
                   <Button size="sm" variant="outline" onClick={() => void rejectRequest(row.id)}>
-                    Reject
+                    {t("admin.reject")}
                   </Button>
                 </div>
               </div>
@@ -153,7 +155,7 @@ export default function AdminDashboardPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Tenants</CardTitle>
+          <CardTitle>{t("admin.tenants")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {tenants.map((tenant) => (
@@ -161,7 +163,7 @@ export default function AdminDashboardPage() {
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <p className="font-medium">{tenant.name}</p>
                 <p className="text-muted-foreground">
-                  {tenant.subscription?.plan.displayName ?? "No plan"} ·{" "}
+                  {tenant.subscription?.plan.displayName ?? t("admin.noPlan")} ·{" "}
                   {tenant.subscription?.status ?? "—"}
                 </p>
               </div>
@@ -171,14 +173,14 @@ export default function AdminDashboardPage() {
                   type="number"
                   min={1}
                   max={365}
-                  placeholder="Days"
+                  placeholder={t("admin.days")}
                   value={extendDays[tenant.id] ?? "7"}
                   onChange={(e) =>
                     setExtendDays((prev) => ({ ...prev, [tenant.id]: e.target.value }))
                   }
                 />
                 <Button size="sm" variant="outline" onClick={() => void extendTrial(tenant.id)}>
-                  Extend trial
+                  {t("admin.extendTrial")}
                 </Button>
                 <select
                   className="border-input bg-background h-9 rounded-md border px-2 text-sm"
@@ -194,7 +196,7 @@ export default function AdminDashboardPage() {
                   ))}
                 </select>
                 <Button size="sm" onClick={() => void assignSubscription(tenant.id)}>
-                  Assign plan
+                  {t("admin.assignPlan")}
                 </Button>
               </div>
             </div>

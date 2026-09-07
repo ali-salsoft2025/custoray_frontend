@@ -43,6 +43,22 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
+html[lang="ar"] {
+  --font-sans: var(--font-arabic), var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+}
+
+html[lang="ar"] body {
+  font-family: var(--font-arabic), var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+}
+
+html[lang="ur"] {
+  --font-sans: var(--font-arabic), var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+}
+
+html[lang="ur"] body {
+  font-family: var(--font-arabic), var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+}
+
 :root {
   --radius: 0.625rem;
   --background: oklch(1 0 0);
@@ -535,6 +551,30 @@ html[data-density="compact"] [data-slot="table-head"] {
 
 html[data-density="compact"] [data-slot="table-cell"] {
   padding-block: 0.25rem;
+}
+
+/* RTL packs auto-sized columns to the inline start (the right). Keep table
+   geometry LTR so grids fill the row; cell text still follows Unicode bidi. */
+html[dir="rtl"] [data-slot="table-container"] {
+  direction: ltr;
+}
+
+/* Dropdown chevrons stay on the physical left in Urdu/Arabic, even inside
+   LTR table containers. */
+html[dir="rtl"] [data-slot="select-trigger"],
+html[dir="rtl"] [role="combobox"] {
+  padding-left: 2rem;
+  padding-right: 0.75rem;
+}
+
+html[dir="rtl"] [data-slot="select-trigger"] > svg,
+html[dir="rtl"] [role="combobox"] > svg {
+  right: auto;
+  left: 0.625rem;
+}
+
+html[dir="rtl"] select:not([multiple]) {
+  background-position: left 0.4rem center;
 }
 
 html[data-reduce-motion="true"] *,

@@ -1,6 +1,7 @@
 "use client"
 
 import { IconCalendar } from "@tabler/icons-react"
+import { useTranslation } from "react-i18next"
 
 import { useFiscalTerms } from "@/context/fiscal-term-context"
 import { getTermDateRange } from "@/lib/tax-reports"
@@ -10,6 +11,7 @@ const panelClass =
   "rounded-xl bg-card shadow-sm shadow-black/[0.04] ring-1 ring-border/40"
 
 export function TaxTermBanner({ className }: { className?: string }) {
+  const { t } = useTranslation("tax")
   const { viewing, plannedEndIso } = useFiscalTerms()
 
   if (!viewing) return null
@@ -22,13 +24,10 @@ export function TaxTermBanner({ className }: { className?: string }) {
         <IconCalendar className="size-4" stroke={1.75} />
       </div>
       <div className="min-w-0">
-        <p className="text-sm font-semibold tracking-tight">
-          Preparing taxes for this period
-        </p>
+        <p className="text-sm font-semibold tracking-tight">{t("banner.title")}</p>
         <p className="text-muted-foreground mt-0.5 text-xs">{range.label}</p>
         <p className="text-muted-foreground mt-1 text-[11px] leading-relaxed">
-          Reports use completed sales and purchases in these dates. Pending items are
-          listed separately on the year summary.
+          {t("banner.hint")}
         </p>
       </div>
     </div>

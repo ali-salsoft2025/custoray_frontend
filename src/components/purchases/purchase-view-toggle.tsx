@@ -1,13 +1,12 @@
 "use client"
 
+import { useTranslation } from "react-i18next"
+
 import {
   BillItemViewTableOption,
   BillItemViewToggle,
 } from "@/components/shared/bill-item-view-toggle"
 import type { BillItemViewMode } from "@/lib/app-preferences"
-
-const BILL_DESCRIPTION = "Bill wise — one row per purchase order"
-const ITEM_DESCRIPTION = "Item wise — one row per line item"
 
 export function PurchaseViewToggle({
   value,
@@ -20,15 +19,16 @@ export function PurchaseViewToggle({
   className?: string
   variant?: "icons" | "labeled"
 }) {
+  const { t } = useTranslation("purchases")
   return (
     <BillItemViewToggle
       value={value}
       onValueChange={onValueChange}
       className={className}
       variant={variant}
-      ariaLabel="Purchase view mode"
-      billDescription={BILL_DESCRIPTION}
-      itemDescription={ITEM_DESCRIPTION}
+      ariaLabel={t("viewMode.aria")}
+      billDescription={t("viewMode.billDescription")}
+      itemDescription={t("viewMode.itemDescription")}
     />
   )
 }
@@ -40,13 +40,14 @@ export function PurchaseViewTableOption({
   value: BillItemViewMode
   onValueChange: (value: BillItemViewMode) => void
 }) {
+  const { t } = useTranslation("purchases")
   return (
     <BillItemViewTableOption
       value={value}
       onValueChange={onValueChange}
-      ariaLabel="Purchase view mode"
-      billDescription={BILL_DESCRIPTION}
-      itemDescription={ITEM_DESCRIPTION}
+      ariaLabel={t("viewMode.aria")}
+      billDescription={t("viewMode.billDescription")}
+      itemDescription={t("viewMode.itemDescription")}
     />
   )
 }

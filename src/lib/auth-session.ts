@@ -22,6 +22,7 @@ export type AuthSession = {
   isAdmin: boolean
   employeeId: number | null
   permissions: EmployeePermissions
+  designation?: string
 }
 
 /** Full-access demo session when no one is signed in. */
@@ -38,6 +39,7 @@ export type AuthUser = Pick<AuthSession, "name" | "email"> & {
   avatar: string
   isAdmin: boolean
   permissions: EmployeePermissions
+  designation: string
 }
 
 export function loadSession(): AuthSession | null {
@@ -68,6 +70,7 @@ export function sessionToNavUser(session: AuthSession): AuthUser {
     avatar: "",
     isAdmin: session.isAdmin,
     permissions: session.permissions,
+    designation: session.designation?.trim() ?? "",
   }
 }
 
@@ -88,6 +91,7 @@ export function authenticateCredentials(
       isAdmin: true,
       employeeId: null,
       permissions: FULL_PERMISSIONS,
+      designation: "Owner",
     }
   }
 
@@ -114,5 +118,9 @@ export function authenticateCredentials(
     isAdmin: normalizePermissions(employee.permissions).admin,
     employeeId: employee.id,
     permissions: normalizePermissions(employee.permissions),
+    designation:
+      employee.designation.trim() && employee.designation !== "—"
+        ? employee.designation.trim()
+        : "",
   }
 }

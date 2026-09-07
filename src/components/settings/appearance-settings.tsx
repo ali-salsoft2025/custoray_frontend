@@ -3,6 +3,7 @@
 import { Check } from "lucide-react"
 import { useTheme } from "next-themes"
 import { useEffect, useState, type ReactNode } from "react"
+import { useTranslation } from "react-i18next"
 
 import { Switch } from "@/components/ui/switch"
 import { useAppearance } from "@/components/theme/appearance-provider"
@@ -69,14 +70,14 @@ function ChoiceCard({
       type="button"
       onClick={onClick}
       className={cn(
-        "relative flex cursor-pointer flex-col overflow-hidden rounded-xl border text-left transition-colors",
+        "relative flex cursor-pointer flex-col overflow-hidden rounded-xl border text-start transition-colors",
         selected
           ? "border-primary bg-primary/5 ring-primary/30 ring-2"
           : "border-border hover:border-primary/40 bg-card"
       )}
     >
       {selected ? (
-        <span className="bg-primary text-primary-foreground absolute top-2.5 right-2.5 z-10 flex size-5 items-center justify-center rounded-full">
+        <span className="bg-primary text-primary-foreground absolute top-2.5 end-2.5 z-10 flex size-5 items-center justify-center rounded-full">
           <Check className="size-3" strokeWidth={3} />
         </span>
       ) : null}
@@ -91,7 +92,16 @@ function ChoiceCard({
   )
 }
 
+const PRESET_I18N_KEY: Record<string, "green" | "red" | "blue" | "purple" | "navy"> = {
+  green: "green",
+  red: "red",
+  blue: "blue",
+  purple: "purple",
+  violet: "navy",
+}
+
 export function AppearanceSettings() {
+  const { t } = useTranslation("settings")
   const { prefs, update } = useAppearance()
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
@@ -107,32 +117,32 @@ export function AppearanceSettings() {
   return (
     <div className="divide-border flex flex-col divide-y">
       <section className="pb-8">
-        <h2 className="text-base font-semibold">Themes</h2>
+        <h2 className="text-base font-semibold">{t("appearance.themes")}</h2>
         <p className="text-muted-foreground mt-1 text-sm">
-          Choose your style or customize your theme.
+          {t("appearance.themesDescription")}
         </p>
         <div className="mt-4 grid gap-4 sm:grid-cols-3">
           <ChoiceCard
             selected={mode === "light"}
             onClick={() => setTheme("light")}
-            label="Light mode"
-            description="Bright workspace for daytime use."
+            label={t("appearance.lightMode")}
+            description={t("appearance.lightModeDesc")}
           >
             <MiniUi />
           </ChoiceCard>
           <ChoiceCard
             selected={mode === "dark"}
             onClick={() => setTheme("dark")}
-            label="Dark mode"
-            description="Lower contrast for low light."
+            label={t("appearance.darkMode")}
+            description={t("appearance.darkModeDesc")}
           >
             <MiniUi dark />
           </ChoiceCard>
           <ChoiceCard
             selected={mode === "system"}
             onClick={() => setTheme("system")}
-            label="System preferences"
-            description="Follow your device setting."
+            label={t("appearance.systemPreferences")}
+            description={t("appearance.systemPreferencesDesc")}
           >
             <div className="grid min-h-[8.5rem] grid-cols-2 overflow-hidden">
               <MiniUi />
@@ -143,20 +153,21 @@ export function AppearanceSettings() {
       </section>
 
       <section className="py-8">
-        <h2 className="text-base font-semibold">Accent colors</h2>
+        <h2 className="text-base font-semibold">{t("appearance.accentColors")}</h2>
         <p className="text-muted-foreground mt-1 text-sm">
-          Use a preset or a custom accent color.
+          {t("appearance.accentColorsDescription")}
         </p>
         <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-3">
             {ACCENT_PRESETS.map((item) => {
               const selected = prefs.colorTheme === item.id
+              const label = t(`appearance.presets.${PRESET_I18N_KEY[item.id] ?? item.id}`)
               return (
                 <button
                   key={item.id}
                   type="button"
-                  title={item.label}
-                  aria-label={item.label}
+                  title={label}
+                  aria-label={label}
                   onClick={() =>
                     update({ colorTheme: item.id, customColor: item.color })
                   }
@@ -170,7 +181,7 @@ export function AppearanceSettings() {
             })}
           </div>
           <label className="flex items-center gap-2.5">
-            <span className="text-muted-foreground text-sm">Custom color</span>
+            <span className="text-muted-foreground text-sm">{t("appearance.customColor")}</span>
             <input
               value={customHex}
               onChange={(event) => {
@@ -182,7 +193,7 @@ export function AppearanceSettings() {
               }}
               className="border-input h-9 w-[7.5rem] rounded-md border bg-transparent px-2.5 font-mono text-sm outline-none focus-visible:ring-2"
               spellCheck={false}
-              aria-label="Custom accent hex"
+              aria-label={t("appearance.customAccentHex")}
             />
             <span
               className="size-8 rounded-full border"
@@ -194,38 +205,38 @@ export function AppearanceSettings() {
 
       <section className="flex items-start justify-between gap-6 py-8">
         <div>
-          <h2 className="text-base font-semibold">Show animations</h2>
+          <h2 className="text-base font-semibold">{t("appearance.showAnimations")}</h2>
           <p className="text-muted-foreground mt-1 text-sm">
-            Enable or disable UI animations.
+            {t("appearance.showAnimationsDescription")}
           </p>
         </div>
         <Switch
           checked={!prefs.reduceMotion}
           onCheckedChange={(checked) => update({ reduceMotion: !checked })}
           className="h-6 w-11"
-          aria-label="Show animations"
+          aria-label={t("appearance.showAnimations")}
         />
       </section>
 
       <section className="pt-8">
-        <h2 className="text-base font-semibold">Tables view</h2>
+        <h2 className="text-base font-semibold">{t("appearance.tablesView")}</h2>
         <p className="text-muted-foreground mt-1 text-sm">
-          Customize how tables are displayed in your app.
+          {t("appearance.tablesViewDescription")}
         </p>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <ChoiceCard
             selected={!prefs.compactLayout}
             onClick={() => update({ compactLayout: false })}
-            label="Comfortable"
-            description="More space between rows."
+            label={t("appearance.comfortable")}
+            description={t("appearance.comfortableDesc")}
           >
             <TablePreview />
           </ChoiceCard>
           <ChoiceCard
             selected={prefs.compactLayout}
             onClick={() => update({ compactLayout: true })}
-            label="Compact"
-            description="Tighter rows for dense lists."
+            label={t("appearance.compact")}
+            description={t("appearance.compactDesc")}
           >
             <TablePreview compact />
           </ChoiceCard>

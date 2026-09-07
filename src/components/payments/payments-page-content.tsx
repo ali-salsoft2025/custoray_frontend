@@ -12,6 +12,8 @@ import {
   IconX,
 } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
+import type { TFunction } from "i18next"
 
 import { PaymentDetail } from "@/components/payments/payment-detail"
 import { PaymentForm } from "@/components/payments/payment-form"
@@ -52,16 +54,10 @@ import {
   paymentFromFormData,
   paymentStatusTabFilter,
   statusBadgeClass,
-  statusLabel,
   type PaymentRow,
 } from "@/lib/payments"
 
-const statusTabs: DataTableTab[] = [
-  { value: "all", label: "All" },
-  { value: "pending", label: "Pending" },
-  { value: "completed", label: "Completed" },
-  { value: "voided", label: "Voided" },
-]
+const statusTabValues = ["all", "pending", "completed", "voided"] as const
 
 type PaymentSidebarState =
   | { mode: "view"; payment: PaymentRow }
@@ -73,7 +69,7 @@ type PaymentsPageContentProps = {
   paymentType: PaymentRow["type"]
 }
 
-function selectColumn<T>(): ColumnDef<T> {
+function selectColumn<T>(t: TFunction<"payments">): ColumnDef<T> {
   return {
     id: "select",
     header: ({ table }) => (
@@ -84,7 +80,7 @@ function selectColumn<T>(): ColumnDef<T> {
             (table.getIsSomePageRowsSelected() && "indeterminate")
           }
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
+          aria-label={t("table.selectAll", { ns: "common" })}
         />
       </div>
     ),
@@ -93,7 +89,7 @@ function selectColumn<T>(): ColumnDef<T> {
         <Checkbox
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
+          aria-label={t("table.selectRow", { ns: "common" })}
         />
       </div>
     ),
@@ -102,10 +98,12 @@ function selectColumn<T>(): ColumnDef<T> {
   }
 }
 
-function srNoColumn<T>(): ColumnDef<T> {
+function srNoColumn<T>(t: TFunction<"payments">): ColumnDef<T> {
   return {
     id: "srNo",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Sr No" />,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title={t("columns.srNo")} />
+    ),
     cell: ({ row, table }) => {
       const { pageIndex, pageSize } = table.getState().pagination
       const srNo = pageIndex * pageSize + row.index + 1
@@ -119,18 +117,19 @@ function srNoColumn<T>(): ColumnDef<T> {
 }
 
 function getPaymentColumns(
+  t: TFunction<"payments">,
   partyLabel: string,
   openPaymentSidebar: (row: PaymentRow, mode: "view" | "edit") => void,
   onDelete: (row: PaymentRow) => void,
   onDuplicate: (row: PaymentRow) => void
 ): ColumnDef<PaymentRow>[] {
   return [
-    selectColumn<PaymentRow>(),
-    srNoColumn<PaymentRow>(),
+    selectColumn<PaymentRow>(t),
+    srNoColumn<PaymentRow>(t),
     {
       accessorKey: "paymentNumber",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Payment #" />
+        <DataTableColumnHeader column={column} title={t("columns.paymentNumber")} />
       ),
       cell: ({ row }) => (
         <button
@@ -159,7 +158,7 @@ function getPaymentColumns(
     {
       accessorKey: "referenceNumber",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Reference" />
+        <DataTableColumnHeader column={column} title={t("columns.reference")} />
       ),
       cell: ({ row }) => (
         <span className="text-muted-foreground tabular-nums text-xs">
@@ -171,7 +170,7 @@ function getPaymentColumns(
     {
       accessorKey: "paymentDate",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Date" />
+        <DataTableColumnHeader column={column} title={t("columns.date")} />
       ),
       cell: ({ row }) => (
         <span className="text-muted-foreground tabular-nums text-xs">
@@ -183,7 +182,7 @@ function getPaymentColumns(
     {
       accessorKey: "amount",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Amount" align="center" />
+        <DataTableColumnHeader column={column} title={t("columns.amount")} align="center" />
       ),
       cell: ({ row }) => (
         <div className="flex justify-center">
@@ -197,7 +196,7 @@ function getPaymentColumns(
     {
       accessorKey: "paymentMethod",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Method" />
+        <DataTableColumnHeader column={column} title={t("columns.method")} />
       ),
       cell: ({ row }) => (
         <span className="text-muted-foreground text-xs">{row.original.paymentMethod}</span>
@@ -206,10 +205,12 @@ function getPaymentColumns(
     },
     {
       accessorKey: "status",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t("columns.status")} />
+      ),
       cell: ({ row }) => (
         <Badge variant="outline" className={statusBadgeClass(row.original.status)}>
-          {statusLabel(row.original.status)}
+          {t(`status.${row.original.status}`, { ns: "common" })}
         </Badge>
       ),
       meta: { dataTableFilter: false },
@@ -226,26 +227,26 @@ function getPaymentColumns(
               size="icon"
             >
               <IconDotsVertical />
-              <span className="sr-only">Open menu</span>
+              <span className="sr-only">{t("actions.openMenu")}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40">
             <DropdownMenuItem onClick={() => openPaymentSidebar(row.original, "view")}>
               <IconEye />
-              View
+              {t("actions.view")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => openPaymentSidebar(row.original, "edit")}>
               <IconPencil />
-              Edit
+              {t("actions.edit")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onDuplicate(row.original)}>
               <IconCopy />
-              Duplicate
+              {t("actions.duplicate")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem variant="destructive" onClick={() => onDelete(row.original)}>
               <IconTrash />
-              Delete
+              {t("actions.delete")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -255,12 +256,13 @@ function getPaymentColumns(
 }
 
 export function PaymentsPageContent({ paymentType }: PaymentsPageContentProps) {
+  const { t } = useTranslation("payments")
   const isCustomer = paymentType === "customer"
-  const partyLabel = isCustomer ? "Customer" : "Vendor"
-  const addButtonLabel = isCustomer ? "Receive payment" : "Make payment"
+  const partyLabel = isCustomer ? t("columns.customer") : t("columns.vendor")
+  const addButtonLabel = isCustomer ? t("receive") : t("make")
   const searchPlaceholder = isCustomer
-    ? "Search customer payments..."
-    : "Search vendor payments..."
+    ? t("searchCustomer")
+    : t("searchVendor")
   const exportFilename = isCustomer
     ? "customer-payments-export.csv"
     : "vendor-payments-export.csv"
@@ -319,7 +321,7 @@ export function PaymentsPageContent({ paymentType }: PaymentsPageContentProps) {
       if (
         !(await confirmDeleteAction({
           itemName: payment.paymentNumber,
-          entityLabel: "payment",
+          entityLabel: t("entity.payment"),
         }))
       ) {
         return
@@ -328,7 +330,7 @@ export function PaymentsPageContent({ paymentType }: PaymentsPageContentProps) {
       if (sidebar?.mode !== "add" && sidebar?.payment.id === payment.id) {
         closeSidebar()
       }
-      toast.message(`Removed ${payment.paymentNumber} (demo).`)
+      toast.message(t("toasts.removedNamed", { name: payment.paymentNumber }))
     },
     [removePayment, sidebar]
   )
@@ -338,13 +340,13 @@ export function PaymentsPageContent({ paymentType }: PaymentsPageContentProps) {
       if (
         !(await confirmDuplicateAction({
           itemName: payment.paymentNumber,
-          entityLabel: "payment",
+          entityLabel: t("entity.payment"),
         }))
       ) {
         return
       }
       const copy = duplicatePayment(payment.id)
-      if (copy) toast.success(`Duplicated as ${copy.paymentNumber} (demo).`)
+      if (copy) toast.success(t("toasts.duplicatedNamed", { name: copy.paymentNumber }))
     },
     [duplicatePayment]
   )
@@ -355,13 +357,13 @@ export function PaymentsPageContent({ paymentType }: PaymentsPageContentProps) {
       const fd = new FormData(e.currentTarget)
       const partyName = String(fd.get("partyName") ?? "").trim()
       if (!partyName) {
-        toast.error(isCustomer ? "Select a customer." : "Select a vendor.")
+        toast.error(isCustomer ? t("toasts.selectCustomer") : t("toasts.selectVendor"))
         return
       }
 
       const amount = Number(String(fd.get("amount") ?? "0"))
       if (!Number.isFinite(amount) || amount <= 0) {
-        toast.error("Enter a valid payment amount.")
+        toast.error(t("toasts.invalidAmount"))
         return
       }
 
@@ -369,14 +371,14 @@ export function PaymentsPageContent({ paymentType }: PaymentsPageContentProps) {
 
       if (sidebar?.mode === "add") {
         addPayment(paymentFromFormData(fd, 0))
-        toast.success(isCustomer ? "Payment received (demo)." : "Payment recorded (demo).")
+        toast.success(isCustomer ? t("toasts.received") : t("toasts.recorded"))
         closeSidebar()
         return
       }
 
       if (sidebar?.mode === "edit" && sidebar.payment) {
         updatePayment(sidebar.payment.id, paymentFromFormData(fd, sidebar.payment.id))
-        toast.success("Payment saved (demo).")
+        toast.success(t("toasts.saved"))
         closeSidebar()
       }
     },
@@ -386,13 +388,19 @@ export function PaymentsPageContent({ paymentType }: PaymentsPageContentProps) {
   const columns = useMemo(
     () =>
       getPaymentColumns(
+        t,
         partyLabel,
         (row, mode) => setSidebar({ payment: row, mode }),
         handleDelete,
         handleDuplicate
       ),
-    [partyLabel, handleDelete, handleDuplicate]
+    [t, partyLabel, handleDelete, handleDuplicate]
   )
+
+  const statusTabs: DataTableTab[] = statusTabValues.map((value) => ({
+    value,
+    label: t(`tabs.${value}`),
+  }))
 
   const sheetPayment = sidebar && sidebar.mode !== "add" ? sidebar.payment : null
   const formPayment =
@@ -449,14 +457,14 @@ export function PaymentsPageContent({ paymentType }: PaymentsPageContentProps) {
                   {sidebar.mode === "add"
                     ? addButtonLabel
                     : sidebar.mode === "edit"
-                      ? "Edit payment"
+                      ? t("sheet.edit")
                       : sheetPayment?.paymentNumber}
                 </SheetTitle>
                 <SheetDescription>
                   {sidebar.mode === "add" ? (
                     isCustomer
-                      ? "Record a payment received from a customer. Saving is demo only."
-                      : "Record a payment made to a vendor. Saving is demo only."
+                      ? t("sheet.addCustomerDescription")
+                      : t("sheet.addVendorDescription")
                   ) : sidebar.mode === "edit" && sheetPayment ? (
                     <>
                       {sheetPayment.partyName}
@@ -506,21 +514,23 @@ export function PaymentsPageContent({ paymentType }: PaymentsPageContentProps) {
                         setSidebar({ mode: "edit", payment: sheetPayment })
                       }
                     >
-                      Edit
+                      {t("actions.edit")}
                     </Button>
                     <SheetClose asChild>
-                      <Button className="w-full sm:w-auto">Close</Button>
+                      <Button className="w-full sm:w-auto">
+                        {t("actions.close", { ns: "common" })}
+                      </Button>
                     </SheetClose>
                   </>
                 ) : (
                   <>
                     <SheetClose asChild>
                       <Button variant="outline" type="button">
-                        Cancel
+                        {t("actions.cancel", { ns: "common" })}
                       </Button>
                     </SheetClose>
                     <Button type="submit" form={formId}>
-                      {sidebar.mode === "add" ? addButtonLabel : "Save payment"}
+                      {sidebar.mode === "add" ? addButtonLabel : t("sheet.save")}
                     </Button>
                   </>
                 )}
@@ -535,9 +545,11 @@ export function PaymentsPageContent({ paymentType }: PaymentsPageContentProps) {
           <div className="flex items-center gap-2">
             <IconFilter className="text-muted-foreground size-4" />
             <div>
-              <p className="text-sm font-semibold">Payment filters</p>
+              <p className="text-sm font-semibold">{t("filters.title")}</p>
               <p className="text-muted-foreground text-xs">
-                Narrow payments by date, method, or {partyLabel.toLowerCase()}.
+                {isCustomer
+                  ? t("filters.descriptionCustomer")
+                  : t("filters.descriptionVendor")}
               </p>
             </div>
           </div>
@@ -554,7 +566,7 @@ export function PaymentsPageContent({ paymentType }: PaymentsPageContentProps) {
               }}
             >
               <IconX className="size-4" />
-              Clear {activeFilterCount}
+              {t("filters.clear", { count: activeFilterCount })}
             </Button>
           ) : null}
         </div>
@@ -562,7 +574,7 @@ export function PaymentsPageContent({ paymentType }: PaymentsPageContentProps) {
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <div className="space-y-1.5">
             <Label htmlFor={`${paymentType}-payment-from`} className="text-xs">
-              From date
+              {t("filters.fromDate")}
             </Label>
             <Input
               id={`${paymentType}-payment-from`}
@@ -575,7 +587,7 @@ export function PaymentsPageContent({ paymentType }: PaymentsPageContentProps) {
           </div>
           <div className="space-y-1.5">
             <Label htmlFor={`${paymentType}-payment-to`} className="text-xs">
-              To date
+              {t("filters.toDate")}
             </Label>
             <Input
               id={`${paymentType}-payment-to`}
@@ -588,7 +600,7 @@ export function PaymentsPageContent({ paymentType }: PaymentsPageContentProps) {
           </div>
           <div className="space-y-1.5">
             <Label htmlFor={`${paymentType}-payment-method`} className="text-xs">
-              Payment method
+              {t("filters.method")}
             </Label>
             <select
               id={`${paymentType}-payment-method`}
@@ -596,7 +608,7 @@ export function PaymentsPageContent({ paymentType }: PaymentsPageContentProps) {
               onChange={(event) => setMethodFilter(event.target.value)}
               className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm shadow-xs"
             >
-              <option value="all">All methods</option>
+              <option value="all">{t("filters.allMethods")}</option>
               {PAYMENT_METHODS.map((method) => (
                 <option key={method} value={method}>
                   {method}
@@ -614,7 +626,9 @@ export function PaymentsPageContent({ paymentType }: PaymentsPageContentProps) {
               onChange={(event) => setPartyFilter(event.target.value)}
               className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm shadow-xs"
             >
-              <option value="all">All {partyLabel.toLowerCase()}s</option>
+              <option value="all">
+                {isCustomer ? t("filters.allCustomers") : t("filters.allVendors")}
+              </option>
               {parties.map((party) => (
                 <option key={party} value={party}>
                   {party}
@@ -625,7 +639,10 @@ export function PaymentsPageContent({ paymentType }: PaymentsPageContentProps) {
         </div>
 
         <p className="text-muted-foreground mt-3 text-xs">
-          Showing {filteredPayments.length} of {typePayments.length} payments
+          {t("filters.showing", {
+            filtered: filteredPayments.length,
+            total: typePayments.length,
+          })}
         </p>
       </div>
 
@@ -641,23 +658,21 @@ export function PaymentsPageContent({ paymentType }: PaymentsPageContentProps) {
         bulkActions={[
           {
             id: "delete",
-            label: "Delete selected",
+            label: t("actions.deleteSelected"),
             icon: <IconTrash className="size-4" />,
             variant: "destructive",
             onClick: async (selected) => {
               if (
                 !(await confirmDeleteAction({
                   count: selected.length,
-                  entityLabel: "payment",
+                  entityLabel: t("entity.payment"),
                 }))
               ) {
                 return
               }
               const ids = new Set(selected.map((row) => row.id))
               setPayments((prev) => prev.filter((row) => !ids.has(row.id)))
-              toast.message(
-                `Removed ${selected.length} payment${selected.length === 1 ? "" : "s"} (demo).`
-              )
+              toast.message(t("toasts.removedCount", { count: selected.length }))
             },
           },
         ]}

@@ -1,4 +1,5 @@
 import { z } from "zod"
+import i18n from "@/i18n"
 
 export const MODULE_IDS = [
   "dashboard",
@@ -18,21 +19,21 @@ export const MODULE_IDS = [
 
 export type ModuleId = (typeof MODULE_IDS)[number]
 
-export const MODULE_LABELS: Record<ModuleId, string> = {
-  dashboard: "Dashboard",
-  inventory: "Inventory",
-  customers: "Customers",
-  vendors: "Vendors",
-  sales: "Sales",
-  purchases: "Purchases",
-  returns: "Returns",
-  payments: "Payments",
-  documents: "Documents",
-  pos: "POS",
-  employees: "Employees",
-  reports: "Reports",
-  settings: "Settings",
+export function moduleLabel(id: ModuleId): string {
+  return i18n.t(`modules.${id}`, { ns: "nav" })
 }
+
+export const MODULE_LABELS: Record<ModuleId, string> = new Proxy(
+  {} as Record<ModuleId, string>,
+  {
+    get(_target, prop: string) {
+      if (MODULE_IDS.includes(prop as ModuleId)) {
+        return moduleLabel(prop as ModuleId)
+      }
+      return undefined
+    },
+  }
+)
 
 export const modulePermissionSchema = z.object({
   add: z.boolean(),
@@ -149,17 +150,17 @@ export function getModulePermission(
 
 export function permissionSummary(permissions: EmployeePermissions): string {
   const effective = effectivePermissions(permissions)
-  if (effective.admin) return "Admin"
+  if (effective.admin) return i18n.t("userMenu.admin", { ns: "nav" })
   const granted = MODULE_IDS.filter((id) => {
     const m = effective.modules[id]
     return m.add || m.edit || m.delete
   })
-  if (granted.length === 0) return "No access"
-  if (granted.length === MODULE_IDS.length) return "All modules"
+  if (granted.length === 0) return i18n.t("userMenu.noAccess", { ns: "nav" })
+  if (granted.length === MODULE_IDS.length) return i18n.t("userMenu.allModules", { ns: "nav" })
   if (granted.length <= 2) {
-    return granted.map((id) => MODULE_LABELS[id]).join(", ")
+    return granted.map((id) => i18n.t(`modules.${id}`, { ns: "nav" })).join(", ")
   }
-  return `${granted.length} modules`
+  return i18n.t("userMenu.modulesCount", { ns: "nav", count: granted.length })
 }
 
 export function canView(permissions: EmployeePermissions): boolean {
@@ -281,21 +282,19 @@ export const PERMISSION_PRESET_IDS = [
 
 export type PermissionPresetId = (typeof PERMISSION_PRESET_IDS)[number]
 
-export const PERMISSION_PRESET_LABELS: Record<PermissionPresetId, string> = {
-  none: "No access",
-  viewer: "View only",
-  contributor: "Contributor",
-  manager: "Manager",
-  admin: "Admin",
+export function permissionPresetLabel(id: PermissionPresetId): string {
+  return i18n.t(`presets.${id}`, { ns: "employees" })
 }
 
-export const PERMISSION_PRESET_DESCRIPTIONS: Record<PermissionPresetId, string> = {
-  none: "Cannot access any modules.",
-  viewer: "Can view and edit existing records, but not add or delete.",
-  contributor: "Can add and edit records across all modules.",
-  manager: "Full add, edit, and delete access on all modules.",
-  admin: "Unrestricted access to everything, including settings.",
-}
+export const PERMISSION_PRESET_LABELS: Record<PermissionPresetId, string> =
+  new Proxy({} as Record<PermissionPresetId, string>, {
+    get(_target, prop: string) {
+      if (PERMISSION_PRESET_IDS.includes(prop as PermissionPresetId)) {
+        return permissionPresetLabel(prop as PermissionPresetId)
+      }
+      return undefined
+    },
+  })
 
 function moduleMapWith(
   row: ModulePermission,

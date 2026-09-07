@@ -1,0 +1,90 @@
+{
+  "tabs": {
+    "all": "All",
+    "pending": "Pending",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "active": "Active",
+    "archived": "Archived"
+  },
+  "status": {
+    "pending": "Pending",
+    "completed": "Completed",
+    "cancelled": "Cancelled"
+  },
+  "viewMode": {
+    "aria": "Sales view mode",
+    "billDescription": "Bill wise — one row per invoice",
+    "itemDescription": "Item wise — one row per sold line item"
+  },
+  "search": {
+    "bills": "Search sales by invoice, customer…",
+    "items": "Search sales by item, customer, invoice…"
+  },
+  "addButton": "New Sale",
+  "columns": {
+    "srNo": "Sr No",
+    "invoiceNumber": "Invoice #",
+    "customer": "Customer",
+    "items": "Items",
+    "date": "Date",
+    "totalAmount": "Total amount",
+    "paidAmount": "Paid amount",
+    "balance": "Balance",
+    "status": "Status",
+    "item": "Item",
+    "qty": "Qty",
+    "unitPrice": "Unit price",
+    "lineTotal": "Line total"
+  },
+  "actions": {
+    "viewInvoice": "View invoice",
+    "edit": "Edit",
+    "duplicate": "Duplicate",
+    "return": "Return",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "view": "View",
+    "deleteSelected": "Delete selected",
+    "openMenu": "Open menu"
+  },
+  "sheet": {
+    "addSale": "Add sale",
+    "newInvoice": "New invoice",
+    "addToInvoice": "Add to invoice",
+    "chooseDescription": "Record a sale on a new invoice or add line items to an existing one.",
+    "newInvoiceDescription": "Create a new invoice and record line items.",
+    "existingInvoice": "Existing invoice",
+    "selectInvoice": "Select invoice",
+    "searchInvoices": "Search invoices…",
+    "noInvoices": "No invoices found.",
+    "addToSelected": "Add to selected invoice",
+    "createInvoice": "Create invoice",
+    "saveInvoice": "Save invoice",
+    "editInvoice": "Edit invoice",
+    "close": "Close",
+    "cancel": "Cancel",
+    "back": "Back"
+  },
+  "toasts": {
+    "removedNamed": "Removed {{name}} (demo).",
+    "duplicatedNamed": "Duplicated {{name}} (demo).",
+    "removedLines": "Removed {{count}} line item(s) (demo).",
+    "removedSales": "Removed {{count}} sale(s) (demo).",
+    "onlyCompletedPaid": "Only completed paid sales can be returned.",
+    "sourceNotFound": "Source invoice not found.",
+    "returnRecorded": "Return {{returnNumber}} recorded for {{name}}.",
+    "cancelled": "{{name}} cancelled.",
+    "onlyPendingUnpaid": "Only pending unpaid sales can be cancelled.",
+    "selectInvoiceFirst": "Select an invoice first.",
+    "customerRequired": "Customer name is required.",
+    "lineRequired": "Add at least one line item with a product name.",
+    "saleOnNewInvoice": "Sale recorded on new invoice (demo).",
+    "saleAdded": "Sale added to invoice (demo).",
+    "lineNotFound": "Line item not found."
+  },
+  "entity": {
+    "sale": "sale",
+    "saleLineItem": "sale line item"
+  }
+}

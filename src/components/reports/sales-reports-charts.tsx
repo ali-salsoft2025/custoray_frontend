@@ -32,6 +32,8 @@ import {
   salesTimelineBucketLabel,
 } from "@/lib/sales-reports"
 import { cn } from "@/lib/utils"
+import { useTranslation } from "react-i18next"
+import i18n from "@/i18n"
 
 const panelClass =
   "rounded-2xl bg-card shadow-sm shadow-black/[0.03] ring-1 ring-border/50"
@@ -110,9 +112,9 @@ function shortTickLabel(label: string, bucket: SalesTimelineBucket): string {
 }
 
 const performanceChartConfig = {
-  sales: { label: "Sales", color: COLORS.sales },
-  net: { label: "Net", color: COLORS.net },
-  invoices: { label: "Invoices", color: COLORS.invoices },
+  sales: { label: i18n.t("salesPage.chartSales", { ns: "reports" }), color: COLORS.sales },
+  net: { label: i18n.t("salesPage.chartNet", { ns: "reports" }), color: COLORS.net },
+  invoices: { label: i18n.t("salesPage.chartInvoices", { ns: "reports" }), color: COLORS.invoices },
 } satisfies ChartConfig
 
 export function SalesPerformanceLineChart({
@@ -125,6 +127,7 @@ export function SalesPerformanceLineChart({
   trends: SalesReportTrends
   bucket?: SalesTimelineBucket
 }) {
+  const { t } = useTranslation("reports")
   const salesFillId = useChartGradientId("perf-sales")
   const netFillId = useChartGradientId("perf-net")
   const grain = salesTimelineBucketLabel(bucket).toLowerCase()
@@ -148,18 +151,22 @@ export function SalesPerformanceLineChart({
   if (!hasActivity) {
     return (
       <ChartPanel
-        title="Sales performance"
-        description={`${salesTimelineBucketLabel(bucket)} sales, net, and invoice volume`}
+        title={t("salesPage.performance")}
+        description={t("salesPage.performanceHint", {
+          bucket: salesTimelineBucketLabel(bucket),
+        })}
       >
-        <ChartEmpty message="No sales in this period." />
+        <ChartEmpty message={t("salesPage.noSales")} />
       </ChartPanel>
     )
   }
 
   return (
     <ChartPanel
-      title="Sales performance"
-      description={`${salesTimelineBucketLabel(bucket)} sales, net, and invoice volume`}
+      title={t("salesPage.performance")}
+      description={t("salesPage.performanceHint", {
+        bucket: salesTimelineBucketLabel(bucket),
+      })}
       action={
         <div className="flex flex-wrap items-center justify-end gap-1.5">
           <span className="rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium capitalize">
@@ -167,7 +174,7 @@ export function SalesPerformanceLineChart({
           </span>
           {netTrend ? (
             <span className="rounded-full bg-primary/15 px-2.5 py-1 text-[11px] font-medium text-primary">
-              Net {netTrend}
+              {t("salesPage.netTrend", { trend: netTrend })}
               {trends.compareLabel ? ` ${trends.compareLabel}` : ""}
             </span>
           ) : null}
@@ -238,7 +245,7 @@ export function SalesPerformanceLineChart({
                   if (key === "invoices") {
                     return (
                       <span className="font-medium tabular-nums">
-                        {Number(value)} invoice{Number(value) === 1 ? "" : "s"}
+                        {t("salesPage.invoiceCount", { count: Number(value) })}
                       </span>
                     )
                   }
@@ -289,8 +296,8 @@ export function SalesPerformanceLineChart({
 }
 
 const salesVsReturnsConfig = {
-  sales: { label: "Sales", color: COLORS.sales },
-  returns: { label: "Returns", color: COLORS.returns },
+  sales: { label: i18n.t("salesPage.chartSales", { ns: "reports" }), color: COLORS.sales },
+  returns: { label: i18n.t("salesPage.chartReturns", { ns: "reports" }), color: COLORS.returns },
 } satisfies ChartConfig
 
 export function SalesVsReturnsChart({
@@ -306,6 +313,7 @@ export function SalesVsReturnsChart({
   periodLabel?: string
   bucket?: SalesTimelineBucket
 }) {
+  const { t } = useTranslation("reports")
   const salesFillId = useChartGradientId("svr-sales")
   const returnsFillId = useChartGradientId("svr-returns")
   const grain = salesTimelineBucketLabel(bucket)
@@ -332,21 +340,27 @@ export function SalesVsReturnsChart({
   if (!hasActivity) {
     return (
       <ChartPanel
-        title="Sales vs returns"
-        description={`${periodLabel} — ${grain.toLowerCase()} comparison`}
+        title={t("salesPage.salesVsReturns")}
+        description={t("salesPage.vsComparison", {
+          period: periodLabel,
+          grain: grain.toLowerCase(),
+        })}
       >
-        <ChartEmpty message="No sales or returns in this period." />
+        <ChartEmpty message={t("salesPage.noSalesOrReturns")} />
       </ChartPanel>
     )
   }
 
   return (
     <ChartPanel
-      title="Sales vs returns"
-      description={`${periodLabel} — ${grain.toLowerCase()} comparison`}
+      title={t("salesPage.salesVsReturns")}
+      description={t("salesPage.vsComparison", {
+        period: periodLabel,
+        grain: grain.toLowerCase(),
+      })}
       action={
         <span className="rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium tabular-nums">
-          {returnRate.toFixed(0)}% return rate
+          {t("salesPage.returnRateBadge", { rate: returnRate.toFixed(0) })}
           {returnsTrend && trends.compareLabel ? ` · ${returnsTrend}` : ""}
         </span>
       }
@@ -430,7 +444,7 @@ export function SalesVsReturnsChart({
 }
 
 const topProductsConfig = {
-  revenue: { label: "Revenue", color: COLORS.sales },
+  revenue: { label: i18n.t("salesPage.chartRevenue", { ns: "reports" }), color: COLORS.sales },
 } satisfies ChartConfig
 
 export function SalesTopProductsChart({
@@ -438,6 +452,7 @@ export function SalesTopProductsChart({
 }: {
   data: SalesTopProductRow[]
 }) {
+  const { t } = useTranslation("reports")
   const barFillId = useChartGradientId("top-products")
 
   const chartData = React.useMemo(() => {
@@ -461,18 +476,18 @@ export function SalesTopProductsChart({
   if (!hasActivity) {
     return (
       <ChartPanel
-        title="Top selling products"
-        description="Best revenue contributors this period"
+        title={t("salesPage.topProducts")}
+        description={t("salesPage.topProductsHint")}
       >
-        <ChartEmpty message="No product sales in this period." />
+        <ChartEmpty message={t("salesPage.noProductSales")} />
       </ChartPanel>
     )
   }
 
   return (
     <ChartPanel
-      title="Top selling products"
-      description="Best revenue contributors this period"
+      title={t("salesPage.topProducts")}
+      description={t("salesPage.topProductsHint")}
       action={
         leader ? (
           <span className="rounded-full bg-primary/15 px-2.5 py-1 text-[11px] font-medium text-primary">
@@ -530,8 +545,10 @@ export function SalesTopProductsChart({
                 }}
                 formatter={(value, _name, item) => (
                   <span className="tabular-nums">
-                    {formatSalesReportMoney(String(value))} ·{" "}
-                    {item.payload?.quantity} sold
+                    {t("salesPage.quantitySold", {
+                      amount: formatSalesReportMoney(String(value)),
+                      quantity: item.payload?.quantity,
+                    })}
                   </span>
                 )}
               />

@@ -1,0 +1,90 @@
+{
+  "tabs": {
+    "all": "تمام",
+    "pending": "زیر التوا",
+    "completed": "مکمل",
+    "cancelled": "منسوخ",
+    "active": "فعال",
+    "archived": "محفوظ شدہ"
+  },
+  "status": {
+    "pending": "زیر التوا",
+    "completed": "مکمل",
+    "cancelled": "منسوخ"
+  },
+  "viewMode": {
+    "aria": "فروخت کا نظارہ",
+    "billDescription": "بل وائز — ہر انوائس کے لیے ایک قطار",
+    "itemDescription": "آئٹم وائز — ہر فروخت شدہ لائن آئٹم کے لیے ایک قطار"
+  },
+  "search": {
+    "bills": "انوائس، گاہک سے فروخت تلاش کریں…",
+    "items": "آئٹم، گاہک، انوائس سے فروخت تلاش کریں…"
+  },
+  "addButton": "نئی فروخت",
+  "columns": {
+    "srNo": "نمبر",
+    "invoiceNumber": "انوائس #",
+    "customer": "گاہک",
+    "items": "آئٹمز",
+    "date": "تاریخ",
+    "totalAmount": "کل رقم",
+    "paidAmount": "ادا شدہ رقم",
+    "balance": "بیلنس",
+    "status": "حیثیت",
+    "item": "آئٹم",
+    "qty": "مقدار",
+    "unitPrice": "یونٹ قیمت",
+    "lineTotal": "لائن کل"
+  },
+  "actions": {
+    "viewInvoice": "انوائس دیکھیں",
+    "edit": "ترمیم",
+    "duplicate": "نقل بنائیں",
+    "return": "واپس کریں",
+    "cancel": "منسوخ کریں",
+    "delete": "حذف کریں",
+    "view": "دیکھیں",
+    "deleteSelected": "منتخب حذف کریں",
+    "openMenu": "مینو کھولیں"
+  },
+  "sheet": {
+    "addSale": "فروخت شامل کریں",
+    "newInvoice": "نیا انوائس",
+    "addToInvoice": "انوائس میں شامل کریں",
+    "chooseDescription": "نئے انوائس پر فروخت درج کریں یا موجودہ میں لائن آئٹمز شامل کریں۔",
+    "newInvoiceDescription": "نیا انوائس بنائیں اور لائن آئٹمز درج کریں۔",
+    "existingInvoice": "موجودہ انوائس",
+    "selectInvoice": "انوائس منتخب کریں",
+    "searchInvoices": "انوائسز تلاش کریں…",
+    "noInvoices": "کوئی انوائس نہیں ملا۔",
+    "addToSelected": "منتخب انوائس میں شامل کریں",
+    "createInvoice": "انوائس بنائیں",
+    "saveInvoice": "انوائس محفوظ کریں",
+    "editInvoice": "انوائس میں ترمیم",
+    "close": "بند کریں",
+    "cancel": "منسوخ کریں",
+    "back": "واپس"
+  },
+  "toasts": {
+    "removedNamed": "{{name}} ہٹا دیا گیا (ڈیمو)۔",
+    "duplicatedNamed": "{{name}} کی نقل بن گئی (ڈیمو)۔",
+    "removedLines": "{{count}} لائن آئٹم(ز) ہٹا دی گئیں (ڈیمو)۔",
+    "removedSales": "{{count}} فروخت(یں) ہٹا دی گئیں (ڈیمو)۔",
+    "onlyCompletedPaid": "صرف مکمل ادا شدہ فروخت واپس کی جا سکتی ہے۔",
+    "sourceNotFound": "ماخذ انوائس نہیں ملا۔",
+    "returnRecorded": "{{name}} کے لیے واپسی {{returnNumber}} درج ہو گئی۔",
+    "cancelled": "{{name}} منسوخ ہو گیا۔",
+    "onlyPendingUnpaid": "صرف زیر التوا غیر ادا شدہ فروخت منسوخ کی جا سکتی ہے۔",
+    "selectInvoiceFirst": "پہلے انوائس منتخب کریں۔",
+    "customerRequired": "گاہک کا نام درکار ہے۔",
+    "lineRequired": "کم از کم ایک لائن آئٹم مصنوعات کے نام کے ساتھ شامل کریں۔",
+    "saleOnNewInvoice": "نئے انوائس پر فروخت درج ہو گئی (ڈیمو)۔",
+    "saleAdded": "فروخت انوائس میں شامل ہو گئی (ڈیمو)۔",
+    "lineNotFound": "لائن آئٹم نہیں ملا۔"
+  },
+  "entity": {
+    "sale": "فروخت",
+    "saleLineItem": "فروخت لائن آئٹم"
+  }
+}

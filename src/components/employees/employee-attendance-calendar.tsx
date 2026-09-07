@@ -27,8 +27,10 @@ import {
   IconUsers,
 } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
+import i18n from "@/i18n"
 import { InfiniteScrollSelect } from "@/components/ui/infinite-scroll-select"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -92,8 +94,8 @@ function dateValue(date: Date) {
 }
 
 function statusLabel(status: AttendanceStatus) {
-  if (status === "half-day") return "Half day"
-  return status.charAt(0).toUpperCase() + status.slice(1)
+  if (status === "half-day") return i18n.t("status.halfDay", { ns: "employees" })
+  return i18n.t(`status.${status}`, { ns: "employees" })
 }
 
 function initialAttendance(): AttendanceRecord[] {
@@ -132,6 +134,8 @@ function parseStoredAttendance(raw: string | null): AttendanceRecord[] | null {
 }
 
 export function EmployeeAttendanceCalendar() {
+  const { t } = useTranslation("employees")
+  const { t: tc } = useTranslation("common")
   const { employees } = useEmployees()
   const [records, setRecords] = useState<AttendanceRecord[]>(initialAttendance)
   const [hydrated, setHydrated] = useState(false)
@@ -166,8 +170,8 @@ export function EmployeeAttendanceCalendar() {
   const employeeName = useCallback(
     (employeeId: number) =>
       employees.find((employee) => employee.id === employeeId)?.name ??
-      `Employee #${employeeId}`,
-    [employees]
+      t("attendancePage.employeeFallback", { id: employeeId }),
+    [employees, t]
   )
 
   const departments = useMemo(
@@ -206,10 +210,12 @@ export function EmployeeAttendanceCalendar() {
     () => [
       {
         value: "all",
-        label: "All employees",
+        label: t("attendancePage.allEmployees"),
         description:
           departmentFilter === "all"
-            ? `${departmentEmployees.length} active employees`
+            ? t("attendancePage.activeCount", {
+                count: departmentEmployees.length,
+              })
             : departmentFilter,
       },
       ...departmentEmployees.map((employee) => ({
@@ -219,7 +225,7 @@ export function EmployeeAttendanceCalendar() {
         trailing: employee.department,
       })),
     ],
-    [departmentEmployees, departmentFilter]
+    [departmentEmployees, departmentFilter, t]
   )
 
   const visibleRecords = useMemo(() => {
@@ -254,7 +260,12 @@ export function EmployeeAttendanceCalendar() {
           ).length
           const exceptions = dayRecords.length - present
           return {
-            title: `${present} present${exceptions ? ` · ${exceptions} exceptions` : ""}`,
+            title: exceptions
+              ? t("attendancePage.presentWithExceptions", {
+                  present,
+                  exceptions,
+                })
+              : t("attendancePage.presentSummary", { present }),
             start,
             end,
             allDay: true,
@@ -276,7 +287,7 @@ export function EmployeeAttendanceCalendar() {
         }
       })
     },
-    [employeeFilter, recordsByDate, visibleRecords]
+    [employeeFilter, recordsByDate, visibleRecords, t]
   )
 
   const openNew = (date = new Date()) => {
@@ -341,7 +352,7 @@ export function EmployeeAttendanceCalendar() {
     })
     setDayOpen(false)
     toast.success(
-      `Attendance saved for ${filteredEmployees.length} employee${filteredEmployees.length === 1 ? "" : "s"}.`
+      t("attendancePage.toastSavedCount", { count: filteredEmployees.length })
     )
   }
 
@@ -351,7 +362,7 @@ export function EmployeeAttendanceCalendar() {
     const employeeId = Number(fd.get("employeeId"))
     const date = String(fd.get("date") ?? "")
     if (!employeeId || !date) {
-      toast.error("Select an employee and date.")
+      toast.error(t("attendancePage.toastSelectRequired"))
       return
     }
 
@@ -362,7 +373,7 @@ export function EmployeeAttendanceCalendar() {
         record.id !== editing?.id
     )
     if (duplicate) {
-      toast.error("Attendance is already recorded for this employee and date.")
+      toast.error(t("attendancePage.toastDuplicate"))
       return
     }
 
@@ -384,7 +395,11 @@ export function EmployeeAttendanceCalendar() {
         : [...previous, next]
     )
     setOpen(false)
-    toast.success(editing ? "Attendance updated." : "Attendance recorded.")
+    toast.success(
+      editing
+        ? t("attendancePage.toastUpdated")
+        : t("attendancePage.toastRecorded")
+    )
   }
 
   const removeAttendance = () => {
@@ -393,7 +408,7 @@ export function EmployeeAttendanceCalendar() {
       previous.filter((record) => record.id !== editing.id)
     )
     setOpen(false)
-    toast.message("Attendance record removed.")
+    toast.message(t("attendancePage.toastRemoved"))
   }
 
   const defaultEmployee =
@@ -410,18 +425,20 @@ export function EmployeeAttendanceCalendar() {
           className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl"
         >
           <SheetHeader className="border-b px-6 py-5 text-left">
-            <SheetTitle>Daily attendance</SheetTitle>
+            <SheetTitle>{t("attendancePage.dailyTitle")}</SheetTitle>
             <SheetDescription>
               {format(new Date(`${selectedDate}T00:00:00`), "EEEE, dd MMMM yyyy")}
               {" · "}
-              {filteredEmployees.length} employees
+              {t("attendancePage.employeesCount", {
+                count: filteredEmployees.length,
+              })}
               {departmentFilter !== "all" ? ` · ${departmentFilter}` : ""}
             </SheetDescription>
           </SheetHeader>
           <div className="min-h-0 flex-1 overflow-y-auto">
             <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-2 border-b bg-background px-6 py-3">
               <p className="text-muted-foreground text-xs">
-                Everyone defaults to present. Mark only the exceptions.
+                {t("attendancePage.defaultsHint")}
               </p>
               <Button
                 type="button"
@@ -439,7 +456,7 @@ export function EmployeeAttendanceCalendar() {
                 }
               >
                 <IconCheck className="size-4" />
-                Mark all present
+                {t("attendancePage.markAllPresent")}
               </Button>
             </div>
             <div className="divide-y">
@@ -484,11 +501,11 @@ export function EmployeeAttendanceCalendar() {
           <SheetFooter className="border-t px-6 py-4">
             <SheetClose asChild>
               <Button type="button" variant="outline">
-                Cancel
+                {tc("actions.cancel")}
               </Button>
             </SheetClose>
             <Button type="button" onClick={saveDayAttendance}>
-              Save attendance
+              {t("attendancePage.saveAttendance")}
             </Button>
           </SheetFooter>
         </SheetContent>
@@ -501,10 +518,12 @@ export function EmployeeAttendanceCalendar() {
         >
           <SheetHeader className="border-b px-6 py-5 text-left">
             <SheetTitle>
-              {editing ? "Edit attendance" : "Record attendance"}
+              {editing
+                ? t("attendancePage.editTitle")
+                : t("attendancePage.recordTitle")}
             </SheetTitle>
             <SheetDescription>
-              Mark attendance, working times, and optional notes.
+              {t("attendancePage.formHint")}
             </SheetDescription>
           </SheetHeader>
           <div
@@ -517,7 +536,7 @@ export function EmployeeAttendanceCalendar() {
               onSubmit={handleSubmit}
             >
               <div className="space-y-2">
-                <Label htmlFor="attendance-employee">Employee</Label>
+                <Label htmlFor="attendance-employee">{t("attendancePage.employee")}</Label>
                 <select
                   id="attendance-employee"
                   name="employeeId"
@@ -525,7 +544,7 @@ export function EmployeeAttendanceCalendar() {
                   required
                   className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm shadow-xs"
                 >
-                  <option value="">Select employee</option>
+                  <option value="">{t("attendancePage.selectEmployee")}</option>
                   {employees.map((employee) => (
                     <option key={employee.id} value={employee.id}>
                       {employee.name}
@@ -534,7 +553,7 @@ export function EmployeeAttendanceCalendar() {
                 </select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="attendance-date">Date</Label>
+                <Label htmlFor="attendance-date">{t("attendancePage.date")}</Label>
                 <Input
                   id="attendance-date"
                   name="date"
@@ -544,7 +563,7 @@ export function EmployeeAttendanceCalendar() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="attendance-status">Status</Label>
+                <Label htmlFor="attendance-status">{t("columns.status")}</Label>
                 <select
                   id="attendance-status"
                   name="status"
@@ -560,7 +579,7 @@ export function EmployeeAttendanceCalendar() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
-                  <Label htmlFor="attendance-in">Check in</Label>
+                  <Label htmlFor="attendance-in">{t("attendancePage.checkIn")}</Label>
                   <Input
                     id="attendance-in"
                     name="checkIn"
@@ -569,7 +588,7 @@ export function EmployeeAttendanceCalendar() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="attendance-out">Check out</Label>
+                  <Label htmlFor="attendance-out">{t("attendancePage.checkOut")}</Label>
                   <Input
                     id="attendance-out"
                     name="checkOut"
@@ -579,12 +598,12 @@ export function EmployeeAttendanceCalendar() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="attendance-notes">Notes</Label>
+                <Label htmlFor="attendance-notes">{t("attendancePage.notes")}</Label>
                 <Input
                   id="attendance-notes"
                   name="notes"
                   defaultValue={editing?.notes}
-                  placeholder="Optional note"
+                  placeholder={t("attendancePage.notesPlaceholder")}
                 />
               </div>
             </form>
@@ -597,16 +616,18 @@ export function EmployeeAttendanceCalendar() {
                 onClick={removeAttendance}
               >
                 <IconTrash className="size-4" />
-                Delete
+                {tc("actions.delete")}
               </Button>
             ) : null}
             <SheetClose asChild>
               <Button type="button" variant="outline">
-                Cancel
+                {tc("actions.cancel")}
               </Button>
             </SheetClose>
             <Button type="submit" form="attendance-form">
-              {editing ? "Save changes" : "Record attendance"}
+              {editing
+                ? t("attendancePage.saveChanges")
+                : t("attendancePage.recordAttendance")}
             </Button>
           </SheetFooter>
         </SheetContent>
@@ -616,7 +637,7 @@ export function EmployeeAttendanceCalendar() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 flex-1 items-center gap-2 sm:max-w-md">
             <SearchInput
-              placeholder="Search attendance..."
+              placeholder={t("attendancePage.searchPlaceholder")}
               value={employeeSearch}
               onChange={(event) => setEmployeeSearch(event.target.value)}
               icon={<IconSearch className="size-4" />}
@@ -630,7 +651,7 @@ export function EmployeeAttendanceCalendar() {
                     variant="ghost"
                     size="icon"
                     className="relative size-9 rounded-l-full rounded-r-none border-0 shadow-none"
-                    aria-label="Open attendance filters"
+                    aria-label={t("attendancePage.openFilters")}
                   >
                     <IconAdjustmentsHorizontal className="size-4" />
                     {activeFilterCount > 0 ? (
@@ -646,7 +667,7 @@ export function EmployeeAttendanceCalendar() {
                   variant="ghost"
                   size="icon"
                   className="size-9 rounded-none border-0 shadow-none"
-                  aria-label="Show calendar view"
+                  aria-label={t("attendancePage.showCalendar")}
                   onClick={() => setView("calendar")}
                 >
                   <IconCalendar
@@ -659,7 +680,7 @@ export function EmployeeAttendanceCalendar() {
                   variant="ghost"
                   size="icon"
                   className="size-9 rounded-r-full rounded-l-none border-0 shadow-none"
-                  aria-label="Show table view"
+                  aria-label={t("attendancePage.showTable")}
                   onClick={() => setView("table")}
                 >
                   <IconList
@@ -669,28 +690,28 @@ export function EmployeeAttendanceCalendar() {
               </div>
               <PopoverContent align="start" className="w-80 space-y-4 p-4">
                 <div>
-                  <p className="text-sm font-semibold">Filters</p>
+                  <p className="text-sm font-semibold">{t("attendancePage.filters")}</p>
                   <p className="text-muted-foreground text-xs">
-                    Limit attendance by employee or department.
+                    {t("attendancePage.filtersHint")}
                   </p>
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="attendance-filter" className="text-xs">
-                    Employee
+                    {t("attendancePage.employee")}
                   </Label>
                   <InfiniteScrollSelect
                     id="attendance-filter"
                     value={employeeFilter}
                     onValueChange={setEmployeeFilter}
                     options={employeeOptions}
-                    placeholder="Select employee"
-                    searchPlaceholder="Search employees…"
+                    placeholder={t("attendancePage.selectEmployee")}
+                    searchPlaceholder={t("attendancePage.searchEmployees")}
                     leadingIcon={<IconUsers />}
                   />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="attendance-department" className="text-xs">
-                    Department
+                    {t("attendancePage.department")}
                   </Label>
                   <select
                     id="attendance-department"
@@ -701,7 +722,7 @@ export function EmployeeAttendanceCalendar() {
                     }}
                     className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm shadow-xs"
                   >
-                    <option value="all">All departments</option>
+                    <option value="all">{t("attendancePage.allDepartments")}</option>
                     {departments.map((department) => (
                       <option key={department} value={department}>
                         {department}
@@ -720,7 +741,7 @@ export function EmployeeAttendanceCalendar() {
                       setDepartmentFilter("all")
                     }}
                   >
-                    Clear filters
+                    {t("attendancePage.clearFilters")}
                   </Button>
                 ) : null}
               </PopoverContent>
@@ -735,7 +756,7 @@ export function EmployeeAttendanceCalendar() {
                 onClick={() => openDay(new Date())}
               >
                 <IconUsers className="size-4" />
-                Mark today
+                {t("attendancePage.markToday")}
               </Button>
             ) : null}
             <Button
@@ -744,7 +765,7 @@ export function EmployeeAttendanceCalendar() {
               onClick={() => openNew()}
             >
               <IconPlus className="size-4" />
-              Record attendance
+              {t("attendancePage.recordAttendance")}
             </Button>
           </div>
         </div>
@@ -772,7 +793,7 @@ export function EmployeeAttendanceCalendar() {
               </div>
               {employeeFilter === "all" ? (
                 <p className="text-muted-foreground text-xs">
-                  Calendar shows one daily summary to stay readable.
+                  {t("attendancePage.calendarHint")}
                 </p>
               ) : null}
             </div>
@@ -825,29 +846,29 @@ export function EmployeeAttendanceCalendar() {
             <p className="text-muted-foreground mt-3 flex items-center gap-1.5 text-xs">
               <IconClock className="size-3.5" />
               {employeeFilter === "all"
-                ? "Click a date to mark the filtered team in one step."
-                : "Click a date to record attendance, or an event to edit it."}
+                ? t("attendancePage.clickDateTeam")
+                : t("attendancePage.clickDateRecord")}
             </p>
           </div>
         ) : (
           <div className="bg-card overflow-hidden rounded-xl border border-border/60">
             <div className="border-b px-4 py-3">
-              <p className="text-sm font-semibold">Attendance records</p>
+              <p className="text-sm font-semibold">{t("attendancePage.recordsTitle")}</p>
               <p className="text-muted-foreground text-xs">
-                {visibleRecords.length} records for the selected filters
+                {t("attendancePage.recordsCount", { count: visibleRecords.length })}
               </p>
             </div>
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Employee</TableHead>
-                    <TableHead>Department</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Check in</TableHead>
-                    <TableHead>Check out</TableHead>
-                    <TableHead className="text-right">Action</TableHead>
+                    <TableHead>{t("attendancePage.date")}</TableHead>
+                    <TableHead>{t("attendancePage.employee")}</TableHead>
+                    <TableHead>{t("attendancePage.department")}</TableHead>
+                    <TableHead>{t("columns.status")}</TableHead>
+                    <TableHead>{t("attendancePage.checkIn")}</TableHead>
+                    <TableHead>{t("attendancePage.checkOut")}</TableHead>
+                    <TableHead className="text-right">{t("attendancePage.action")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -857,7 +878,7 @@ export function EmployeeAttendanceCalendar() {
                         colSpan={7}
                         className="text-muted-foreground h-24 text-center"
                       >
-                        No attendance records match these filters.
+                        {t("attendancePage.noRecords")}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -896,7 +917,7 @@ export function EmployeeAttendanceCalendar() {
                                   setOpen(true)
                                 }}
                               >
-                                Edit
+                                {tc("actions.edit")}
                               </Button>
                             </TableCell>
                           </TableRow>

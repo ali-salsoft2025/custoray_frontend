@@ -1,6 +1,7 @@
 "use client"
 
 import { usePathname } from "next/navigation"
+import { useTranslation } from "react-i18next"
 
 import { NavUser } from "@/components/nav-user"
 import { Separator } from "@/components/ui/separator"
@@ -19,80 +20,82 @@ const headerIconCircleBtn = cn(
 const sidebarTriggerClass =
   "size-9 shrink-0 rounded-2xl border-0 bg-transparent shadow-none text-muted-foreground hover:bg-primary/10 hover:text-primary focus-visible:ring-2 focus-visible:ring-primary/35 dark:text-zinc-400 dark:hover:bg-primary/15 dark:hover:text-primary"
 
-function titleForPath(pathname: string | null): string {
-  if (!pathname) return "Documents"
-  if (pathname === "/home") return "Dashboard"
-  if (pathname === "/customers") return "Customers"
+function titleKeyForPath(pathname: string | null): string {
+  if (!pathname) return "header.documents"
+  if (pathname === "/home") return "header.dashboard"
+  if (pathname === "/customers") return "header.customers"
   if (pathname.startsWith("/customers/")) {
-    if (pathname.endsWith("/new")) return "Add customer"
-    if (pathname.endsWith("/edit")) return "Edit customer"
-    return "Customer details"
+    if (pathname.endsWith("/new")) return "header.addCustomer"
+    if (pathname.endsWith("/edit")) return "header.editCustomer"
+    if (pathname.endsWith("/timeline")) return "header.customerTimeline"
+    return "header.customerDetails"
   }
-  if (pathname === "/vendors") return "Vendors"
-  if (pathname === "/invoices") return "Sales invoice"
-  if (pathname === "/documents/sales-invoice") return "Sales invoice"
-  if (pathname === "/documents/purchase-invoice") return "Purchase invoice"
-  if (pathname === "/documents/invoice-templates") return "Invoice templates"
-  if (pathname.startsWith("/documents/invoice-templates/preview/")) return "Template preview"
-  if (pathname.startsWith("/documents")) return "Documents"
-  if (pathname === "/purchases") return "Purchases"
-  if (pathname === "/sales") return "Sales report"
-  if (pathname === "/reports/sales") return "Sales reports"
-  if (pathname === "/reports/purchases") return "Purchase reports"
-  if (pathname === "/reports/inventory") return "Inventory reports"
-  if (pathname === "/reports/payments") return "Payment reports"
-  if (pathname === "/returns") return "Returns"
-  if (pathname === "/payments") return "Payments"
-  if (pathname === "/payments/customer") return "Customer payments"
-  if (pathname === "/payments/vendor") return "Vendor payments"
-  if (pathname === "/pos") return "POS register"
-  if (pathname === "/pos/new-sale") return "POS register"
-  if (pathname === "/pos/sales") return "Sales history"
-  if (pathname === "/pos/reports") return "POS reports"
-  if (pathname === "/pos/settings") return "POS settings"
-  if (pathname.startsWith("/pos")) return "POS"
+  if (pathname === "/vendors") return "header.vendors"
+  if (pathname === "/invoices") return "header.salesInvoice"
+  if (pathname === "/documents/sales-invoice") return "header.salesInvoice"
+  if (pathname === "/documents/purchase-invoice") return "header.purchaseInvoice"
+  if (pathname === "/documents/invoice-templates") return "header.invoiceTemplates"
+  if (pathname.startsWith("/documents/invoice-templates/preview/")) return "header.templatePreview"
+  if (pathname.startsWith("/documents")) return "header.documents"
+  if (pathname === "/purchases") return "header.purchases"
+  if (pathname === "/sales") return "header.salesReport"
+  if (pathname === "/reports/sales") return "header.salesReports"
+  if (pathname === "/reports/purchases") return "header.purchaseReports"
+  if (pathname === "/reports/inventory") return "header.inventoryReports"
+  if (pathname === "/reports/payments") return "header.paymentReports"
+  if (pathname === "/returns") return "header.returns"
+  if (pathname === "/payments") return "header.payments"
+  if (pathname === "/payments/customer") return "header.customerPayments"
+  if (pathname === "/payments/vendor") return "header.vendorPayments"
+  if (pathname === "/pos") return "header.posRegister"
+  if (pathname === "/pos/new-sale") return "header.posRegister"
+  if (pathname === "/pos/sales") return "header.salesHistory"
+  if (pathname === "/pos/reports") return "header.posReports"
+  if (pathname === "/pos/settings") return "header.posSettings"
+  if (pathname.startsWith("/pos")) return "header.pos"
   if (pathname === "/qr-storefront" || pathname.startsWith("/qr-storefront/")) {
-    return "QR Storefront"
+    return "header.qrStorefront"
   }
-  if (pathname === "/inventory") return "Inventory"
+  if (pathname === "/inventory") return "header.inventory"
   if (pathname.startsWith("/inventory/")) {
-    if (pathname.includes("year-closing")) return "Year closing"
-    if (pathname.includes("/terms/")) return "Term details"
-    if (pathname.includes("/products")) return "Products"
-    if (pathname.includes("/brands") || pathname.includes("/brand")) return "Brands"
-    if (pathname.includes("/categories")) return "Categories"
-    if (pathname.includes("/variants")) return "Variants"
-    return "Inventory"
+    if (pathname.includes("year-closing")) return "header.yearClosing"
+    if (pathname.includes("/terms/")) return "header.termDetails"
+    if (pathname.includes("/products")) return "header.products"
+    if (pathname.includes("/brands") || pathname.includes("/brand")) return "header.brands"
+    if (pathname.includes("/categories")) return "header.categories"
+    if (pathname.includes("/variants")) return "header.variants"
+    return "header.inventory"
   }
-  if (pathname === "/plans" || pathname.startsWith("/settings")) return "Settings"
-  if (pathname === "/employees") return "Employees"
-  if (pathname === "/employees/new") return "Add employee"
-  if (pathname === "/employees/permissions") return "Permissions"
-  if (pathname === "/employees/payroll") return "Payroll"
-  if (pathname === "/employees/attendance") return "Attendance"
-  if (pathname === "/employees/leaves") return "Leave management"
-  if (pathname === "/employees/departments") return "Departments"
-  if (pathname.startsWith("/employees/") && pathname.endsWith("/edit")) return "Edit employee"
-  if (pathname.startsWith("/employees/")) return "Employee profile"
-  if (pathname === "/zakat") return "Zakat overview"
-  if (pathname === "/zakat/assets") return "Zakat assets"
-  if (pathname === "/zakat/liabilities") return "Zakat liabilities"
-  if (pathname === "/zakat/history") return "Zakat history"
-  if (pathname === "/zakat/settings") return "Zakat settings"
-  if (pathname === "/zakat/calculator") return "Zakat overview"
-  if (pathname.startsWith("/zakat")) return "Zakat"
-  if (pathname === "/tax") return "Tax Helper"
-  if (pathname === "/tax/profit-loss") return "Profit & loss"
-  if (pathname === "/tax/balance-sheet") return "Balance sheet"
-  if (pathname === "/tax/year-summary") return "Year summary"
-  if (pathname === "/tax/settings") return "Tax settings"
-  if (pathname.startsWith("/tax")) return "Tax Helper"
-  return "Documents"
+  if (pathname === "/plans" || pathname.startsWith("/settings")) return "header.settings"
+  if (pathname === "/employees") return "header.employees"
+  if (pathname === "/employees/new") return "header.addEmployee"
+  if (pathname === "/employees/permissions") return "header.permissions"
+  if (pathname === "/employees/payroll") return "header.payroll"
+  if (pathname === "/employees/attendance") return "header.attendance"
+  if (pathname === "/employees/leaves") return "header.leaveManagement"
+  if (pathname === "/employees/departments") return "header.departments"
+  if (pathname.startsWith("/employees/") && pathname.endsWith("/edit")) return "header.editEmployee"
+  if (pathname.startsWith("/employees/")) return "header.employeeProfile"
+  if (pathname === "/zakat") return "header.zakatOverview"
+  if (pathname === "/zakat/assets") return "header.zakatAssets"
+  if (pathname === "/zakat/liabilities") return "header.zakatLiabilities"
+  if (pathname === "/zakat/history") return "header.zakatHistory"
+  if (pathname === "/zakat/settings") return "header.zakatSettings"
+  if (pathname === "/zakat/calculator") return "header.zakatOverview"
+  if (pathname.startsWith("/zakat")) return "header.zakat"
+  if (pathname === "/tax") return "header.taxHelper"
+  if (pathname === "/tax/profit-loss") return "header.profitLoss"
+  if (pathname === "/tax/balance-sheet") return "header.balanceSheet"
+  if (pathname === "/tax/year-summary") return "header.yearSummary"
+  if (pathname === "/tax/settings") return "header.taxSettings"
+  if (pathname.startsWith("/tax")) return "header.taxHelper"
+  return "header.documents"
 }
 
 export function SiteHeader() {
   const pathname = usePathname()
-  const headerTitle = titleForPath(pathname)
+  const { t } = useTranslation("nav")
+  const headerTitle = t(titleKeyForPath(pathname))
 
   return (
     <header className="flex h-(--header-height) shrink-0 items-stretch border-b border-zinc-200/70 h-auto rounded-t-2xl transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height) dark:border-zinc-800/80">
@@ -108,7 +111,7 @@ export function SiteHeader() {
         <div className="ms-auto flex shrink-0 items-center gap-2">
           <TermSwitcher triggerClassName={headerIconCircleBtn} />
           <ToggleButton layout="toolbar" variant="ghost" className={headerIconCircleBtn} />
-          <NavUser className={headerIconCircleBtn} />
+          <NavUser />
         </div>
       </div>
     </header>

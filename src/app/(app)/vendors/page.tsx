@@ -10,6 +10,8 @@ import {
   IconTrash,
 } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
+import type { TFunction } from "i18next"
 
 import { VendorDetail } from "@/components/vendors/vendor-detail"
 import { VendorForm } from "@/components/vendors/vendor-form"
@@ -45,16 +47,9 @@ import {
   formatMoney,
   mapImportedVendor,
   statusBadgeClass,
-  statusLabel,
   vendorFromFormData,
   type VendorRow,
 } from "@/lib/vendors"
-
-const vendorTabs: DataTableTab[] = [
-  { value: "all", label: "All" },
-  { value: "active", label: "Active" },
-  { value: "inactive", label: "Inactive" },
-]
 
 type VendorSidebarState =
   | { mode: "view"; vendor: VendorRow }
@@ -68,6 +63,7 @@ function vendorTabFilter(row: VendorRow, tab: string) {
 }
 
 function getVendorColumns(
+  t: TFunction<"vendors">,
   openVendorSidebar: (row: VendorRow, mode: "view" | "edit") => void,
   onDelete: (row: VendorRow) => void,
   onDuplicate: (row: VendorRow) => void
@@ -83,7 +79,7 @@ function getVendorColumns(
               (table.getIsSomePageRowsSelected() && "indeterminate")
             }
             onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-            aria-label="Select all"
+            aria-label={t("table.selectAll", { ns: "common" })}
           />
         </div>
       ),
@@ -92,7 +88,7 @@ function getVendorColumns(
           <Checkbox
             checked={row.getIsSelected()}
             onCheckedChange={(value) => row.toggleSelected(!!value)}
-            aria-label="Select row"
+            aria-label={t("table.selectRow", { ns: "common" })}
           />
         </div>
       ),
@@ -101,7 +97,9 @@ function getVendorColumns(
     },
     {
       accessorKey: "id",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="ID" />,
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t("columns.id")} />
+      ),
       cell: ({ row }) => (
         <span className="text-muted-foreground font-mono tabular-nums">
           {row.original.id}
@@ -112,7 +110,7 @@ function getVendorColumns(
     {
       accessorKey: "name",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Name" />
+        <DataTableColumnHeader column={column} title={t("columns.name")} />
       ),
       cell: ({ row }) => (
         <button
@@ -129,7 +127,7 @@ function getVendorColumns(
     {
       accessorKey: "description",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Description" />
+        <DataTableColumnHeader column={column} title={t("columns.description")} />
       ),
       cell: ({ row }) => (
         <span className="text-muted-foreground max-w-[12rem] truncate">
@@ -141,7 +139,7 @@ function getVendorColumns(
     {
       accessorKey: "openingBalance",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Opening balance" align="center" />
+        <DataTableColumnHeader column={column} title={t("columns.openingBalance")} align="center" />
       ),
       cell: ({ row }) => (
         <div className="flex justify-center">
@@ -155,7 +153,7 @@ function getVendorColumns(
     {
       accessorKey: "totalPurchases",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Total purchases" align="center" />
+        <DataTableColumnHeader column={column} title={t("columns.totalPurchases")} align="center" />
       ),
       cell: ({ row }) => (
         <div className="flex justify-center">
@@ -169,7 +167,7 @@ function getVendorColumns(
     {
       accessorKey: "totalPayments",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Total payments" align="center" />
+        <DataTableColumnHeader column={column} title={t("columns.totalPayments")} align="center" />
       ),
       cell: ({ row }) => (
         <div className="flex justify-center">
@@ -184,7 +182,7 @@ function getVendorColumns(
       id: "balance",
       accessorFn: (row) => Number(computeBalance(row)),
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Balance" align="center" />
+        <DataTableColumnHeader column={column} title={t("columns.balance")} align="center" />
       ),
       cell: ({ row }) => {
         const balance = computeBalance(row.original)
@@ -207,7 +205,7 @@ function getVendorColumns(
     {
       accessorKey: "phone",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Phone number" />
+        <DataTableColumnHeader column={column} title={t("columns.phone")} />
       ),
       cell: ({ row }) => (
         <span className="text-muted-foreground tabular-nums text-xs">{row.original.phone}</span>
@@ -216,10 +214,12 @@ function getVendorColumns(
     },
     {
       accessorKey: "status",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t("columns.status")} />
+      ),
       cell: ({ row }) => (
         <Badge variant="outline" className={statusBadgeClass(row.original.status)}>
-          {statusLabel(row.original.status)}
+          {t(`status.${row.original.status}`, { ns: "common" })}
         </Badge>
       ),
       meta: { dataTableFilter: false },
@@ -236,26 +236,26 @@ function getVendorColumns(
               size="icon"
             >
               <IconDotsVertical />
-              <span className="sr-only">Open menu</span>
+              <span className="sr-only">{t("actions.openMenu")}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40">
             <DropdownMenuItem onClick={() => openVendorSidebar(row.original, "view")}>
               <IconEye />
-              View
+              {t("actions.view")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => openVendorSidebar(row.original, "edit")}>
               <IconPencil />
-              Edit
+              {t("actions.edit")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onDuplicate(row.original)}>
               <IconCopy />
-              Duplicate
+              {t("actions.duplicate")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem variant="destructive" onClick={() => onDelete(row.original)}>
               <IconTrash />
-              Delete
+              {t("actions.delete")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -265,6 +265,7 @@ function getVendorColumns(
 }
 
 export default function VendorsPage() {
+  const { t } = useTranslation("vendors")
   const {
     vendors,
     setVendors,
@@ -282,7 +283,7 @@ export default function VendorsPage() {
       if (
         !(await confirmDeleteAction({
           itemName: vendor.name,
-          entityLabel: "vendor",
+          entityLabel: t("entity.vendor"),
         }))
       ) {
         return
@@ -291,7 +292,7 @@ export default function VendorsPage() {
       if (sidebar?.mode !== "add" && sidebar?.vendor.id === vendor.id) {
         closeSidebar()
       }
-      toast.message(`Removed ${vendor.name} (demo).`)
+      toast.message(t("toasts.removedNamed", { name: vendor.name }))
     },
     [removeVendor, sidebar]
   )
@@ -301,13 +302,13 @@ export default function VendorsPage() {
       if (
         !(await confirmDuplicateAction({
           itemName: vendor.name,
-          entityLabel: "vendor",
+          entityLabel: t("entity.vendor"),
         }))
       ) {
         return
       }
       const copy = duplicateVendor(vendor.id)
-      if (copy) toast.success(`Duplicated ${vendor.name} (demo).`)
+      if (copy) toast.success(t("toasts.duplicatedNamed", { name: vendor.name }))
     },
     [duplicateVendor]
   )
@@ -318,20 +319,20 @@ export default function VendorsPage() {
       const fd = new FormData(e.currentTarget)
       const name = String(fd.get("name") ?? "").trim()
       if (!name) {
-        toast.error("Vendor name is required.")
+        toast.error(t("toasts.nameRequired"))
         return
       }
 
       if (sidebar?.mode === "add") {
         addVendor(vendorFromFormData(fd, 0))
-        toast.success("Vendor created (demo).")
+        toast.success(t("toasts.created"))
         closeSidebar()
         return
       }
 
       if (sidebar?.mode === "edit" && sidebar.vendor) {
         updateVendor(sidebar.vendor.id, vendorFromFormData(fd, sidebar.vendor.id))
-        toast.success("Vendor saved (demo).")
+        toast.success(t("toasts.saved"))
         closeSidebar()
       }
     },
@@ -341,12 +342,19 @@ export default function VendorsPage() {
   const columns = useMemo(
     () =>
       getVendorColumns(
+        t,
         (row, mode) => setSidebar({ vendor: row, mode }),
         handleDelete,
         handleDuplicate
       ),
-    [handleDelete, handleDuplicate]
+    [t, handleDelete, handleDuplicate]
   )
+
+  const vendorTabs: DataTableTab[] = [
+    { value: "all", label: t("tabs.all") },
+    { value: "active", label: t("tabs.active") },
+    { value: "inactive", label: t("tabs.inactive") },
+  ]
 
   const sheetVendor = sidebar && sidebar.mode !== "add" ? sidebar.vendor : null
   const formVendor =
@@ -375,14 +383,14 @@ export default function VendorsPage() {
               <SheetHeader className="border-border/60 space-y-1 border-b px-6 py-5 text-left">
                 <SheetTitle className="text-lg leading-tight">
                   {sidebar.mode === "add"
-                    ? "Add vendor"
+                    ? t("sheet.add")
                     : sidebar.mode === "edit"
-                      ? "Edit vendor"
+                      ? t("sheet.edit")
                       : sheetVendor?.name}
                 </SheetTitle>
                 <SheetDescription>
                   {sidebar.mode === "add" ? (
-                    "Fill in vendor details and photo. Saving is demo only."
+                    t("sheet.addDescription")
                   ) : sidebar.mode === "edit" && sheetVendor ? (
                     <>
                       {sheetVendor.name}
@@ -421,21 +429,21 @@ export default function VendorsPage() {
                         setSidebar({ mode: "edit", vendor: sheetVendor })
                       }
                     >
-                      Edit
+                      {t("actions.edit")}
                     </Button>
                     <SheetClose asChild>
-                      <Button className="w-full sm:w-auto">Close</Button>
+                      <Button className="w-full sm:w-auto">{t("actions.close", { ns: "common" })}</Button>
                     </SheetClose>
                   </>
                 ) : (
                   <>
                     <SheetClose asChild>
                       <Button variant="outline" type="button">
-                        Cancel
+                        {t("actions.cancel", { ns: "common" })}
                       </Button>
                     </SheetClose>
                     <Button type="submit" form={formId}>
-                      {sidebar.mode === "add" ? "Create vendor" : "Save vendor"}
+                      {sidebar.mode === "add" ? t("sheet.create") : t("sheet.save")}
                     </Button>
                   </>
                 )}
@@ -448,8 +456,8 @@ export default function VendorsPage() {
       <DataTable
         data={vendors}
         columns={columns}
-        addButtonLabel="New Vendor"
-        searchPlaceholder="Search vendors..."
+        addButtonLabel={t("addButton")}
+        searchPlaceholder={t("search")}
         importRowMapper={mapImportedVendor}
         importSampleFilename="vendors-sample.csv"
         exportFilename="vendors-export.csv"
@@ -459,23 +467,21 @@ export default function VendorsPage() {
         bulkActions={[
           {
             id: "delete",
-            label: "Delete selected",
+            label: t("actions.deleteSelected"),
             icon: <IconTrash className="size-4" />,
             variant: "destructive",
             onClick: async (selected) => {
               if (
                 !(await confirmDeleteAction({
                   count: selected.length,
-                  entityLabel: "vendor",
+                  entityLabel: t("entity.vendor"),
                 }))
               ) {
                 return
               }
               const ids = new Set(selected.map((v) => v.id))
               setVendors((prev) => prev.filter((r) => !ids.has(r.id)))
-              toast.message(
-                `Removed ${selected.length} vendor${selected.length === 1 ? "" : "s"} (demo).`
-              )
+              toast.message(t("toasts.removedCount", { count: selected.length }))
             },
           },
         ]}

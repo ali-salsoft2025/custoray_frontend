@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { useZakat } from "@/context/zakat-context"
 import { formatZakatMoney } from "@/lib/zakat"
+import { useTranslation } from "react-i18next"
 
 function LiabilityRow({
   icon,
@@ -49,54 +50,55 @@ function LiabilityRow({
 }
 
 export function ZakatLiabilitiesPanel() {
+  const { t } = useTranslation("zakat")
   const { calculation } = useZakat()
 
   return (
     <div className="flex flex-col gap-6">
       <div>
         <h2 className="text-xl font-semibold tracking-tight">
-          Business liabilities
+          {t("liabilitiesPage.title")}
         </h2>
         <p className="text-muted-foreground mt-1 text-sm">
-          Review deductible business obligations and update them at their source.
+          {t("liabilitiesPage.hint")}
         </p>
       </div>
 
       <section className="overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm">
         <LiabilityRow
           icon={<IconBuildingStore className="size-4" />}
-          label="Supplier payables"
-          hint="Positive balances from vendor accounts"
+          label={t("liabilitiesPage.supplierPayables")}
+          hint={t("liabilitiesPage.supplierHint")}
           value={calculation.liabilities.supplierPayables}
           href="/vendors"
-          action="Suppliers"
+          action={t("liabilitiesPage.suppliers")}
         />
         <LiabilityRow
           icon={<IconReceiptTax className="size-4" />}
-          label="Expenses payable"
-          hint="Temporary balance maintained in Zakat settings"
+          label={t("liabilitiesPage.expensesPayable")}
+          hint={t("liabilitiesPage.expensesHint")}
           value={calculation.liabilities.expensesPayable}
           href="/zakat/settings"
-          action="Settings"
+          action={t("liabilitiesPage.settings")}
         />
         <LiabilityRow
           icon={<IconCashBanknote className="size-4" />}
-          label="Short-term loans"
-          hint="Temporary balance maintained in Zakat settings"
+          label={t("liabilitiesPage.shortTermLoans")}
+          hint={t("liabilitiesPage.loansHint")}
           value={calculation.liabilities.shortTermLoans}
           href="/zakat/settings"
-          action="Settings"
+          action={t("liabilitiesPage.settings")}
         />
         <LiabilityRow
           icon={<IconSettings className="size-4" />}
-          label="Manual adjustment"
-          hint="Other eligible short-term liabilities"
+          label={t("liabilitiesPage.manualAdjustment")}
+          hint={t("liabilitiesPage.manualHint")}
           value={calculation.liabilities.manualAdjustment}
           href="/zakat/settings"
-          action="Settings"
+          action={t("liabilitiesPage.settings")}
         />
         <div className="flex items-center justify-between gap-4 bg-muted/20 px-5 py-4">
-          <p className="text-sm font-semibold">Total liabilities</p>
+          <p className="text-sm font-semibold">{t("liabilitiesPage.totalLiabilities")}</p>
           <p className="text-lg font-semibold tabular-nums">
             {formatZakatMoney(calculation.liabilities.total)}
           </p>
@@ -104,22 +106,22 @@ export function ZakatLiabilitiesPanel() {
       </section>
 
       <section className="rounded-xl border border-border/60 bg-card p-5 shadow-sm">
-        <h3 className="text-sm font-semibold">Calculation impact</h3>
+        <h3 className="text-sm font-semibold">{t("liabilitiesPage.calculationImpact")}</h3>
         <div className="mt-4 divide-y rounded-lg border">
           <div className="flex items-center justify-between gap-4 px-4 py-3 text-sm">
-            <span className="text-muted-foreground">Business assets</span>
+            <span className="text-muted-foreground">{t("liabilitiesPage.businessAssets")}</span>
             <span className="font-medium tabular-nums">
               {formatZakatMoney(calculation.assets.total)}
             </span>
           </div>
           <div className="flex items-center justify-between gap-4 px-4 py-3 text-sm">
-            <span className="text-muted-foreground">Less liabilities</span>
+            <span className="text-muted-foreground">{t("liabilitiesPage.lessLiabilities")}</span>
             <span className="font-medium tabular-nums">
               − {formatZakatMoney(calculation.liabilities.total)}
             </span>
           </div>
           <div className="flex items-center justify-between gap-4 px-4 py-3 text-sm">
-            <span className="font-medium">Net Zakat assets</span>
+            <span className="font-medium">{t("liabilitiesPage.netAssets")}</span>
             <span className="font-semibold tabular-nums">
               {formatZakatMoney(calculation.netAssets)}
             </span>

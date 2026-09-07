@@ -1,6 +1,7 @@
 "use client"
 
-import { IconPackage } from "@tabler/icons-react"
+import { IconPackage, IconPlus } from "@tabler/icons-react"
+import { useTranslation } from "react-i18next"
 
 import type { ProductRow } from "@/lib/products"
 import { cn } from "@/lib/utils"
@@ -34,6 +35,7 @@ export function PosProductCard({
   showStock = true,
   lowStockThreshold = 5,
 }: PosProductCardProps) {
+  const { t } = useTranslation("pos")
   const outOfStock = product.stock <= 0
   const lowStock = !outOfStock && product.stock <= lowStockThreshold
   const imageUrl = product.imageUrls?.[0]?.trim()
@@ -47,28 +49,32 @@ export function PosProductCard({
       className={cn(
         "group relative flex h-full flex-col overflow-hidden rounded-xl bg-card text-left",
         "shadow-sm shadow-black/[0.04] ring-1 ring-border/40",
-        "transition-all hover:-translate-y-0.5 hover:shadow-md hover:ring-border/60",
+        "transition-all hover:-translate-y-0.5 hover:shadow-md hover:ring-primary/25",
         "focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
-        isDisabled && "cursor-not-allowed opacity-55 hover:translate-y-0 hover:shadow-sm"
+        isDisabled && "cursor-not-allowed opacity-55 hover:translate-y-0 hover:shadow-sm hover:ring-border/40"
       )}
     >
       {inCartQty > 0 ? (
-        <span className="bg-foreground text-background absolute top-1.5 right-1.5 z-10 flex size-5 items-center justify-center rounded-full text-[10px] font-semibold">
+        <span className="bg-primary text-primary-foreground absolute top-2 right-2 z-10 flex size-6 items-center justify-center rounded-full text-[11px] font-semibold shadow-sm">
           {inCartQty}
+        </span>
+      ) : !isDisabled ? (
+        <span className="bg-background/90 text-muted-foreground absolute top-2 right-2 z-10 flex size-6 items-center justify-center rounded-full opacity-0 shadow-sm ring-1 ring-border/50 transition-opacity group-hover:opacity-100">
+          <IconPlus className="size-3.5" stroke={2} />
         </span>
       ) : null}
 
-      <div className="relative h-16 w-full shrink-0 overflow-hidden bg-muted/40">
+      <div className="relative h-20 w-full shrink-0 overflow-hidden bg-muted/40">
         {imageUrl ? (
           /* eslint-disable-next-line @next/next/no-img-element */
           <img
             src={imageUrl}
             alt=""
-            className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+            className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
           />
         ) : (
-          <div className="text-muted-foreground flex size-full items-center justify-center gap-2 bg-gradient-to-b from-muted/30 to-muted/60 px-2">
-            <div className="bg-background/70 flex size-8 shrink-0 items-center justify-center rounded-md ring-1 ring-border/40">
+          <div className="text-muted-foreground flex size-full flex-col items-center justify-center gap-1.5 bg-gradient-to-b from-muted/20 to-muted/55 px-2">
+            <div className="bg-background/80 flex size-9 items-center justify-center rounded-lg ring-1 ring-border/40">
               <IconPackage className="size-4" stroke={1.5} />
             </div>
             <span className="text-muted-foreground/80 truncate text-[10px] font-semibold tracking-wide uppercase">
@@ -78,7 +84,7 @@ export function PosProductCard({
         )}
       </div>
 
-      <div className="flex flex-1 flex-col gap-1.5 p-2.5">
+      <div className="flex flex-1 flex-col gap-1.5 p-3">
         <div className="min-h-0 flex-1">
           <p className="line-clamp-2 text-sm leading-snug font-medium">{product.name}</p>
           {showSku ? (
@@ -98,13 +104,21 @@ export function PosProductCard({
           {showStock ? (
             <span
               className={cn(
-                "rounded-md px-2 py-0.5 text-[10px] font-medium",
+                "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium",
                 outOfStock && "bg-muted text-muted-foreground",
                 lowStock && "bg-amber-500/10 text-amber-800 dark:text-amber-300",
-                !outOfStock && !lowStock && "bg-muted/80 text-muted-foreground"
+                !outOfStock && !lowStock && "bg-emerald-500/10 text-emerald-800 dark:text-emerald-300"
               )}
             >
-              {outOfStock ? "Out of stock" : `${product.stock} avail.`}
+              <span
+                className={cn(
+                  "size-1.5 rounded-full",
+                  outOfStock && "bg-muted-foreground/50",
+                  lowStock && "bg-amber-500",
+                  !outOfStock && !lowStock && "bg-emerald-500"
+                )}
+              />
+              {outOfStock ? t("outOfStockShort") : product.stock}
             </span>
           ) : null}
         </div>

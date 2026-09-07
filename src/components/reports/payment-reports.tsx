@@ -8,6 +8,7 @@ import {
   IconTrendingUp,
 } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 import {
   CashFlowChart,
@@ -131,27 +132,28 @@ function paymentIconTone(payment: PaymentRow): string {
 }
 
 function PaymentList({ payments }: { payments: PaymentRow[] }) {
+  const { t } = useTranslation("reports")
   return (
     <div className={cn(panelClass, "overflow-hidden")}>
       <div className="flex items-start justify-between gap-3 px-5 pt-5 pb-3">
         <div>
           <p className="text-sm font-semibold tracking-tight">
-            Recent payments
+            {t("paymentsPage.recentPayments")}
           </p>
           <p className="text-muted-foreground mt-0.5 text-xs">
-            Receipts and payouts in the selected period
+            {t("paymentsPage.receiptsPayouts")}
           </p>
         </div>
         {payments.length > 0 ? (
           <span className="text-muted-foreground rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium tabular-nums">
-            {payments.length} shown
+            {t("shared.shownCount", { count: payments.length })}
           </span>
         ) : null}
       </div>
 
       {payments.length === 0 ? (
         <p className="text-muted-foreground flex items-center justify-center px-5 py-12 text-center text-sm">
-          No payments in this period.
+          {t("paymentsPage.noPayments")}
         </p>
       ) : (
         <div className="border-border/50 border-t">
@@ -159,25 +161,25 @@ function PaymentList({ payments }: { payments: PaymentRow[] }) {
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 <TableHead className="text-muted-foreground h-10 px-4 text-[11px] font-semibold tracking-wide uppercase">
-                  Number
+                  {t("paymentsPage.number")}
                 </TableHead>
                 <TableHead className="text-muted-foreground h-10 px-4 text-[11px] font-semibold tracking-wide uppercase">
-                  Party
+                  {t("paymentsPage.party")}
                 </TableHead>
                 <TableHead className="text-muted-foreground h-10 px-4 text-[11px] font-semibold tracking-wide uppercase">
-                  Direction
+                  {t("paymentsPage.direction")}
                 </TableHead>
                 <TableHead className="text-muted-foreground h-10 px-4 text-[11px] font-semibold tracking-wide uppercase">
-                  Date
+                  {t("paymentsPage.date")}
                 </TableHead>
                 <TableHead className="text-muted-foreground h-10 px-4 text-[11px] font-semibold tracking-wide uppercase">
-                  Method
+                  {t("paymentsPage.method")}
                 </TableHead>
                 <TableHead className="text-muted-foreground h-10 px-4 text-[11px] font-semibold tracking-wide uppercase">
-                  Status
+                  {t("paymentsPage.status")}
                 </TableHead>
                 <TableHead className="text-muted-foreground h-10 px-4 text-right text-[11px] font-semibold tracking-wide uppercase">
-                  Amount
+                  {t("paymentsPage.amount")}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -217,7 +219,7 @@ function PaymentList({ payments }: { payments: PaymentRow[] }) {
                           typeBadgeClass(payment.type)
                         )}
                       >
-                        {inbound ? "In" : "Out"}
+                        {inbound ? t("paymentsPage.in") : t("paymentsPage.out")}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground px-4 py-3 whitespace-nowrap tabular-nums">
@@ -274,6 +276,7 @@ function withPresetDates(
 }
 
 export function PaymentReports() {
+  const { t } = useTranslation("reports")
   // Relative-date demo seed so month / custom filters show a full cash-flow curve.
   const payments = React.useMemo(() => buildPaymentReportDemoPayments(), [])
   const [filter, setFilter] = React.useState<PaymentReportFilter>(() =>
@@ -324,22 +327,22 @@ export function PaymentReports() {
 
   const handleExport = () => {
     if (cashFlow.length === 0) {
-      toast.error("No data to export for this period.")
+      toast.error(t("shared.toastNoData"))
       return
     }
 
     downloadRowsAsXls(
       cashFlow.map((row) => ({
-        Date: row.label,
-        Received: row.received,
-        "Paid out": row.paidOut,
-        Net: row.net,
-        "Receipt count": row.receivedCount,
-        "Payout count": row.paidOutCount,
+        [t("paymentsPage.exportDate")]: row.label,
+        [t("paymentsPage.exportReceived")]: row.received,
+        [t("paymentsPage.exportPaidOut")]: row.paidOut,
+        [t("paymentsPage.exportNet")]: row.net,
+        [t("paymentsPage.exportReceiptCount")]: row.receivedCount,
+        [t("paymentsPage.exportPayoutCount")]: row.paidOutCount,
       })),
       `payment-report-${filter.preset}.xls`
     )
-    toast.success("Report exported.")
+    toast.success(t("shared.toastExported"))
   }
 
   if (!ready) {
@@ -371,7 +374,7 @@ export function PaymentReports() {
                     "text-muted-foreground hover:bg-muted/50 hover:text-foreground relative size-9 rounded-full border-0 shadow-none",
                     activeFilterCount > 0 && "bg-primary/5 text-foreground"
                   )}
-                  aria-label="Open filters"
+                  aria-label={t("shared.openFilters")}
                 >
                   <IconAdjustmentsHorizontal className="size-4 opacity-90" />
                   {activeFilterCount > 0 ? (
@@ -392,10 +395,10 @@ export function PaymentReports() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 space-y-1">
                     <h3 className="text-foreground text-sm font-semibold tracking-tight">
-                      Report filters
+                      {t("shared.reportFilters")}
                     </h3>
                     <p className="text-muted-foreground text-[11px] leading-relaxed">
-                      This month, last month, or a custom date range.
+                      {t("shared.filtersHint")}
                     </p>
                   </div>
                   <Button
@@ -406,7 +409,7 @@ export function PaymentReports() {
                     disabled={activeFilterCount === 0}
                     onClick={resetFilters}
                   >
-                    Reset filters
+                    {t("shared.resetFilters")}
                   </Button>
                 </div>
               </div>
@@ -414,10 +417,10 @@ export function PaymentReports() {
               <div className="max-h-[min(70vh,28rem)] space-y-4 overflow-y-auto px-4 py-3">
                 <div className="space-y-2">
                   <Label className="text-muted-foreground block text-[11px] font-semibold tracking-wide uppercase">
-                    Period
+                    {t("shared.period")}
                   </Label>
                   <div className="flex flex-wrap gap-1.5">
-                    {PAYMENT_REPORT_PRESETS.map(({ value, label }) => {
+                    {PAYMENT_REPORT_PRESETS.map(({ value }) => {
                       const selected = filter.preset === value
                       return (
                         <Button
@@ -428,7 +431,7 @@ export function PaymentReports() {
                           className="h-7 rounded-full px-2.5 text-xs"
                           onClick={() => setPreset(value)}
                         >
-                          {label}
+                          {t(`presets.${value}`)}
                         </Button>
                       )
                     })}
@@ -437,12 +440,12 @@ export function PaymentReports() {
 
                 <div className="border-border/80 space-y-3 border-t pt-3">
                   <Label className="text-muted-foreground block text-[11px] font-semibold tracking-wide uppercase">
-                    Date range
+                    {t("shared.dateRange")}
                   </Label>
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div className="space-y-1.5">
                       <Label htmlFor="payment-report-from" className="text-xs">
-                        From date
+                        {t("shared.fromDate")}
                       </Label>
                       <Input
                         id="payment-report-from"
@@ -462,7 +465,7 @@ export function PaymentReports() {
                     </div>
                     <div className="space-y-1.5">
                       <Label htmlFor="payment-report-to" className="text-xs">
-                        To date
+                        {t("shared.toDate")}
                       </Label>
                       <Input
                         id="payment-report-to"
@@ -484,7 +487,7 @@ export function PaymentReports() {
                   <p className="text-muted-foreground text-[11px]">
                     {customDatesEnabled
                       ? `${formatDate(range.start)} – ${formatDate(range.end)}`
-                      : "Switch to Custom to edit dates."}
+                      : t("shared.switchToCustom")}
                   </p>
                 </div>
               </div>
@@ -498,42 +501,58 @@ export function PaymentReports() {
             onClick={handleExport}
           >
             <IconCloudDownload />
-            <span className="hidden sm:inline">Export</span>
+            <span className="hidden sm:inline">{t("shared.export")}</span>
           </Button>
         </div>
       </div>
 
       <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs sm:grid-cols-2 xl:grid-cols-4">
         <PaymentStatCard
-          label="Money in"
+          label={t("paymentsPage.moneyIn")}
           value={formatPaymentReportMoney(summary.received)}
           trend={trends.receivedChangePct}
-          footerTitle={`${summary.receivedCount} customer receipts`}
-          footerHint={`Average ${formatPaymentReportMoney(summary.avgReceipt)} per receipt`}
+          footerTitle={t("paymentsPage.customerReceipts", {
+            count: summary.receivedCount,
+          })}
+          footerHint={t("paymentsPage.avgReceipt", {
+            amount: formatPaymentReportMoney(summary.avgReceipt),
+          })}
         />
         <PaymentStatCard
-          label="Money out"
+          label={t("paymentsPage.moneyOut")}
           value={formatPaymentReportMoney(summary.paidOut)}
           trend={trends.paidOutChangePct}
-          footerTitle={`${summary.paidOutCount} vendor payouts`}
-          footerHint={`${summary.collectionShare.toFixed(0)}% of settled volume was inbound`}
+          footerTitle={t("paymentsPage.vendorPayouts", {
+            count: summary.paidOutCount,
+          })}
+          footerHint={t("paymentsPage.inboundShare", {
+            rate: summary.collectionShare.toFixed(0),
+          })}
         />
         <PaymentStatCard
-          label="Net cash flow"
+          label={t("paymentsPage.netCashFlow")}
           value={formatPaymentReportMoney(summary.netCashFlow)}
           trend={trends.netChangePct}
-          footerTitle={net >= 0 ? "Positive this period" : "Negative this period"}
+          footerTitle={
+            net >= 0
+              ? t("paymentsPage.positivePeriod")
+              : t("paymentsPage.negativePeriod")
+          }
           footerHint={
             net >= 0
-              ? "Receipts outpaced payouts"
-              : "Payouts outpaced receipts"
+              ? t("paymentsPage.receiptsOutpaced")
+              : t("paymentsPage.payoutsOutpaced")
           }
         />
         <PaymentStatCard
-          label="Outstanding"
+          label={t("paymentsPage.outstanding")}
           value={formatPaymentReportMoney(summary.outstanding)}
-          footerTitle={`${formatPaymentReportMoney(summary.pendingIn)} owed to you`}
-          footerHint={`${formatPaymentReportMoney(summary.pendingOut)} owed to vendors`}
+          footerTitle={t("paymentsPage.owedToYou", {
+            amount: formatPaymentReportMoney(summary.pendingIn),
+          })}
+          footerHint={t("paymentsPage.owedToVendors", {
+            amount: formatPaymentReportMoney(summary.pendingOut),
+          })}
         />
       </div>
 
@@ -547,8 +566,8 @@ export function PaymentReports() {
         <OutstandingAgingChart data={aging} />
         <TopPartiesChart
           data={topCustomers}
-          title="Top paying customers"
-          description="Largest receipts in the selected period"
+          title={t("paymentsPage.topPayingCustomers")}
+          description={t("paymentsPage.largestReceipts")}
         />
       </div>
 

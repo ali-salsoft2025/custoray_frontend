@@ -3,6 +3,7 @@ import puppeteer from "puppeteer"
 import { z } from "zod"
 
 import { companySettingsSchema } from "@/lib/company-settings"
+import { documentDisplayFlagsSchema } from "@/lib/document-display-settings"
 import {
   invoiceBuilderConfigSchema,
   invoiceTemplateColorOverridesSchema,
@@ -22,6 +23,8 @@ const bodySchema = z.object({
   copy: invoiceTemplateCopySchema.optional(),
   colors: invoiceTemplateColorOverridesSchema.optional(),
   builder: invoiceBuilderConfigSchema.optional(),
+  display: documentDisplayFlagsSchema.optional(),
+  customerBalance: z.string().optional(),
 })
 
 export async function POST(request: Request) {
@@ -32,7 +35,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid invoice data." }, { status: 400 })
     }
 
-    const { order, company, templateId, copy, colors, builder } = parsed.data
+    const { order, company, templateId, copy, colors, builder, display, customerBalance } =
+      parsed.data
     const logoSrc = resolveLogoSrc(company)
     const html = buildInvoicePdfHtml(
       order,
@@ -41,7 +45,8 @@ export async function POST(request: Request) {
       templateId ?? "classic",
       copy,
       colors as InvoiceTemplateColorOverrides | undefined,
-      builder
+      builder,
+      { display, customerBalance }
     )
 
     const browser = await puppeteer.launch({

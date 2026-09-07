@@ -170,6 +170,27 @@ export function customerFromFormData(fd: FormData, id: number): CustomerRow {
   }
 }
 
+export function applySalesReturnToCustomer(
+  customer: CustomerRow,
+  returnAmount: string,
+  refundDue: string
+): Pick<CustomerRow, "totalSales" | "totalPayments"> {
+  const sales = Number(customer.totalSales)
+  const payments = Number(customer.totalPayments)
+  const returned = Number(returnAmount)
+  const refund = Number(refundDue)
+  return {
+    totalSales: Math.max(
+      0,
+      (Number.isFinite(sales) ? sales : 0) - (Number.isFinite(returned) ? returned : 0)
+    ).toFixed(2),
+    totalPayments: Math.max(
+      0,
+      (Number.isFinite(payments) ? payments : 0) - (Number.isFinite(refund) ? refund : 0)
+    ).toFixed(2),
+  }
+}
+
 export function parsePersistedCustomers(raw: string | null): CustomerRow[] | null {
   if (!raw) return null
   try {

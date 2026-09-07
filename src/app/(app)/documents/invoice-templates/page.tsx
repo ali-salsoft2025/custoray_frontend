@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { IconPlus } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { useTranslation } from "react-i18next"
 
 import { InvoiceBuilder } from "@/components/invoices/invoice-builder"
 import { InvoiceTemplateCard } from "@/components/invoices/invoice-template-card"
@@ -28,6 +29,7 @@ import {
 } from "@/lib/invoice-templates"
 
 export default function InvoiceTemplatesPage() {
+  const { t } = useTranslation("documents")
   const searchParams = useSearchParams()
   const [activeRef, setActiveRef] = useState<ActiveInvoiceTemplateRef>({ kind: "preset", id: "classic" })
   const [customTemplates, setCustomTemplates] = useState<CustomInvoiceTemplate[]>([])
@@ -52,16 +54,16 @@ export default function InvoiceTemplatesPage() {
     const ref: ActiveInvoiceTemplateRef = { kind: "preset", id }
     setActiveRef(ref)
     saveActiveInvoiceTemplateRef(ref)
-    const name = INVOICE_TEMPLATES.find((t) => t.id === id)?.name ?? id
-    toast.success(`${name} is now the active invoice template.`)
-  }, [])
+    const name = t(`presets.${id}.name`)
+    toast.success(t("toasts.activeNow", { name }))
+  }, [t])
 
   const handleSelectCustom = useCallback((template: CustomInvoiceTemplate) => {
     const ref: ActiveInvoiceTemplateRef = { kind: "custom", id: template.id }
     setActiveRef(ref)
     saveActiveInvoiceTemplateRef(ref)
-    toast.success(`${template.name} is now the active invoice template.`)
-  }, [])
+    toast.success(t("toasts.activeNow", { name: template.name }))
+  }, [t])
 
   const openBuilderForPreset = useCallback((id: InvoiceTemplateId) => {
     const draft = draftFromPreset(id)
@@ -78,9 +80,9 @@ export default function InvoiceTemplatesPage() {
     setBuilderLayout("classic")
     setBuilderColors(getDefaultColorsForTemplate("classic"))
     setBuilderDraft(defaultInvoiceBuilderConfig())
-    setSuggestedTemplateName("My invoice template")
+    setSuggestedTemplateName(t("templatesPage.defaultName"))
     setBuilderOpen(true)
-  }, [])
+  }, [t])
 
   const openBuilderEditCustom = useCallback((template: CustomInvoiceTemplate) => {
     setEditingCustom(template)
@@ -128,9 +130,9 @@ export default function InvoiceTemplatesPage() {
       if (activeRef.kind === "custom" && activeRef.id === id) {
         handleSelectPreset("classic")
       }
-      toast.message("Custom template removed.")
+      toast.message(t("toasts.customRemoved"))
     },
-    [activeRef, handleSelectPreset]
+    [activeRef, handleSelectPreset, t]
   )
 
   if (!hydrated) return null
@@ -140,22 +142,21 @@ export default function InvoiceTemplatesPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="max-w-2xl">
           <h2 className="text-lg font-semibold" style={{ color: "#111827" }}>
-            Invoice templates
+            {t("templatesPage.title")}
           </h2>
           <p className="mt-1 text-sm" style={{ color: "#6b7280" }}>
-            Four built-in layouts are read-only. Use one as-is, or create a custom copy to edit
-            colors, fields, and text. Custom templates appear in your library below.
+            {t("templatesPage.intro")}
           </p>
         </div>
         <Button type="button" onClick={openBuilderNew} className="shrink-0">
           <IconPlus className="size-4" />
-          Create template
+          {t("templatesPage.create")}
         </Button>
       </div>
 
       <section className="space-y-4">
         <h3 className="text-sm font-medium uppercase tracking-wide" style={{ color: "#374151" }}>
-          Preset layouts
+          {t("templatesPage.presetLayouts")}
         </h3>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {INVOICE_TEMPLATES.map((meta) => {
@@ -166,8 +167,8 @@ export default function InvoiceTemplatesPage() {
             return (
               <InvoiceTemplateCard
                 key={meta.id}
-                name={meta.name}
-                description={meta.description}
+                name={t(`presets.${meta.id}.name`)}
+                description={t(`presets.${meta.id}.description`)}
                 previewSlug={meta.id}
                 template={rowTemplate}
                 builder={preset.builder}
@@ -183,20 +184,18 @@ export default function InvoiceTemplatesPage() {
 
       <section className="space-y-4">
         <h3 className="text-sm font-medium uppercase tracking-wide" style={{ color: "#374151" }}>
-          Your custom templates
+          {t("templatesPage.customSection")}
         </h3>
         {customTemplates.length === 0 ? (
           <p className="rounded-lg border border-dashed px-4 py-8 text-center text-sm" style={{ borderColor: "#e5e7eb", color: "#6b7280" }}>
-            No custom templates yet. Click <strong>Customize</strong> on a preset or{" "}
-            <strong>Create template</strong> to build your own.
+            {t("templatesPage.emptyCustom")}
           </p>
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {customTemplates.map((template) => {
               const isSelected = activeRef.kind === "custom" && activeRef.id === template.id
               const rowTemplate = resolveInvoiceTemplate(template.baseLayout, template.colors)
-              const baseLayoutName =
-                INVOICE_TEMPLATES.find((t) => t.id === template.baseLayout)?.name ?? template.baseLayout
+              const baseLayoutName = t(`presets.${template.baseLayout}.name`)
 
               return (
                 <InvoiceTemplateCard
