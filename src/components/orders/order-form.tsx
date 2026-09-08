@@ -173,8 +173,7 @@ export function OrderForm({ formId, order, onSubmit }: OrderFormProps) {
         return
       }
 
-      const { id: _id, srNo: _srNo, ...productInput } = parsed
-      const created = addProduct(productInput)
+      const created = addProduct(parsed)
       updateLine(quickAdd.lineIndex, {
         productName: created.name,
         unitPrice: created.salePrice,

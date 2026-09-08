@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react"
 import { ColumnDef } from "@tanstack/react-table"
 import { IconArchive, IconTrash } from "@tabler/icons-react"
-import { z } from "zod"
 import { toast } from "sonner"
 import { useTranslation } from "react-i18next"
 import type { TFunction } from "i18next"
@@ -15,16 +14,14 @@ import i18n from "@/i18n"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 
-const brandSchema = z.object({
-  srNo: z.number(),
-  name: z.string(),
-  description: z.string(),
-  products: z.number(),
-  status: z.enum(["active", "inactive"]),
-  lifecycle: z.enum(["active", "inactive", "archived"]).default("active"),
-})
-
-type BrandRow = z.infer<typeof brandSchema>
+type BrandRow = {
+  srNo: number
+  name: string
+  description: string
+  products: number
+  status: "active" | "inactive"
+  lifecycle: "active" | "inactive" | "archived"
+}
 
 const brandsData: BrandRow[] = [
   { srNo: 1, name: "Voltara", description: "Premium laptops and storage products", products: 18, status: "active", lifecycle: "active" },

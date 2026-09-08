@@ -188,7 +188,7 @@ export function parsePersistedSales(raw: string | null): SaleRow[] | null {
     const parsed = JSON.parse(raw) as unknown
     const normalized = Array.isArray(parsed)
       ? parsed.map((row) =>
-          row && typeof row === "object" && (row as SaleRow).status === "on_hold"
+          row && typeof row === "object" && (row as { status?: string }).status === "on_hold"
             ? { ...row, status: "pending" }
             : row
         )

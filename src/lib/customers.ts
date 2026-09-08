@@ -197,7 +197,7 @@ export function parsePersistedCustomers(raw: string | null): CustomerRow[] | nul
     const parsed = JSON.parse(raw) as unknown
     const normalized = Array.isArray(parsed)
       ? parsed.map((row) =>
-          row && typeof row === "object" && (row as CustomerRow).status === "on_hold"
+          row && typeof row === "object" && (row as { status?: string }).status === "on_hold"
             ? { ...row, status: "inactive" }
             : row
         )

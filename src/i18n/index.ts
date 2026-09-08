@@ -1,5 +1,4 @@
-import i18n from "i18next"
-import { initReactI18next } from "react-i18next"
+import i18n, { type InitOptions } from "i18next"
 
 import { loadAppearance } from "@/lib/appearance-prefs"
 
@@ -143,7 +142,7 @@ function getInitialLanguage() {
 }
 
 if (!i18n.isInitialized) {
-  void i18n.use(initReactI18next).init({
+  void i18n.init({
     resources,
     lng: getInitialLanguage(),
     fallbackLng: DEFAULT_LANGUAGE,
@@ -153,7 +152,7 @@ if (!i18n.isInitialized) {
     returnNull: false,
     initImmediate: false,
     react: { useSuspense: false, bindI18n: "languageChanged loaded" },
-  })
+  } as InitOptions)
 }
 
 export default i18n

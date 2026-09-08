@@ -1,11 +1,13 @@
 "use client"
 
 import { useLayoutEffect, type ReactNode } from "react"
-import { I18nextProvider } from "react-i18next"
+import { I18nextProvider, initReactI18next } from "react-i18next"
 
 import { useAppearance } from "@/components/theme/appearance-provider"
 import i18n from "@/i18n"
 import { isAppLanguage } from "@/i18n/config"
+
+i18n.use(initReactI18next)
 
 export function I18nProvider({ children }: { children: ReactNode }) {
   const { prefs, ready } = useAppearance()
