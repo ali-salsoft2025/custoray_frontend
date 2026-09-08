@@ -155,7 +155,7 @@ export function parsePersistedVendors(raw: string | null): VendorRow[] | null {
     const parsed = JSON.parse(raw) as unknown
     const normalized = Array.isArray(parsed)
       ? parsed.map((row) =>
-          row && typeof row === "object" && (row as VendorRow).status === "on_hold"
+          row && typeof row === "object" && (row as { status?: string }).status === "on_hold"
             ? { ...row, status: "inactive" }
             : row
         )

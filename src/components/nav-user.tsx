@@ -1,6 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
+import type { TFunction } from "i18next"
 import {
   CreditCard,
   Languages,
@@ -39,7 +40,7 @@ function initials(name: string): string {
     .join("")
 }
 
-function translateRole(role: string, t: (key: string) => string) {
+function translateRole(role: string, t: TFunction<"nav">) {
   const normalized = role.trim().toLowerCase()
   if (normalized === "owner") return t("userMenu.owner")
   if (normalized === "admin") return t("userMenu.admin")

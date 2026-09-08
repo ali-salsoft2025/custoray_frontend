@@ -111,7 +111,7 @@ function orderWithNewLine(order: OrderRow): OrderRow {
   }
 }
 
-function selectColumn<T>(t: TFunction): ColumnDef<T> {
+function selectColumn<T>(t: TFunction<"sales">): ColumnDef<T> {
   return {
     id: "select",
     header: ({ table }) => (

@@ -40,8 +40,7 @@ export function VendorQuickAddSheet({
         toast.error("Vendor name is required.")
         return
       }
-      const { id: _id, ...vendorInput } = parsed
-      const created = addVendor(vendorInput)
+      const created = addVendor(parsed)
       onCreated(created)
       onOpenChange(false)
       toast.success("Vendor added.")

@@ -29,20 +29,17 @@ import { toast } from "sonner"
 import { useFiscalTerms } from "@/context/fiscal-term-context"
 import { formatShortDate } from "@/lib/fiscal-terms"
 import data from "./data.json"
-import { z } from "zod"
 
-export const inventorySchema = z.object({
-  srNo: z.number(),
-  sku: z.string(),
-  name: z.string(),
-  category: z.string(),
-  status: z.string(),
-  stock: z.number(),
-  orders: z.number(),
-  lifecycle: z.enum(["active", "inactive", "archived"]).default("active"),
-})
-
-type InventoryItem = z.infer<typeof inventorySchema>
+type InventoryItem = {
+  srNo: number
+  sku: string
+  name: string
+  category: string
+  status: string
+  stock: number
+  orders: number
+  lifecycle: "active" | "inactive" | "archived"
+}
 
 const inventoryTabs: DataTableTab[] = [
   { value: "active", label: "Active" },

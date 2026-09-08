@@ -202,7 +202,6 @@ function SaleOrderActions({ order, onReturn, returning, compact }: SaleOrderActi
 function SaleOrderLines({ order }: { order: OrderRow }) {
   const { t } = useTranslation("pos")
   const productLines = productLinesForOrder(order)
-  const returnable = canReturnDocument(order)
 
   return (
     <>

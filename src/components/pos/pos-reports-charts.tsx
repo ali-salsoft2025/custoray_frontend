@@ -168,7 +168,7 @@ export function PosDailyTrendChart({ data }: { data: PosDailyTotalRow[] }) {
               <ChartTooltipContent
                 indicator="dot"
                 labelFormatter={(label) => String(label)}
-                formatter={(value, name) => (
+                formatter={(value) => (
                   <span className="font-medium tabular-nums">
                     {formatPosReportMoney(String(value))}
                   </span>
@@ -553,7 +553,7 @@ export function PosTopProductsChart({ data }: { data: PosTopProductRow[] }) {
                 formatter={(value, _name, item) => (
                   <div className="flex flex-col gap-0.5">
                     <span className="max-w-[200px] font-medium leading-snug">
-                      {item.payload?.fullName}
+                      {String(item.payload?.fullName ?? "")}
                     </span>
                     <span className="text-muted-foreground tabular-nums">
                       {formatPosReportMoney(String(value))} ·{" "}

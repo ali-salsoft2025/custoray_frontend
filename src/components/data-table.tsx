@@ -5,7 +5,6 @@ import { useTranslation } from "react-i18next"
 import i18n from "@/i18n"
 import {
   IconAdjustmentsHorizontal,
-  IconChevronDown,
   IconChevronLeft,
   IconChevronRight,
   IconChevronsLeft,
@@ -59,6 +58,9 @@ type DataTableColumnMeta = {
   dataTableFilter?: boolean
   headerClassName?: string
   cellClassName?: string
+  dataTableFilterVariant?: "range" | "select" | "text"
+  dataTableFilterLabel?: string
+  dataTableFilterSelectLabels?: Record<string, string>
 }
 
 function getColumnMeta<TData>(column: Column<TData, unknown>) {
@@ -85,10 +87,8 @@ import {
 } from "@/components/ui/drawer"
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
@@ -164,7 +164,7 @@ const DASHBOARD_STATUS_KEYS: Record<string, string> = {
 function translateDashboardLabel(
   value: string,
   map: Record<string, string>,
-  t: (key: string) => string
+  t: typeof i18n.t
 ) {
   const key = map[value]
   return key ? t(key) : value
@@ -404,7 +404,7 @@ export function getDefaultColumns(): ColumnDef<z.infer<typeof schema>>[] {
 
 const FILTER_ANY = "__data_table_any__"
 
-const rangeNumberFilter: FilterFn<any> = (row, columnId, filterValue) => {
+const rangeNumberFilter: FilterFn<unknown> = (row, columnId, filterValue) => {
   if (filterValue == null) return true
   const pair = filterValue as [string, string]
   if (!Array.isArray(pair)) return true
@@ -417,26 +417,15 @@ const rangeNumberFilter: FilterFn<any> = (row, columnId, filterValue) => {
   return true
 }
 
-const exactStringFilter: FilterFn<any> = (row, columnId, filterValue) => {
+const exactStringFilter: FilterFn<unknown> = (row, columnId, filterValue) => {
   if (filterValue == null || filterValue === "") return true
   return String(row.getValue(columnId) ?? "") === String(filterValue)
 }
 
-const includesTextFilter: FilterFn<any> = (row, columnId, filterValue) => {
+const includesTextFilter: FilterFn<unknown> = (row, columnId, filterValue) => {
   if (filterValue == null || filterValue === "") return true
   const q = String(filterValue).toLowerCase()
   return String(row.getValue(columnId) ?? "").toLowerCase().includes(q)
-}
-
-type DataTableColumnMeta = {
-  /** Set false to hide column from the filter popover */
-  dataTableFilter?: boolean
-  /** Override auto-detected filter control */
-  dataTableFilterVariant?: "range" | "select" | "text"
-  /** Label in filter popover and grid field list (when header is not a string) */
-  dataTableFilterLabel?: string
-  /** Map option values to display labels in filter select */
-  dataTableFilterSelectLabels?: Record<string, string>
 }
 
 function mergeColumnFilters<TData>(
@@ -1074,7 +1063,10 @@ export function DataTable<TData>({
       pagination,
       globalFilter,
     },
-    getRowId: (row: any) => (row.id ?? row.srNo ?? Math.random()).toString(),
+    getRowId: (row) => {
+      const record = row as { id?: string | number; srNo?: string | number }
+      return String(record.id ?? record.srNo ?? Math.random())
+    },
     enableRowSelection: true,
     enableGlobalFilter: true,
     onRowSelectionChange: setRowSelection,
@@ -1085,7 +1077,8 @@ export function DataTable<TData>({
     onGlobalFilterChange: setGlobalFilter,
     globalFilterFn: (row, columnId, filterValue) => {
       const search = filterValue.toLowerCase()
-      const rowValues = Object.values(row.original).join(" ").toLowerCase()
+      const record = row.original as Record<string, unknown>
+      const rowValues = Object.values(record).join(" ").toLowerCase()
       return rowValues.includes(search)
     },
     getCoreRowModel: getCoreRowModel(),
