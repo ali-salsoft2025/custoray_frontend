@@ -561,7 +561,9 @@ export function PurchaseTopVendorsChart({
                 formatter={(value, _name, item) => (
                   <span className="tabular-nums">
                     {formatPurchaseReportMoney(String(value))} ·{" "}
-                    {item.payload?.purchaseCount} order
+                    {item.payload?.purchaseCount == null
+                      ? ""
+                      : String(item.payload.purchaseCount)} order
                     {item.payload?.purchaseCount === 1 ? "" : "s"}
                   </span>
                 )}

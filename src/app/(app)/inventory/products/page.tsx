@@ -111,7 +111,7 @@ const productSchema = z.object({
   imageUrls: z.array(z.string()).default([]),
 })
 
-export type ProductRow = z.infer<typeof productSchema>
+type ProductRow = z.infer<typeof productSchema>
 
 const productTabValues = ["all", "active", "archived"] as const
 

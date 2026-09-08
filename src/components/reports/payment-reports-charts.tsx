@@ -7,7 +7,6 @@ import {
   BarChart,
   CartesianGrid,
   ComposedChart,
-  Line,
   XAxis,
   YAxis,
 } from "recharts"

@@ -42,7 +42,7 @@ export function ProductPriceTimeline({ sku }: { sku: string }) {
       <h3 className="mb-4 text-sm font-semibold tracking-tight">Timeline</h3>
       {events.length === 0 ? (
         <p className="text-muted-foreground text-sm">
-          Price changes will appear here when this product's cost or sale price is updated.
+          Price changes will appear here when this product&apos;s cost or sale price is updated.
         </p>
       ) : (
         <ol className="relative ms-1.5 space-y-5 border-l border-border/80 ps-5">

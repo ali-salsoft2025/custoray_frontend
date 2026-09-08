@@ -9,7 +9,6 @@ import {
   IconPencil,
   IconTrash,
 } from "@tabler/icons-react"
-import { z } from "zod"
 import { toast } from "sonner"
 import { useTranslation } from "react-i18next"
 import type { TFunction } from "i18next"
@@ -38,14 +37,12 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 
-const variantSchema = z.object({
-  id: z.number(),
-  name: z.string(),
-  description: z.string(),
-  products: z.number(),
-})
-
-type VariantRow = z.infer<typeof variantSchema>
+type VariantRow = {
+  id: number
+  name: string
+  description: string
+  products: number
+}
 
 const variantData: VariantRow[] = [
   { id: 1, name: "Genuine", description: "Original branded product", products: 24 },

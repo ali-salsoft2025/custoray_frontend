@@ -7,6 +7,7 @@ import {
 } from "@tabler/icons-react"
 import { toast } from "sonner"
 import { useTranslation } from "react-i18next"
+import type { TFunction } from "i18next"
 
 import {
   FastestMoversChart,
@@ -114,7 +115,7 @@ function statusIconTone(status: InventoryReorderRow["status"]): string {
 
 function reorderStatusLabel(
   status: InventoryReorderRow["status"],
-  t: (key: string) => string
+  t: TFunction<"reports">
 ) {
   if (status === "Critical") return t("inventoryPage.statusCritical")
   if (status === "Reorder") return t("inventoryPage.statusReorder")

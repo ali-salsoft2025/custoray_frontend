@@ -15,7 +15,6 @@ import { toast } from "sonner"
 import { useTranslation } from "react-i18next"
 import type { TFunction } from "i18next"
 import i18n from "@/i18n"
-import { z } from "zod"
 
 import { DataTableColumnHeader } from "@/components/data-table-column-header"
 import { DataTable, type DataTableTab } from "@/components/data-table"
@@ -41,15 +40,13 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 
-const categorySchema = z.object({
-  id: z.number(),
-  name: z.string(),
-  description: z.string(),
-  products: z.number(),
-  status: z.enum(["active", "inactive"]),
-})
-
-type CategoryRow = z.infer<typeof categorySchema>
+type CategoryRow = {
+  id: number
+  name: string
+  description: string
+  products: number
+  status: "active" | "inactive"
+}
 
 const initialCategories: CategoryRow[] = [
   {

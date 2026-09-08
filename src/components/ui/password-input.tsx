@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 
-function PasswordInput({ className, type, ...props }: React.ComponentProps<"input">) {
+function PasswordInput({ className, ...props }: Omit<React.ComponentProps<"input">, "type">) {
 	const [showPassword, setShowPassword] = React.useState(false)
 	const disabled = props.value === '' || props.value === undefined || props.disabled
     const ref = useRef<HTMLInputElement>(null)
@@ -25,6 +25,7 @@ function PasswordInput({ className, type, ...props }: React.ComponentProps<"inpu
 				variant="ghost"
 				size="sm"
 				className="text-muted-foreground hover:text-foreground absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+				disabled={disabled}
 				onClick={() => setShowPassword((prev) => !prev)}
 			>
 				{showPassword ? (

@@ -15,9 +15,10 @@ import { SectionCards } from "@/components/section-cards"
 import { confirmDeleteAction } from "@/lib/confirm-action"
 import { toast } from "sonner"
 import data from "./data.json"
-import type { z } from "zod"
+import { z } from "zod"
 
 type DocRow = z.infer<typeof schema>
+const dashboardRows: DocRow[] = z.array(schema).parse(data)
 
 function sectionTabFilter(row: DocRow, tab: string) {
   if (tab === "archived") return row.lifecycle === "archived"
@@ -42,7 +43,7 @@ export default function DashboardPage() {
       <SectionCards />
       <ChartAreaInteractive />
       <DataTable
-        data={data}
+        data={dashboardRows}
         columns={columns}
         showSearch={false}
         showFilters={false}

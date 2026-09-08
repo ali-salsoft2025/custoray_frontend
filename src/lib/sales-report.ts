@@ -58,7 +58,6 @@ export function flattenOrdersToSaleLines(orders: OrderRow[]): SaleLineRow[] {
 
 export function mapImportedSaleLine(
   row: Record<string, string>,
-  _existing: SaleLineRow[]
 ): SaleLineRow | null {
   const productName = (row.productName ?? row.product ?? row.product_name ?? "").trim()
   const invoiceNumber = (

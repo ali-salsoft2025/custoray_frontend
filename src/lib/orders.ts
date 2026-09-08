@@ -690,7 +690,7 @@ export function parsePersistedOrders(raw: string | null): OrderRow[] | null {
     const parsed = JSON.parse(raw) as unknown
     const normalized = Array.isArray(parsed)
       ? parsed.map((row) =>
-          row && typeof row === "object" && (row as OrderRow).status === "on_hold"
+          row && typeof row === "object" && (row as { status?: string }).status === "on_hold"
             ? { ...row, status: "pending" }
             : row
         )

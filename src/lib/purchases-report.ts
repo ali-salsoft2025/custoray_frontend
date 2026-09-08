@@ -58,7 +58,6 @@ export function flattenPurchasesToLines(
 
 export function mapImportedPurchaseLine(
   row: Record<string, string>,
-  _existing: PurchaseLineReportRow[]
 ): PurchaseLineReportRow | null {
   const productName = (row.productName ?? row.product ?? row.product_name ?? "").trim()
   const purchaseNumber = (
