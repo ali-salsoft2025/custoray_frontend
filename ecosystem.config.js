@@ -3,7 +3,7 @@ module.exports = {
     {
       name: "custoray_frontend_dev",
       script: "./node_modules/next/dist/bin/next",
-      args: "start -p 3035",
+      args: "start -p 3036",
       cwd: __dirname,
       instances: 1,
       autorestart: true,
@@ -11,7 +11,7 @@ module.exports = {
       max_memory_restart: "1G",
       env: {
         NODE_ENV: "production",
-        PORT: 3035,
+        PORT: 3036,
         NODE_OPTIONS: "--max-old-space-size=8192",
       },
     },

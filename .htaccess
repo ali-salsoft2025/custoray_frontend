@@ -4,4 +4,4 @@ DirectoryIndex disabled
 RewriteEngine On
 RewriteBase /
 
-RewriteRule ^(.*)$ http://127.0.0.1:3035/$1 [P,L]
+RewriteRule ^(.*)$ http://127.0.0.1:3036/$1 [P,L]
