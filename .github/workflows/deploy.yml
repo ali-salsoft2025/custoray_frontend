@@ -51,12 +51,15 @@ jobs:
             [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
             source ~/.bashrc 2>/dev/null || true
             export PATH="$HOME/.nvm/versions/node/$(ls "$HOME/.nvm/versions/node" 2>/dev/null | tail -1)/bin:$PATH"
+            nvm install 22 >/dev/null 2>&1 || true
+            nvm use 22 || true
+            hash -r
+            echo "Using $(node -v) at $(command -v node)"
 
             cd ./public_html/${{ vars.SERVER_DIR }}/
-            export NODE_ENV=production
             export NODE_OPTIONS="--max-old-space-size=8192"
-            npm install --legacy-peer-deps
-            npm run build
+            npm ci --legacy-peer-deps --include=dev
+            NODE_ENV=production npm run build
             pm2 reload ecosystem.config.js --update-env || pm2 start ecosystem.config.js
             pm2 save
 
