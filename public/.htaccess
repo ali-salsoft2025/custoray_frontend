@@ -1,3 +1,6 @@
+Options -Indexes
+DirectoryIndex index.html
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteBase /
@@ -5,6 +8,7 @@
     RewriteCond %{HTTPS} off
     RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
+    RewriteRule ^$ /index.html [L]
     RewriteRule ^store/([^/]+)/?$ /store/index.html [L]
     RewriteRule ^customers/([0-9]+)/timeline/?$ /customers/timeline/index.html [L]
     RewriteRule ^employees/([0-9]+)/edit/?$ /employees/edit/index.html [L]
