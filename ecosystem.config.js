@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: "custoray_frontend",
+      name: "custoray_frontend_dev",
       script: "./node_modules/next/dist/bin/next",
       args: "start -p 3035",
       cwd: __dirname,
