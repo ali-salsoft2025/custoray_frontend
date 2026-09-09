@@ -1,5 +1,7 @@
-import { redirect } from "next/navigation"
+"use client"
+
+import { ClientRedirect } from "@/components/client-redirect"
 
 export default function PlansPage() {
-  redirect("/settings/billing")
+  return <ClientRedirect href="/settings/billing" />
 }

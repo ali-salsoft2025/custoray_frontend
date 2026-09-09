@@ -1,5 +1,7 @@
-import { redirect } from "next/navigation"
+"use client"
 
-export default function PosNewSalePage() {
-  redirect("/pos")
+import { ClientRedirect } from "@/components/client-redirect"
+
+export default function PosNewSaleRedirect() {
+  return <ClientRedirect href="/pos" />
 }

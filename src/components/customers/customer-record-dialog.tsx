@@ -28,39 +28,24 @@ import {
 import type { CustomerRow } from "@/lib/customers"
 import { loadDocumentDisplaySettings } from "@/lib/document-display-settings"
 import { resolveActiveTemplateForPdf } from "@/lib/invoice-templates"
-
-function filenameFromDisposition(header: string | null, fallback: string) {
-  if (!header) return fallback
-  const match = header.match(/filename="([^"]+)"/i)
-  return match?.[1] ?? fallback
-}
+import { buildCustomerRecordPdfHtml } from "@/lib/customer-record-pdf-html"
+import { resolveLogoSrc } from "@/lib/invoice-pdf-html"
+import { printHtmlDocument } from "@/lib/print-document"
 
 export async function downloadCustomerRecordPdf(record: CustomerRecord) {
   const company = loadCompanySettings()
   const { templateId, colors, builder } = resolveActiveTemplateForPdf()
   const display = loadDocumentDisplaySettings().customerHistory
-  const response = await fetch("/api/customers/record/pdf", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ record, company, templateId, colors, builder, display }),
-  })
-
-  if (!response.ok) {
-    throw new Error("PDF request failed")
-  }
-
-  const fallback = `customer-record-${record.customer.name.replace(/[^\w-]+/g, "_")}-${record.asOf}.pdf`
-  const filename = filenameFromDisposition(
-    response.headers.get("Content-Disposition"),
-    fallback
+  const html = buildCustomerRecordPdfHtml(
+    record,
+    company,
+    resolveLogoSrc(company),
+    templateId,
+    colors,
+    builder,
+    display
   )
-  const blob = await response.blob()
-  const url = URL.createObjectURL(blob)
-  const anchor = document.createElement("a")
-  anchor.href = url
-  anchor.download = filename
-  anchor.click()
-  URL.revokeObjectURL(url)
+  printHtmlDocument(html)
 }
 
 type CustomerRecordDialogProps = {

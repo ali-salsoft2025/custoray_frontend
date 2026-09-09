@@ -1,20 +1,29 @@
+"use client"
+
+import { Suspense } from "react"
+import { useSearchParams } from "next/navigation"
+
 import { LoginForm } from "@/components/loginForm"
 
-function safeNextPath(path?: string) {
+function safeNextPath(path?: string | null) {
   if (!path || !path.startsWith("/") || path.startsWith("//")) return undefined
   return path
 }
 
-export default async function LoginPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ expired?: string; redirect?: string }>
-}) {
-  const params = await searchParams
+function LoginPageInner() {
+  const params = useSearchParams()
   return (
     <LoginForm
-      expiredNotice={params.expired === "1"}
-      redirectTo={safeNextPath(params.redirect)}
+      expiredNotice={params.get("expired") === "1"}
+      redirectTo={safeNextPath(params.get("redirect"))}
     />
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginPageInner />
+    </Suspense>
   )
 }

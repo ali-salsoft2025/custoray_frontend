@@ -1,6 +1,3 @@
-import fs from "fs"
-import path from "path"
-
 import type { CompanySettings } from "@/lib/company-settings"
 import {
   DEFAULT_DOCUMENT_DISPLAY_FLAGS,
@@ -448,15 +445,10 @@ export function buildInvoicePdfHtml(
 </html>`
 }
 
-export function getDefaultLogoDataUrl(): string {
-  const logoPath = path.join(process.cwd(), "public", "assets", "logo-2.png")
-  const buffer = fs.readFileSync(logoPath)
-  return `data:image/png;base64,${buffer.toString("base64")}`
-}
-
 export function resolveLogoSrc(company: CompanySettings): string {
-  if (company.logoUrl.trim().startsWith("data:")) {
-    return company.logoUrl.trim()
+  const logo = company.logoUrl.trim()
+  if (logo.startsWith("data:") || logo.startsWith("http") || logo.startsWith("/")) {
+    return logo || "/assets/logo-2.png"
   }
-  return getDefaultLogoDataUrl()
+  return "/assets/logo-2.png"
 }

@@ -7,9 +7,5 @@ export default function StorefrontLayout({
 }: {
   children: React.ReactNode
 }) {
-  return (
-    <DashboardProviders>
-      {children}
-    </DashboardProviders>
-  )
+  return <DashboardProviders>{children}</DashboardProviders>
 }

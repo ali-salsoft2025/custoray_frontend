@@ -1,6 +1,6 @@
 "use client"
 
-import { use } from "react"
+import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { IconArrowLeft } from "@tabler/icons-react"
 import { useTranslation } from "react-i18next"
@@ -10,13 +10,11 @@ import { CustomerOrderCards } from "@/components/customers/customer-order-cards"
 import { Button } from "@/components/ui/button"
 import { useCustomers } from "@/context/customers-context"
 import { computeBalance, formatMoney } from "@/lib/customers"
+import { pathMatch } from "@/lib/route-ids"
 
-export default function CustomerTimelinePage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
-  const { id } = use(params)
+export default function CustomerTimelinePage() {
+  const pathname = usePathname()
+  const id = pathMatch(pathname, /^\/customers\/([^/]+)\/timeline$/)
   const { t } = useTranslation("customers")
   const { getCustomer } = useCustomers()
   const customer = getCustomer(Number(id))

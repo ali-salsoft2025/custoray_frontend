@@ -1,5 +1,7 @@
-import { redirect } from "next/navigation"
+"use client"
+
+import { ClientRedirect } from "@/components/client-redirect"
 
 export default function PreferencesSettingsRedirect() {
-  redirect("/settings/appearance")
+  return <ClientRedirect href="/settings/appearance" />
 }
