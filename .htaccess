@@ -1,0 +1,5 @@
+RewriteEngine On
+
+# Send every request to the Next.js process (PM2 on 3035).
+# Do not serve leftover static files from this folder.
+RewriteRule ^(.*)$ http://127.0.0.1:3035/$1 [P,L]
