@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { Suspense, useCallback, useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { IconPlus } from "@tabler/icons-react"
 import { toast } from "sonner"
@@ -28,7 +28,7 @@ import {
   type InvoiceTemplateId,
 } from "@/lib/invoice-templates"
 
-export default function InvoiceTemplatesPage() {
+function InvoiceTemplatesPage() {
   const { t } = useTranslation("documents")
   const searchParams = useSearchParams()
   const [activeRef, setActiveRef] = useState<ActiveInvoiceTemplateRef>({ kind: "preset", id: "classic" })
@@ -235,5 +235,13 @@ export default function InvoiceTemplatesPage() {
         suggestedTemplateName={suggestedTemplateName}
       />
     </div>
+  )
+}
+
+export default function InvoiceTemplatesPageRoute() {
+  return (
+    <Suspense fallback={null}>
+      <InvoiceTemplatesPage />
+    </Suspense>
   )
 }

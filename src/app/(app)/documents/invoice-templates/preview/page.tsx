@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { useParams } from "next/navigation"
+import { usePathname } from "next/navigation"
 import { IconArrowLeft, IconCheck, IconPencil } from "@tabler/icons-react"
 import { toast } from "sonner"
 import { useTranslation } from "react-i18next"
@@ -24,6 +24,7 @@ import {
   type InvoiceTemplateId,
 } from "@/lib/invoice-templates"
 import { cn } from "@/lib/utils"
+import { firstSegmentAfter } from "@/lib/route-ids"
 import i18n from "@/i18n"
 
 type PreviewData =
@@ -70,8 +71,8 @@ function resolvePreviewData(slug: string): PreviewData | null {
 export default function InvoiceTemplatePreviewPage() {
   const { t } = useTranslation("documents")
   const { t: tc } = useTranslation("common")
-  const params = useParams<{ slug: string }>()
-  const slug = params.slug
+  const pathname = usePathname()
+  const slug = firstSegmentAfter(pathname, "/documents/invoice-templates/preview")
 
   const [activeRef, setActiveRef] = useState<ActiveInvoiceTemplateRef>({ kind: "preset", id: "classic" })
   const [hydrated, setHydrated] = useState(false)

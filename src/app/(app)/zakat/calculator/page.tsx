@@ -1,5 +1,7 @@
-import { redirect } from "next/navigation"
+"use client"
 
-export default function ZakatCalculatorPage() {
-  redirect("/zakat")
+import { ClientRedirect } from "@/components/client-redirect"
+
+export default function ZakatCalculatorRedirect() {
+  return <ClientRedirect href="/zakat" />
 }

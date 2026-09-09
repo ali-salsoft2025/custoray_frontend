@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { useParams } from "next/navigation"
+import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -16,11 +16,11 @@ import {
   addMonthsIso,
   formatShortDate,
 } from "@/lib/fiscal-terms"
+import { firstSegmentAfter } from "@/lib/route-ids"
 
 export default function TermDetailPage() {
-  const params = useParams()
-  const raw = params.termId
-  const termId = typeof raw === "string" ? decodeURIComponent(raw) : ""
+  const pathname = usePathname()
+  const termId = firstSegmentAfter(pathname, "/inventory/terms")
   const { state } = useFiscalTerms()
 
   const detail = React.useMemo(() => {

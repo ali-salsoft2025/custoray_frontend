@@ -2,11 +2,18 @@
     RewriteEngine On
     RewriteBase /
 
-    # Force HTTPS
     RewriteCond %{HTTPS} off
     RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-    # Existing rewrites
+    RewriteRule ^store/([^/]+)/?$ /store/index.html [L]
+    RewriteRule ^customers/([0-9]+)/timeline/?$ /customers/timeline/index.html [L]
+    RewriteRule ^employees/([0-9]+)/edit/?$ /employees/edit/index.html [L]
+    RewriteRule ^employees/([0-9]+)/?$ /employees/detail/index.html [L]
+    RewriteRule ^documents/invoice-templates/preview/([^/]+)/?$ /documents/invoice-templates/preview/index.html [L]
+    RewriteRule ^inventory/terms/([^/]+)/?$ /inventory/terms/detail/index.html [L]
+    RewriteRule ^dashboard/?$ /home/index.html [L]
+    RewriteRule ^dashboard/(.+)$ /$1 [L]
+
     RewriteRule ^index\.html$ - [L]
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d

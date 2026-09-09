@@ -1,5 +1,7 @@
-import { redirect } from "next/navigation"
+"use client"
 
-export default function DocumentsIndexPage() {
-  redirect("/documents/sales-invoice")
+import { ClientRedirect } from "@/components/client-redirect"
+
+export default function DocumentsRedirect() {
+  return <ClientRedirect href="/documents/sales-invoice" />
 }

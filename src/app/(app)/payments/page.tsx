@@ -1,5 +1,7 @@
-import { redirect } from "next/navigation"
+"use client"
 
-export default function PaymentsIndexPage() {
-  redirect("/payments/customer")
+import { ClientRedirect } from "@/components/client-redirect"
+
+export default function PaymentsRedirect() {
+  return <ClientRedirect href="/payments/customer" />
 }

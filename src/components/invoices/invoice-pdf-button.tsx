@@ -17,6 +17,8 @@ import {
 } from "@/lib/customers"
 import { loadDocumentDisplaySettings } from "@/lib/document-display-settings"
 import { resolveActiveTemplateForPdf } from "@/lib/invoice-templates"
+import { buildInvoicePdfHtml, resolveLogoSrc } from "@/lib/invoice-pdf-html"
+import { printHtmlDocument } from "@/lib/print-document"
 import type { OrderRow } from "@/lib/orders"
 import { cn } from "@/lib/utils"
 
@@ -27,12 +29,6 @@ type InvoicePdfButtonProps = {
   className?: string
   label?: string
   showIcon?: boolean
-}
-
-function filenameFromDisposition(header: string | null, fallback: string) {
-  if (!header) return fallback
-  const match = header.match(/filename="([^"]+)"/i)
-  return match?.[1] ?? fallback
 }
 
 function lookupCustomerBalance(customerName: string): string | undefined {
@@ -52,36 +48,17 @@ export async function downloadInvoicePdf(order: OrderRow) {
   const { templateId, colors, builder } = resolveActiveTemplateForPdf()
   const display = loadDocumentDisplaySettings().invoice
   const customerBalance = lookupCustomerBalance(order.customerName)
-  const response = await fetch("/api/invoices/pdf", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      order,
-      company,
-      templateId,
-      colors,
-      builder,
-      display,
-      customerBalance,
-    }),
-  })
-
-  if (!response.ok) {
-    throw new Error("PDF request failed")
-  }
-
-  const fallback = `${order.invoiceNumber.replace(/[^\w-]+/g, "_")}.pdf`
-  const filename = filenameFromDisposition(
-    response.headers.get("Content-Disposition"),
-    fallback
+  const html = buildInvoicePdfHtml(
+    order,
+    company,
+    resolveLogoSrc(company),
+    templateId,
+    undefined,
+    colors,
+    builder,
+    { display, customerBalance }
   )
-  const blob = await response.blob()
-  const url = URL.createObjectURL(blob)
-  const anchor = document.createElement("a")
-  anchor.href = url
-  anchor.download = filename
-  anchor.click()
-  URL.revokeObjectURL(url)
+  printHtmlDocument(html)
 }
 
 export function InvoicePdfButton({

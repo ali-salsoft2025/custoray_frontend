@@ -1,13 +1,13 @@
-name: Deploy Next.js
-
 on:
   push:
     branches:
       - customdev
       - live
 
+name: Deploy static website
+
 jobs:
-  deploy:
+  web-deploy:
     name: Deploy
     runs-on: ubuntu-latest
     environment: ${{ github.ref_name }}
@@ -15,59 +15,38 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Sync files
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+        env:
+          NODE_OPTIONS: "--max_old_space_size=8192"
+
+      - name: Build static export
+        run: npm run build
         env:
           NODE_OPTIONS: "--max_old_space_size=8192"
           CI: false
+
+      - name: Upload out/
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ vars.SERVER }}
           username: ${{ vars.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftp
-          port: 21
-          local-dir: ./
+          local-dir: ./out/
           server-dir: /${{ vars.SERVER_DIR }}/
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/.github*/**
-            **/.next/**
-            **/.env*
-            **/node_modules/**
-            **/*.logs*/**
-            **/*.zip/**
-
-      - name: Install, build, and restart PM2
-        uses: appleboy/ssh-action@v1.1.0
-        with:
-          host: ${{ vars.SERVER }}
-          username: ${{ vars.CPANEL_USERNAME }}
-          password: ${{ secrets.CPANEL_PASSWORD }}
-          port: 22
-          script: |
-            set -e
-            export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-            source ~/.bashrc 2>/dev/null || true
-            export PATH="$HOME/.nvm/versions/node/$(ls "$HOME/.nvm/versions/node" 2>/dev/null | tail -1)/bin:$PATH"
-            nvm install 22 >/dev/null 2>&1 || true
-            nvm use 22 || true
-            hash -r
-            echo "Using $(node -v) at $(command -v node)"
-
-            cd ./public_html/${{ vars.SERVER_DIR }}/
-            export NODE_OPTIONS="--max-old-space-size=8192"
-            npm ci --legacy-peer-deps --include=dev
-            NODE_ENV=production npm run build
-            pm2 reload ecosystem.config.js --update-env || pm2 start ecosystem.config.js
-            pm2 save
 
   health-check:
     name: Health Check
     runs-on: ubuntu-latest
     environment: ${{ github.ref_name }}
-    needs: deploy
+    needs: web-deploy
     steps:
       - name: Check the deployed service URL
         uses: jtalk/url-health-check-action@v4
